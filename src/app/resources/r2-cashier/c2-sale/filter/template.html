@@ -1,0 +1,73 @@
+<div class="out-create-section md-form-field-appearance-outline">
+    <div mat-dialog-title class="min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pr-2.5">
+        <div class="flex flex-1 items-center text-slate-500">
+            <h1 class="text-3xl">ស្វែងរកវិក្ក័យប័ត្រ</h1>
+        </div>
+        <div class="flex items-center cursor-pointer">
+            <mat-icon class="-mb-0.5" [svgIcon]="'heroicons_outline:x-mark'" (click)="closeDialog()"></mat-icon>
+        </div>
+    </div>
+
+    <div class="out-create-body px-4 pb-2 border-t w-full">
+        <form [formGroup]="filterForm" class="out-create-content border-t pt-4">
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>ពេលវេលា</mat-label>
+                <mat-select formControlName="timeType">
+                    <mat-option *ngFor="let type of dateType" [value]="type.id">
+                        {{ type.name }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <div class="grid grid-cols-2 gap-4" *ngIf="filterForm.get('timeType')!.value === 'startandend'">
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>ពី</mat-label>
+                    <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+                    <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #startPicker></mat-datepicker>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>ដល់</mat-label>
+                    <input matInput [matDatepicker]="endPicker" formControlName="endDate">
+                    <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #endPicker></mat-datepicker>
+                </mat-form-field>
+            </div>
+
+            <div class="inline-flex w-full rounded-full h-12">
+                <!-- Web Button -->
+                <button type="button" [ngClass]="{
+                    'active z-10 ring-2 bg-gray-100': isSelected('Web'),
+                    'inactive': !isSelected('Web')
+                  }" (click)="setPlatform('Web')" class="flex-1 px-4 py-2 text-lg font-medium border border-gray-200
+                         rounded-l-md  dark:bg-gray-800
+                         dark:border-gray-700 dark:hover:bg-gray-700">
+                    តាមប្រព័ន្ធកុំព្យូទ័រ
+                </button>
+
+                <!-- Mobile Button -->
+                <button type="button" [ngClass]="{
+                    'active z-10 ring-2 bg-gray-100': isSelected('Mobile'),
+                    'inactive': !isSelected('Mobile')
+                  }" (click)="setPlatform('Mobile')" class="flex-1 px-4 py-2 text-lg font-medium border border-gray-200
+                         rounded-r-md  dark:bg-gray-800
+                         dark:border-gray-700 dark:hover:bg-gray-700">
+                    តាមរយៈទូរស័ព្ទ
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+    <mat-dialog-actions>
+        <div class="w-full flex justify-end px-1">
+            <button class="helpers-mat-button-md bg-[#264497] text-white" mat-flat-button (click)="submit()"
+                [disabled]="filterForm.invalid || saving">
+                <span *ngIf="!saving">ស្វែងរក</span>
+                <mat-progress-spinner *ngIf="saving" [diameter]="24" [mode]="'indeterminate'">
+                </mat-progress-spinner>
+            </button>
+        </div>
+    </mat-dialog-actions>
+</div>

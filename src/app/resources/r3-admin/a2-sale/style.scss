@@ -1,0 +1,106 @@
+.section {
+    width: 100%;
+    height: calc(100vh - 3.5rem); // 56px is header of layout
+    @apply overflow-hidden p-4;
+
+    .container {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 5.5rem); // 56px(layout) + 32px(padding-y) is 88px
+        @apply bg-white rounded-xl overflow-hidden;
+
+        .body {
+            height: calc(100vh - 12rem); // 56px(layout) + 32px(padding-y) + 56px(shared-header-section) + 48px(pagination) is 192px
+            flex: 1 1 auto;
+            @apply overflow-auto;
+
+            .data {
+                @apply px-4;
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    }
+}
+
+.data {
+
+    .avatar {
+        @apply rounded-full border min-w-[45px] max-w-[45px] min-h-[45px] max-h-[45px] object-cover #{'!important'};
+    }
+
+    .mat-mdc-header-cell {
+        font-size: 1rem !important;
+        z-index: 10 !important;
+        padding: 0.5rem !important;
+    }
+
+    .mat-mdc-cell {
+        padding: 0.5rem !important;
+    }
+
+    .mat-column-code {
+        min-width: 8rem;
+        width: 8rem;
+        max-width: 8rem;
+        text-align: start;
+    }
+
+    .mat-column-profile {
+        min-width: 16rem;
+        text-align: left;
+    }
+
+    .mat-column-scholarship {
+        min-width: 10rem;
+        width: 10rem;
+        max-width: 10rem;
+        text-align: left;
+    }
+
+    .mat-column-status {
+        min-width: 8rem;
+        width: 8rem;
+        max-width: 8rem;
+        text-align: left;
+    }
+
+    .mat-column-checker {
+        min-width: 12.5rem;
+        width: 12.5rem;
+        max-width: 12.5rem;
+        text-align: left;
+    }
+
+    .mat-column-action {
+        flex: none;
+        width: 2rem;
+        text-align: right;
+    }
+}
+
+::ng-deep .mat-badge {
+    &.mat-badge-hidden {
+        .mat-icon {
+            @apply text-slate-500 #{'!important'} /* Icon color when badge is hidden */
+        }
+    }
+
+    &:not(.mat-badge-hidden) {
+        .mat-icon {
+            @apply text-blue-500 #{'!important'} /* Icon color when badge is visible */
+        }
+
+        .mat-badge-content{
+            @apply -translate-x-2 translate-y-2 scale-90 bg-red-500 #{'!important'}
+        }
+    }
+}
+
+.mat-mdc-icon-button {
+
+    &[disabled=true] {
+        background-color: transparent !important;
+    }
+}

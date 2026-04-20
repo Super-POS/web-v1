@@ -1,0 +1,86 @@
+.list-sale-section {
+    width: 100%;
+    height: calc(100dvh - 4.25rem) !important;
+    overflow: hidden;
+    z-index: 1;
+
+    .list-sale-body,
+    .no-data {
+        width: 100%;
+        height: calc(100dvh - 7.75rem);
+        overflow: hidden;
+
+        .list-sale-content {
+            width: 100%;
+            margin-bottom: 0.25rem;
+            height: calc(100dvh - 11rem); //7.75rem + 1rem + 0.25rem
+            overflow: hidden;
+
+            .list-sale-data {
+                width: 100%;
+                max-height: calc(100dvh - 12rem);
+                overflow: auto;
+            }
+        }
+    }
+}
+
+table {
+    padding: 1rem !important;
+    width: 100%;
+}
+
+
+.list-sale-data .mat-cell {
+    padding: 1rem 6px !important;
+    color: #6b7280;
+    font-size: 16px !important;
+}
+
+.list-sale-data .mat-column-action {
+    flex: none;
+    width: 2rem;
+    margin-right: -2px !important;
+}
+
+:host ::ng-deep .customswitch .switch.checked {
+    background: #3b82f6 !important;
+    border: #3b82f6 !important;
+    height: 1.5rem !important;
+
+    small {
+        margin: 3px !important;
+    }
+}
+
+:host ::ng-deep .customswitch .switch {
+    height: 1.5rem !important;
+
+    small {
+        margin-left: 4px !important;
+        margin-top: 2px !important;
+    }
+}
+
+//dialog no border
+::ng-deep .custom-dialog-container .mdc-dialog__surface {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.flex-custom {
+    display: flex !important;
+}
+
+::placeholder {
+    color: #94a3b8 !important;
+}
+
+::-ms-input-placeholder {
+    color: #94a3b8 !important;
+}
+::ng-deep .mat-mdc-paginator-container{
+    .mdc-icon-button{
+        @apply dark:bg-gray-700 #{'!important'}
+    }
+}

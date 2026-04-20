@@ -1,0 +1,171 @@
+<div class="list-user-section bg-white dark:bg-gray-800 mt-4 mx-4 rounded-tl-lg rounded-tr-lg ">
+    <div class="bg-white min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5 dark:bg-gray-800">
+        <div class="flex flex-1 items-center font-medium">
+            <div class="flex items-center">
+                <mat-icon class="icon-size-5 -mt-0.5" matPrefix [svgIcon]="'heroicons_outline:home'"></mat-icon>
+            </div>
+            <div class="flex items-center ml-1.5">
+                <span class="text-lg text-gray-600 -mb-0.5">អ្នកប្រើប្រាស់</span>
+            </div>
+            <div class="flex items-center">
+                <mat-icon class="-mb-0.5" [svgIcon]="'mat_solid:chevron_right'">
+                </mat-icon>
+                <span class="text-lg text-gray-600 -mb-0.5">ទាំងអស់</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2">
+                <div
+                    class="flex items-center min-w-[26ch] max-w-[26ch] h-10 border border-slate-300 dark:bg-gray-800 rounded-[0.65rem] overflow-hidden">
+                    <button class="min-w-10 max-w-10 h-full pt-1.5 hover:opacity-[0.96] transition-all" (click)="getData()"
+                        aria-label="Search">
+                        <mat-icon class="icon-size-6 text-slate-500"
+                            svgIcon="heroicons_outline:magnifying-glass"></mat-icon>
+                    </button>
+                    <input placeholder="ស្វែងរក" class="w-full px-3 h-10" (keyup.enter)="getData()" [(ngModel)]="key">
+                    <button class="helpers-mat-button-sm active:animate-pulse px-2 rounded-full" mat-button
+                        (click)="openFilterDialog()" aria-label="Open Filter">
+                        <mat-icon class="icon-size-6" svgIcon="mdi:filter-variant"></mat-icon>
+                    </button>
+                </div>
+
+            </div>
+            <button class="helpers-mat-button-sm w-6 " mat-stroked-button [matMenuTriggerFor]="menu">
+                <mat-icon class="icon-size-6 text-slate-500" svgIcon="mat_outline:more_vert"></mat-icon>
+            </button>
+            <mat-menu #menu="matMenu">
+                <button mat-menu-item (click)="create()">
+                    <mat-icon class="icon-size-6" svgIcon="mdi:plus"></mat-icon>
+                    <span class="text-lg ">បង្កើត</span>
+                </button>
+                <button mat-menu-item (click)="getReport()">
+                    <mat-icon class="icon-size-6" svgIcon="mdi:download-outline"></mat-icon>
+                    <span class="text-lg ">ទាញយក</span>
+                </button>
+            </mat-menu>
+        </div>
+    </div>
+    <div class="list-user-body dark:bg-gray-800">
+        <ng-container *ngIf="isLoading; else endLoading">
+            <user-list-skeleton />
+        </ng-container>
+        <ng-template #endLoading>
+            <ng-container *ngIf="dataSource.data.length == 0; else renderData">
+                <div class="no-data bg-white border-t dark:bg-gray-800">
+                    <div class="flex flex-col justify-center items-center mb-4">
+                        <mat-icon class="icon-size-24" svgIcon="toc"></mat-icon>
+                        <span class="text-2xl -mt-3">គ្មានទិន្នន័យ</span>
+                    </div>
+                </div>
+            </ng-container>
+        </ng-template>
+        <ng-template #renderData>
+            <div class="list-user-content px-4 pb-4 bg-white rounded-bl-xl rounded-br-xl dark:bg-gray-800">
+                <div class="list-user-data border-t">
+                    <table mat-table [dataSource]="dataSource">
+
+                        <ng-container matColumnDef="no">
+                            <th mat-header-cell *matHeaderCellDef class="w-10 ">ល.រ</th>
+                            <td mat-cell *matCellDef="let i = index">
+                                <span>{{i+1}}.</span>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="profile">
+                            <th mat-header-cell *matHeaderCellDef class="w-[55%] min-w-[250px]"> គោត្តនាម និង នាម </th>
+                            <td mat-cell *matCellDef="let element">
+                                <div class="flex">
+                                    <div class="p-2 pl-0">
+                                        <img class="rounded-full border border-blue-600 min-w-[45px] max-w-[45px] min-h-[45px] max-h-[45px] object-cover"
+                                            [src]="fileUrl+element.avatar" alt="avatar">
+                                    </div>
+                                    <div class="flex flex-col min-h-12 max-h-12 justify-center pl-1 pt-2.5">
+                                        <div class="flex flex-col">
+                                            <strong class="text-lg font-medium text-slate-800">{{ element?.name |
+                                                capitalize}}</strong>
+                                            <span class="text-gray-500">{{ element?.role?.[0]?.role?.name }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="number">
+                            <th mat-header-cell *matHeaderCellDef class="w-[200px]">ទំនាក់ទំនង</th>
+                            <td mat-cell *matCellDef="let element">
+                                <div class="flex flex-col text-gray-500">
+                                    <span>{{ element?.phone }} </span>
+                                    <span>{{ element?.email }} </span>
+                                </div>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="status">
+                            <th mat-header-cell *matHeaderCellDef class="min-w-[100px]">ស្ថានភាព</th>
+                            <td mat-cell *matCellDef="let element" class="customswitch text-center">
+                                <ui-switch [checked]="element?.is_active == 1" (change)="onChange($event, element)">
+                                </ui-switch>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="last_log">
+                            <th mat-header-cell *matHeaderCellDef class="min-w-[200px] text-center">សកម្មភាពចុងក្រោយ
+                            </th>
+                            <td mat-cell *matCellDef="let element" class="text-center">
+                                <span class="text-gray-500">{{ element?.last_login | date:'dd-MM-yyyy hh:mm' }}</span>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="total_sale">
+                            <th mat-header-cell *matHeaderCellDef class="min-w-[150px] text-right">ចំនួនវិក្ក័យប័ត្រ
+                            </th>
+                            <td mat-cell *matCellDef="let element" class="text-right">
+                                <span class="text-gray-500">{{ element?.totalOrders | number }}</span>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="total_price">
+                            <th mat-header-cell *matHeaderCellDef class="min-w-[150px] text-right ">តម្លៃលក់​(រៀល)</th>
+                            <td mat-cell *matCellDef="let element" class="text-right">
+                                <span class="text-gray-500">{{ element?.totalSales | number }}</span>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="action" stickyEnd>
+                            <th mat-header-cell *matHeaderCellDef></th>
+                            <td mat-cell *matCellDef="let element">
+                                <button mat-icon-button [matMenuTriggerFor]="menu">
+                                    <mat-icon class="icon-size-6" svgIcon="mat_outline:more_vert"></mat-icon>
+                                </button>
+                                <mat-menu #menu="matMenu">
+                                    <button mat-menu-item (click)="view(element)">
+                                        <mat-icon class="icon-size-6" svgIcon="heroicons_outline:eye"></mat-icon>
+                                        <span class="text-lg">មើល</span>
+                                    </button>
+                                    <button mat-menu-item (click)="changPassword(element.id)">
+                                        <mat-icon class="icon-size-6" svgIcon="mdi:lock-outline"></mat-icon>
+                                        <span class="text-lg">ពាក្យសំងាត់</span>
+                                    </button>
+                                    <button mat-menu-item (click)="onDelete(element)">
+                                        <mat-icon class="icon-size-6 text-red-400"
+                                            svgIcon="mdi:trash-can-outline"></mat-icon>
+                                        <span class="text-lg text-red-400">លុប</span>
+                                    </button>
+                                </mat-menu>
+                            </td>
+                        </ng-container>
+                        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+                        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                    </table>
+                </div>
+            </div>
+            <!-- Paginator -->
+            <div class="list-user-paginator dark:bg-gray-800" *ngIf="dataSource.data.length > 0">
+                <mat-paginator class="w-full bg-white flex items-end justify-end overflow-hidden dark:bg-gray-800"
+                    [pageSizeOptions]="[10, 20, 30]" [showFirstLastButtons]="true" [pageIndex]="page - 1"
+                    [length]="total" [pageSize]="limit" (page)="onPageChanged($event)">
+                </mat-paginator>
+            </div>
+        </ng-template>
+
+    </div>
+</div>

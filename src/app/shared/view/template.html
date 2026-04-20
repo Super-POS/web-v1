@@ -1,0 +1,143 @@
+<!-- Loading State -->
+<div *ngIf="isLoading" class="w-full px-6 pt-5">
+    <div>Loading...</div>
+</div>
+
+<!-- Main Section -->
+<div *ngIf="!isLoading" class="out-create-section md-form-field-appearance-outline">
+
+    <!-- Dialog Title -->
+    <div mat-dialog-title class="min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5 border-b">
+        <div class="flex flex-1 items-center text-slate-500 gap-3">
+            <h1 class="text-3xl">វិក្ក័យប័ត្រ {{ row?.receipt_number }} .</h1>
+            <mat-icon *ngIf="row.platform === 'Web'" class="icon-size-6 text-gray-500" svgIcon="mdi:monitor"></mat-icon>
+            <mat-icon *ngIf="row.platform === 'Mobile'" class="icon-size-6 text-gray-500"
+                svgIcon="mdi:cellphone"></mat-icon>
+            <mat-icon *ngIf="row.platform === 'Unknown' || row.platform === null" class="icon-size-6 text-gray-500"
+                svgIcon="mdi:crosshairs-question"></mat-icon>
+        </div>
+
+        <!-- Print Button -->
+        <div class="flex items-center">
+            <button mat-icon-button (click)="print(row)">
+                <mat-icon [svgIcon]="'heroicons_outline:printer'"></mat-icon>
+            </button>
+        </div>
+
+        <!-- Close Button -->
+        <div class="flex items-center cursor-pointer pl-2">
+            <button mat-icon-button (click)="closeDialog()">
+                <mat-icon class="-mb-0.5" [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="out-create-body px-4 pb-5" *ngIf="!isLoading && row">
+        <div class="out-create-content pt-4 ">
+            <!-- Receipt Number -->
+            <div class="flex justify-start items-center gap-2 p-1 w-full bg-gray-50 dark:bg-gray-800 h-[3rem]">
+                <div class="flex justify-start items-center gap-2 w-[150px]">
+                    <img src="icons/invoice-list-outline.svg" class="icon-size-6" alt="">
+                    <p class="text-lg md:text-xl leading-8">លេខវិក្កយបត្រ</p>
+                </div>
+                <div class="flex justify-start items-center gap-2">
+                    <p class="text-lg md:text-xl leading-8">៖</p>
+                    <p class="text-lg md:text-xl leading-8 pl-5 text-gray-600">#{{row?.receipt_number}}</p>
+                </div>
+            </div>
+            <!-- Order Date -->
+            <div class="flex justify-start items-center gap-2 p-1 w-full dark:bg-gray-800 h-[3rem]">
+                <div class="flex justify-start items-center gap-2 w-[150px]">
+                    <mat-icon class="icon-size-6 text-gray-500" svgIcon="mdi:calendar"></mat-icon>
+                    <p class="text-lg md:text-xl leading-8">កាលបរិច្ឆេទ</p>
+                </div>
+                <div class="flex justify-start items-center gap-2">
+                    <p class="text-md md:text-lg leading-8">៖</p>
+                    <p class="text-md md:text-lg leading-8 pl-5 text-gray-500">{{row?.ordered_at | date: 'dd-LL-YYY' }}
+                        {{ row?.ordered_at | date: 'hh:mm a' }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Cashier By -->
+            <div class="flex justify-start items-center gap-2 p-1 w-full bg-gray-50 dark:bg-gray-800 h-[3rem]">
+                <div class="flex justify-start items-center gap-2 w-[150px]">
+                    <mat-icon class="icon-size-6 text-gray-500" svgIcon="mdi:account-cash-outline"></mat-icon>
+                    <p class="text-lg md:text-xl leading-8">អ្នកគិតប្រាក់</p>
+                </div>
+                <div class="flex justify-start items-center gap-2">
+                    <p class="text-lg md:text-xl leading-8">៖</p>
+                    <div class="text-lg md:text-xl leading-8 pl-5 text-gray-600">
+                        <div class="flex items-center">
+                            <img class="border border-blue-200 min-w-8 max-w-8 min-h-8 max-h-8 object-cover rounded-full"
+                                [src]="fileUrl + row.cashier?.avatar" alt="profile">
+                            <span class="ml-3">{{ row.cashier.name }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- data product -->
+            <div class="max-w-[525px] overflow-x-hidden mt-3 text-gray-600">
+                <table mat-table [dataSource]="dataSource" class="min-w-full">
+
+                    <!-- Number Column -->
+                    <ng-container matColumnDef="number">
+                        <th mat-header-cell *matHeaderCellDef class="w-4">ល.រ</th>
+                        <td mat-cell *matCellDef="let element; let i = index">
+                            <span>{{ i + 1 }}.</span>
+                        </td>
+                    </ng-container>
+
+                    <!-- Product Name Column -->
+                    <ng-container matColumnDef="name">
+                        <th mat-header-cell *matHeaderCellDef class="min-w-[180px] ">ផលិតផល</th>
+                        <td mat-cell *matCellDef="let element" class="items-start">
+                            <div class="flex gap-2 justify-start items-center">
+                                <img class="w-10 h-10" alt="image" [src]="fileUrl +  element.product.image">
+                                <div class="flex flex-col">
+                                    <span class="text-lg">{{ element.product.name }}</span>
+                                    <span class="text-sm">{{ element.product.code }} | {{ element.product.type.name
+                                        }}</span>
+                                </div>
+                            </div>
+                        </td>
+                    </ng-container>
+
+                    <!-- Unit Price Column -->
+                    <ng-container matColumnDef="unit_price">
+                        <th mat-header-cell *matHeaderCellDef class="w-20 ">តម្លៃ(រៀល)</th>
+                        <td mat-cell *matCellDef="let element" class="text-right">
+                            <span>{{ element.unit_price | number }}</span>
+                        </td>
+                    </ng-container>
+
+                    <!-- Quantity Column -->
+                    <ng-container matColumnDef="qty">
+                        <th mat-header-cell *matHeaderCellDef class="w-7">ចំនួន</th>
+                        <td mat-cell *matCellDef="let element" class="text-right">
+                            <span>{{ element.qty }}</span>
+                        </td>
+                    </ng-container>
+
+                    <!-- Total Column -->
+                    <ng-container matColumnDef="total">
+                        <th mat-header-cell *matHeaderCellDef class="min-w-36 text-center">សរុប</th>
+                        <td mat-cell *matCellDef="let element" class="text-right pr-9">
+                            <span>{{ (element.unit_price * element.qty) | number }}</span>
+                        </td>
+                    </ng-container>
+
+                    <!-- Table Rows -->
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                </table>
+                <div class="flex justify-end text-gray-600 font-semibold border-t pt-3 pr-[5px]">សរុប(រៀល) ៖ {{
+                    getTotal() |
+                    number }}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

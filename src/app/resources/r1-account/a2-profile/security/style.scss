@@ -1,0 +1,4 @@
+.body {
+    height: calc(100dvh - 9rem) !important; // 56px(layout) + 32px(padding-y) + 56px(header)
+    @apply overflow-auto p-4 #{'!important'};
+}

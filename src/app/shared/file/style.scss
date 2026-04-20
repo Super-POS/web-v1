@@ -1,0 +1,10 @@
+.bg-black-5 {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.file-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%; /* Adjust based on your layout */
+}

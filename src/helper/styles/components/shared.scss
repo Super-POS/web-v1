@@ -1,0 +1,94 @@
+.shared-header-section {
+    @apply flex min-h-14 max-h-14 border-b items-center justify-between pl-4 pr-2 #{'!important'};
+
+    .custom-icon-button {
+        height: 34px !important;
+        min-height: 34px !important;
+        max-height: 34px !important;
+        width: 34px !important;
+        min-width: 34px !important;
+        max-width: 34px !important;
+    }
+}
+
+.shared-input-filter {
+    @apply flex items-center h-10 border border-slate-300 hover:bg-zinc-50 rounded-[0.65rem] overflow-hidden #{'!important'};
+}
+
+.side-bar-header {
+    @apply w-full flex items-center justify-between h-14 border-b px-5 #{'!important'};
+}
+
+.rounded-img {
+    @apply w-12 flex justify-center items-center h-12 rounded-full border border-blue-400 #{'!important'};
+}
+
+.custom-border {
+    border: 1px solid #102D71 !important;
+}
+
+.custom-mat-dialog-as-mat-drawer,
+.custom-mat-dialog-full,
+.mat-dialog-switch-role {
+    .mat-mdc-dialog-surface.mdc-dialog__surface {
+        border-radius: 0 !important;
+        padding: 0 !important;
+    }
+
+    .mat-mdc-dialog-content.mdc-dialog__content {
+        padding: 0 !important;
+    }
+}
+
+.custom-mat-dialog-full .mat-mdc-dialog-surface {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+.icon-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5rem;
+    max-width: 2.5rem;
+    min-height: 2.5rem;
+    max-height: 2.5rem;
+    border-radius: 9999px;
+    object-fit: cover;
+    object-position: center;
+    --tw-bg-opacity: 1 !important;
+    background-color: rgb(148 163 184 / var(--tw-bg-opacity)) !important;
+}
+
+.mat-tab-flex-grow {
+    .mat-mdc-tab {
+        flex-grow: 1 !important;
+    }
+    .mat-mdc-tab-header {
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .mat-mdc-tab-body-wrapper {
+        height: 100%;
+        overflow-y: auto;
+    }
+}
+
+.custom-tab-group .mat-mdc-tab .mdc-tab__text-label {
+    font-size: 17px !important;
+}
+
+.sm-avatar{
+    @apply rounded-full border min-w-[36px] max-w-[36px] min-h-[36px] max-h-[36px] object-cover #{'!important'};
+}
+
+.side-dialog {
+    .mat-mdc-dialog-surface.mdc-dialog__surface {
+        border-radius: 0 !important;
+        padding: 0px;
+
+        .mat-mdc-dialog-component-host{
+            .mat-mdc-dialog-title {
+                padding-right: 8px;
+            }
+        }
+    }
+}

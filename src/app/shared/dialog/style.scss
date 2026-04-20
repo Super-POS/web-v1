@@ -1,0 +1,46 @@
+table {
+    width: 100%;
+}
+
+::ng-deep .data-dialog .mat-cell {
+    padding: 1rem 6px !important;
+    color: rgb(71 85 105) !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+}
+
+::ng-deep .data-dialog .mdc-data-table__header-cell {
+    font-size: 1rem !important;
+    padding: 0 !important;
+    color: rgb(71 85 105) !important;
+    z-index: 100 !important;
+}
+
+::ng-deep .dark .data-dialog .mdc-data-table__header-cell,
+.dark.data-dialog .mat-cel {
+    color: rgb(243, 243, 243) !important;
+}
+
+.data-dialog .mat-column-product {
+    min-width: 10rem;
+    text-align: left;
+    padding: 0.5rem !important;
+}
+
+.data-dialog .mat-column-price {
+    min-width: 5rem;
+    text-align: left;
+    padding: 0.5rem !important;
+}
+
+.data-dialog .mat-column-qty {
+    min-width: 6rem;
+    text-align: left;
+    padding: 0.5rem !important;
+}
+
+.data-dialog .mat-column-total {
+    min-width: 6rem;
+    text-align: right;
+    padding: 0.5rem !important;
+}

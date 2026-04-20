@@ -1,0 +1,51 @@
+<div class="out-create-section md-form-field-appearance-outline">
+    <div mat-dialog-title class="min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pr-2.5">
+        <div class="flex flex-1 items-center text-slate-500">
+            <h1 class="text-3xl">ទាញយករបាយការណ៍</h1>
+        </div>
+        <div class="flex items-center cursor-pointer"><mat-icon class="-mb-0.5" [svgIcon]="'heroicons_outline:x-mark'"
+                (click)="closeDialog()"></mat-icon>
+        </div>
+    </div>
+    <div class="out-create-body px-4 pb-2 border-t-2 w-full ">
+        <div class="flex flex-col mt-2 cursor-pointer">
+            <!-- Sales Section -->
+            <div class="w-full" (click)="chooseType(1)">
+                <div class="min-h-12 bg-gray-100 dark:bg-gray-800 flex justify-start items-center gap-3 pl-4">
+                    <mat-icon class="icon-size-6 text-gray-500 dark:text-gray-300"
+                        svgIcon="mdi:cart-outline"></mat-icon>
+                    <span class="text-xl text-gray-800 dark:text-white">ការលក់</span>
+                </div>
+            </div>
+
+            <!-- Cash Account Section -->
+            <div class="w-full" (click)="chooseType(2)">
+                <div class=" min-h-12 flex justify-start items-center gap-3 pl-4">
+                    <mat-icon class="icon-size-6 text-gray-500 dark:text-gray-300"
+                        svgIcon="mdi:account-cash-outline"></mat-icon>
+                    <span class="text-xl text-gray-800 dark:text-white">អ្នកគិតប្រាក់</span>
+                </div>
+            </div>
+
+            <!-- Package Section -->
+            <div class="w-full" (click)="chooseType(3)">
+                <div class=" min-h-12 bg-gray-100 dark:bg-gray-800 flex justify-start items-center gap-3 pl-4">
+                    <mat-icon class="icon-size-6 text-gray-500 dark:text-gray-300"
+                        svgIcon="mdi:package-variant-closed"></mat-icon>
+                    <span class="text-xl text-gray-800 dark:text-white">ផលិតផល</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!-- <mat-dialog-actions>
+        <div class="w-full flex justify-end px-1">
+            <button class="helpers-mat-button-md bg-[#264497] text-white" mat-flat-button (click)="submit()"
+                [disabled]="productForm.invalid || saving">
+                <span *ngIf="!productForm.disabled">ទាញយក</span>
+                <mat-progress-spinner *ngIf="productForm.disabled" [diameter]="24"
+                    [mode]="'indeterminate'"></mat-progress-spinner>
+            </button>
+        </div>
+    </mat-dialog-actions> -->
+</div>

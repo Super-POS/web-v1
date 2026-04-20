@@ -1,0 +1,23 @@
+<button class="ml-1" mat-icon-button [matMenuTriggerFor]="userActions">
+    <span class="relative border min-w-10 max-w-10 min-h-10 max-h-10 flex items-center justify-center rounded-full">
+        <img class="border-2 border-blue-500 min-w-10 max-w-10 min-h-10 max-h-10 object-cover rounded-full" [src]="fileUrl + user?.avatar">
+    </span>
+</button>
+
+<mat-menu [xPosition]="'before'" #userActions="matMenu" class="absolute top-3 -right-2 py-0">
+    <button mat-menu-item routerLink="/profile">
+        <mat-icon svgIcon="heroicons_outline:user-circle" />
+        <span class="text-slate-500">គណនី</span>
+    </button>
+    <button mat-menu-item (click)="handleSwitchRole()">
+        <mat-icon svgIcon="mat_solid:manage_accounts" />
+        <span class="text-slate-500 -mb-0.5">ប្តូរសិទ្ធ</span>
+    </button>
+    <mat-divider class="my-0" />
+    <button mat-menu-item (click)="signOut()">
+        <mat-icon svgIcon="feather:log-out" />
+        <span class="text-slate-500">ចាកចេញ</span>
+    </button>
+</mat-menu>
+
+<user-switch-role [class]="classList" [roles]="user?.roles" #switchRoleComponent />

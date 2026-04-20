@@ -1,0 +1,73 @@
+.pos-section {
+    width: 100%;
+    height: calc(100vh - 4rem) !important; /* Full viewport height minus the header (4rem) */
+    overflow: hidden;
+    .pos-body,
+    .no-data {
+        width: 100%;
+        height: calc(100vh - 7.5rem); /* Full height minus the header (4rem) and other top space */
+        overflow-x: auto;
+
+        .pos-content {
+            width: 100%;
+            height: auto; /* Match height with body */
+            display: flex;
+
+            .list-pos-left {
+                width: calc(100% - 28rem); /* Remaining space after subtracting the right section */
+                min-width: 20rem;
+                height: 100%; /* Full available height for left content */
+
+                .container-tab-content {
+                    height: calc(100vh - 11rem); /* Account for header and other space (adjust if needed) */
+                    overflow: auto; /* Ensure content is scrollable */
+                }
+            }
+
+            .list-pos-right {
+                min-width: 28rem;
+                max-width: 28rem;
+                height: auto; /* Ensure the right side also takes full available height */
+
+                .list-pos-right-body {
+                    height: calc(100vh - 11rem); /* Same logic for the right content, ensuring it fits the viewport */
+                    overflow: auto;
+                }
+            }
+        }
+    }
+}
+
+
+::ng-deep .list-pos-left {
+    .mat-mdc-tab {
+        flex-grow: 1 !important;
+    }
+}
+
+.proposal-value-table {
+    width: 100%;
+    margin: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    border-radius: 0.3rem;
+    padding: 0.3rem 0.5rem;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;  /* for Internet Explorer, Edge */
+    scrollbar-width: none;  /* for Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* for Chrome, Safari, and Opera */
+}

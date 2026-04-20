@@ -1,0 +1,135 @@
+<div class="flex flex-col min-h-screen w-full items-start justify-between px-4 sm:px-6 lg:px-8">
+    <div>
+        <img class="md:h-20 w-auto pt-4 h-14 " src="images/logo/CamCyber.png" />
+    </div>
+    <div class="flex justify-center items-center w-full">
+        <div class="flex h-[540px] overflow-hidden sm:bg-card sm:rounded-2xl sm:shadow md:w-[850px] md:max-w-6xl p-5">
+            <div
+                class="relative hidden h-auto flex-auto items-center justify-center overflow-hidden bg-gray-800 dark:border-r md:flex">
+                <img [src]="currentImage" alt="Image Slider" class="w-full h-full object-cover" />
+            </div>
+
+            <div class="w-full px-4 sm:w-auto sm:p-12 sm:mt-5 md:mt-0">
+                <div class="flex justify-between -mt-8 ">
+                    <button (click)="toPhone()" *ngIf="isChangeToVerifyOtp === true" mat-icon-button type="button"
+                        class="md:bg-gray-50 mt-[0.5px] bg-transparent" matSuffix>
+                        <mat-icon mat-icon-button class="icon-size-6 text-slate-600 "
+                            svgIcon="feather:arrow-left"></mat-icon>
+                    </button>
+                    <div></div>
+                    <languages login="true"></languages>
+                </div>
+                <ng-container>
+                    <div *ngIf="isChangeToVerifyOtp === false">
+                        <div class="mx-auto w-full max-w-80 md:w-80 sm:mx-0 sm:w-80">
+                            <div class="my-4 flex flex-col gap-2 items-center">
+                                <div
+                                    class="p-3 bg-gray-100 w-fit h-fit flex items-center justify-center rounded-full scale-90 md:scale-100">
+                                    <mat-icon class="icon-size-10 text-black"
+                                        [svgIcon]="'mat_outline:phone_android'"></mat-icon>
+                                </div>
+                                <p class="text-xl md:text-3xl w-fit font-bold">ចូលគណនីរបស់អ្នក</p>
+                            </div>
+
+
+                            <!-- div information login -->
+                            <div class="h-auto ">
+                                <form class="md-form-field-appearance-outline" [formGroup]="signInForm"
+                                    #signInNgForm="ngForm">
+                                    <!-- phone field -->
+                                    <mat-form-field class="w-full thick-border">
+                                        <mat-label>លេខទូរស័ព្ទ</mat-label>
+                                        <input id="username" matInput [formControlName]="'username'" />
+                                        @if (signInForm.get('username').hasError('required')) {
+                                        <mat-error> សូមបញ្ចូលលេខទូរស័ព្ទ </mat-error>
+                                        }
+                                        @if (signInForm.get('username').hasError('username')) {
+                                        <mat-error>
+                                            Please enter a valid username
+                                        </mat-error>
+                                        }
+                                        <button mat-icon-button type="button" matSuffix>
+                                            <mat-icon class="icon-size-5 "
+                                                [svgIcon]="'mat_outline:phone_android'"></mat-icon>
+                                        </button>
+
+                                    </mat-form-field>
+                                    <mat-form-field class="w-full thick-border">
+                                        <mat-label>ពាក្យសម្ងាត់</mat-label>
+                                        <input id="password" matInput type="password" [formControlName]="'password'"
+                                            #passwordField [type]="passwordField.type" />
+                                        <button mat-icon-button (click)="passwordField.type === 'password'
+                                            ? (passwordField.type = 'text')
+                                            : (passwordField.type = 'password')
+                                        " matSuffix>
+                                            <mat-icon class="icon-size-5" *ngIf="passwordField.type === 'password'"
+                                                [svgIcon]="'mat_outline:visibility'">
+                                            </mat-icon>
+                                            <mat-icon class="icon-size-5" *ngIf="passwordField.type === 'text'"
+                                                [svgIcon]="'mat_outline:visibility_off'">
+                                            </mat-icon>
+                                        </button>
+
+                                        @if (signInForm.get('password').hasError('required')) {
+                                        <mat-error> សូមបញ្ចូលពាក្យសម្ងាត់ </mat-error>
+                                        }
+                                        @if (signInForm.get('password').hasError('password')) {
+                                        <mat-error>
+                                            Please enter a valid phone address
+                                        </mat-error>
+                                        }
+
+                                    </mat-form-field>
+
+
+                                </form>
+
+                            </div>
+
+
+                            <div>
+                                <button class="helper-mat-button-large w-full bg-[#09235f] rounded-[10px] text-center"
+                                    mat-flat-button [color]="'primary'" [disabled]="signInForm.disabled"
+                                    (click)="signIn()">
+                                    <span *ngIf="!signInForm.disabled" class="text-white text-center">បន្ទាប់</span>
+                                    <mat-progress-spinner *ngIf="signInForm.disabled" [diameter]="24"
+                                        [mode]="'indeterminate'"></mat-progress-spinner>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div *ngIf="isChangeToVerifyOtp === true">
+                        <verify-otp-password></verify-otp-password>
+                    </div>
+                </ng-container>
+
+                <div class="flex items-center w-full">
+                    <hr class="flex-grow">
+                    <span class="px-2 text-center">ឬចុចចូលដោយស្វ័យប្រវត្តិ</span>
+                    <hr class="flex-grow">
+                </div>
+                <div class="flex gap-2">
+                    <button
+                        class="helper-mat-button-large h-[40px] w-full border-[1.5px] cursor-not-allowed  rounded-[10px] text-center items-center flex justify-center gap-2">
+                        <mat-icon svgIcon="mdi:account-star-outline" />
+                        <span>អ្នកគ្រប់គ្រង</span>
+                    </button>
+                    <button
+                        class="helper-mat-button-large h-[40px] w-full border-[1.5px]  cursor-not-allowed rounded-[10px] text-center items-center flex justify-center gap-2">
+                        <mat-icon svgIcon="mdi:account-cash-outline" />
+                        <span>អ្នកគិតប្រាក់</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div class=" flex justify-center items-center pb-4 gap-2">
+            <img class="md:h-14 w-auto h-12 " src="images/logo/CamCyber_Logo_Draft.png" />
+            <div class="flex flex-col pt-3">
+                <span class="text-gray-700 font-semibold text-xl">ក្រុមបច្ចេកវិទ្យាឌីជីថលខេមហ្សាប័រ</span>
+                <span>បណ្តុះបណ្តាល​ ស្រាវជ្រាវ អភិវឌ្ឍ កសាងសេចក្តីល្អ</span>
+            </div>
+        </div>
+    </div>
+</div>

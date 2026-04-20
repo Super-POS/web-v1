@@ -1,0 +1,101 @@
+.container-dashboard-section {
+    width: 100%;
+    height: calc(100dvh - 4.25rem) !important;
+    overflow: auto;
+}
+::ng-deep .sm-form-field-appearance-outline.height-header {
+    .mat-mdc-form-field.mat-form-field-appearance-outline {
+        .mat-mdc-form-field-flex {
+            height: 2.5rem !important;
+            width: 11rem;
+            .mdc-notched-outline {
+                .mdc-notched-outline__leading {
+                    border-radius: 0.65rem 0 0 0.65rem !important;
+                    min-width: 0.65rem !important;
+                }
+
+                .mdc-notched-outline__trailing {
+                    border-radius: 0 0.65rem 0.65rem 0 !important;
+                    min-width: 0.65rem !important;
+                }
+            }
+        }
+
+        .mat-mdc-form-field-infix {
+            input.mat-mdc-input-element.mdc-text-field__input,
+            .mat-mdc-select,
+            .mat-date-range-input .mat-date-range-input-container {
+                height: 2.5rem !important;
+            }
+            .mat-mdc-select .mat-mdc-select-trigger .mat-mdc-select-value .mat-mdc-select-value-text>* {
+                padding-top: 6px !important;
+            }
+        }
+    }
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    /* Tablet View */
+    ::ng-deep .sm-form-field-appearance-outline.height-header {
+        .mat-mdc-form-field.mat-form-field-appearance-outline {
+
+            .mat-mdc-form-field-flex {
+                height: 2.3rem !important;
+                width: 9rem;
+            }
+
+            .mat-mdc-form-field-infix {
+
+                input.mat-mdc-input-element.mdc-text-field__input,
+                .mat-mdc-select,
+                .mat-date-range-input .mat-date-range-input-container {
+                    height: 2.3rem !important;
+                }
+
+                .mat-mdc-select .mat-mdc-select-trigger .mat-mdc-select-value .mat-mdc-select-value-text>* {
+                    padding-top: 5px !important;
+                }
+            }
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    /* Phone View */
+    ::ng-deep .sm-form-field-appearance-outline.height-header {
+        .mat-mdc-form-field.mat-form-field-appearance-outline {
+
+            .mat-mdc-form-field-flex {
+                height: 2rem !important;
+                width: 7rem;
+            }
+
+            .mat-mdc-form-field-infix {
+
+                input.mat-mdc-input-element.mdc-text-field__input,
+                .mat-mdc-select,
+                .mat-date-range-input .mat-date-range-input-container {
+                    height: 2rem !important;
+                }
+
+                .mat-mdc-select .mat-mdc-select-trigger .mat-mdc-select-value .mat-mdc-select-value-text>* {
+                    padding-top: 4px !important;
+                }
+            }
+        }
+    }
+}
+
+.align-left {
+    text-align: left;
+}
+
+.align-center {
+    text-align: center;
+}
+
+/* Align text to right */
+.align-right {
+    text-align: right;
+}

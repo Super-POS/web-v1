@@ -1,0 +1,53 @@
+<div
+    class="user-profile-section p-4 bg-white dark:bg-opacity-5 border-t-8 border-l-8 border-white dark:border-slate-800">
+    <p class="text-2xl mb-4">ផ្លាស់ប្តូរលេខសម្ងាត់របស់អ្នក</p>
+    <form [formGroup]="passwordForm" class="md-form-field-appearance-outline">
+        
+        <!-- New Password -->
+        <mat-form-field appearance="outline" class="w-full">
+            <mat-label>ពាក្យសម្ងាត់ថ្មី</mat-label>
+            <input matInput type="password" [formControlName]="'new_password'" #newPasswordField>
+            <button mat-icon-button type="button"
+                (click)="newPasswordField.type === 'password' ? newPasswordField.type = 'text' : newPasswordField.type = 'password'"
+                matSuffix>
+                <mat-icon class="icon-size-5" *ngIf="newPasswordField.type === 'password'"
+                    [svgIcon]="'heroicons_solid:eye'"></mat-icon>
+                <mat-icon class="icon-size-5" *ngIf="newPasswordField.type === 'text'"
+                    [svgIcon]="'heroicons_solid:eye-slash'"></mat-icon>
+            </button>
+            <mat-error *ngIf="passwordForm.get('new_password')?.hasError('required')">
+                សូមបញ្ចូលពាក្យសម្ងាត់ថ្មី
+            </mat-error>
+        </mat-form-field>
+
+        <!-- Confirm Password -->
+        <mat-form-field appearance="outline" class="w-full">
+            <mat-label>បញ្ជាក់ពាក្យសម្ងាត់ថ្មី</mat-label>
+            <input matInput type="password" [formControlName]="'confirm_password'" #confirmPasswordField>
+            <button mat-icon-button type="button"
+                (click)="confirmPasswordField.type === 'password' ? confirmPasswordField.type = 'text' : confirmPasswordField.type = 'password'"
+                matSuffix>
+                <mat-icon class="icon-size-5" *ngIf="confirmPasswordField.type === 'password'"
+                    [svgIcon]="'heroicons_solid:eye'"></mat-icon>
+                <mat-icon class="icon-size-5" *ngIf="confirmPasswordField.type === 'text'"
+                    [svgIcon]="'heroicons_solid:eye-slash'"></mat-icon>
+            </button>
+            <mat-error *ngIf="passwordForm.getError('passwordMismatch')">
+                ពាក្យសម្ងាត់ថ្មី និងការបញ្ជាក់មិនត្រូវគ្នា
+            </mat-error>
+        </mat-form-field>
+
+        <!-- Submit Button -->
+        <div class="flex justify-end">
+            <button class="helpers-mat-button-md min-w-24 text-white bg-[#264497]"
+                [disabled]="passwordForm.invalid || passwordForm.disabled" (click)="submit()" mat-flat-button>
+                <ng-container *ngIf="passwordForm.disabled">
+                    <mat-progress-spinner [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>
+                </ng-container>
+                <ng-container *ngIf="!passwordForm.disabled">
+                    <span class="dark:text-white">កែប្រែ</span>
+                </ng-container>
+            </button>
+        </div>
+    </form>
+</div>

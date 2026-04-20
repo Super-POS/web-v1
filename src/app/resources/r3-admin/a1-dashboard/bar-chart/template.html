@@ -1,0 +1,19 @@
+<div #chartContainer1 class="w-full h-full">
+    <ng-container *ngIf="chartOptions && chartOptions.series?.length">
+        <apx-chart [chart]="chartOptions.chart"
+                   [stroke]="chartOptions.stroke"
+                   [series]="chartOptions.series"
+                   [plotOptions]="chartOptions.plotOptions"
+                   [dataLabels]="chartOptions.dataLabels"
+                   [legend]="chartOptions.legend"
+                   [xaxis]="chartOptions.xaxis"
+                   [grid]="chartOptions.grid"
+                   [yaxis]="chartOptions.yaxis">
+        </apx-chart>
+    </ng-container>
+    <ng-container *ngIf="!chartOptions || !chartOptions.series?.length">
+        <div class="flex justify-center items-center h-full">
+            <p>No data available for chart</p>
+        </div>
+    </ng-container>
+</div>

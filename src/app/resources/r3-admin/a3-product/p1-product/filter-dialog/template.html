@@ -1,0 +1,75 @@
+<!-- Header -->
+<div mat-dialog-title class="w-full flex justify-between">
+    <span class="w-full text-2xl font-medium">ច្រោះទិន្ន័យ</span>
+    <button (click)="closeDialog()" mat-icon-button>
+        <mat-icon svgIcon="mdi:close" />
+    </button>
+</div>
+
+<mat-dialog-content class="border-t">
+    <form [formGroup]="form" class="md-form-field-appearance-outline">
+
+        <!-- <mat-form-field appearance="outline" class="w-full">
+            <mat-label>ក្រុមការងារ</mat-label>
+            <mat-icon class="icon-size-5" matPrefix [svgIcon]="'mat_outline:flag'"></mat-icon>
+            <mat-select formControlName="working_group" placeholder="ជ្រើសរើសក្រុម">
+                <mat-option *ngFor=" let item of setup?.working_groups " [value]=" item.id ">
+                    {{ item?.name }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+            <mat-label>គ្រឹះស្ថានសិក្សា</mat-label>
+            <mat-icon class="icon-size-5" matPrefix [svgIcon]="'mdi:building-line'"></mat-icon>
+            <mat-select formControlName="school" placeholder="ជ្រើសរើសគ្រឹះស្ថានសិក្សា">
+                <mat-option *ngFor=" let item of setup?.schools" [value]=" item.id ">
+                    {{ item.name_in_khmer }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field> -->
+
+        <mat-form-field appearance="outline" class="w-full">
+            <mat-label>ប្រភេទផលិតផល</mat-label>
+            <!-- <mat-icon class="icon-size-5" matPrefix [svgIcon]="'heroicons_solid:map-pin'"></mat-icon> -->
+            <mat-select formControlName="productTypes" placeholder="ជ្រើសរើសប្រភេទផលិតផល">
+                <mat-option *ngFor=" let item of setup?.productTypes" [value]=" item.id ">
+                    {{ item.name }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+            <mat-label>អ្នកបញ្ចូលទិន្នន័យ</mat-label>
+            <!-- <mat-icon class="icon-size-5" matPrefix [svgIcon]="'feather:check-square'"></mat-icon> -->
+            <mat-select formControlName="users" placeholder="ជ្រើសរើសអ្នកបញ្ចូលទិន្នន័យ">
+                <mat-option *ngFor=" let item of setup?.users " [value]=" item.id ">
+                    {{ item.name }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <!-- <mat-form-field appearance="outline" class="w-full">
+            <mat-label>ស្ថានភាពសិក្សា</mat-label>
+            <mat-icon class="icon-size-5" matPrefix [svgIcon]="'feather:user-check'"></mat-icon>
+            <mat-select formControlName="scholarship_status" placeholder="ជ្រើសរើសស្ថានភាពសិក្សា">
+                <mat-option *ngFor=" let item of setup?.scholarship_statuses " [value]=" item.id ">
+                    {{ item.name }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field> -->
+
+    </form>
+</mat-dialog-content>
+
+<mat-dialog-actions class="flex items-center justify-end">
+    <button class="text-slate-800 gap-1" mat-stroked-button (click)="reset()">
+        <mat-icon mat-icon-button [svgIcon]="'mdi:refresh'"/>
+        <span>សម្អាត</span>
+    </button>
+    <button class="bg-blue-900 text-white gap-1" mat-flat-button (click)="submit()">
+        <mat-icon mat-icon-button class="" [svgIcon]="'heroicons_outline:magnifying-glass'"/>
+        <span>ស្វែងរក</span>
+    </button>
+</mat-dialog-actions>
+

@@ -1,0 +1,51 @@
+<div class="out-create-section md-form-field-appearance-outline">
+    <div class="min-h-14 max-h-14 flex items-center py-2 pr-2.5">
+        <!-- Left Icon -->
+        <div class="flex justify-start items-center cursor-pointer ml-2">
+            <mat-icon class="-mb-0.5" svgIcon="mdi:arrow-left" (click)="closeDialog()"></mat-icon>
+        </div>
+
+        <!-- Centered Title -->
+        <div class="flex-grow flex justify-center items-center text-slate-500">
+            <h1 class="text-3xl">ទាញយករបាយការណ៍ការលក់</h1>
+        </div>
+    </div>
+
+    <div class="out-create-body pb-2  w-full">
+        <form [formGroup]="filterForm" class="out-create-content border-t-2 pt-4 px-4">
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>ពេលវេលា</mat-label>
+                <mat-select formControlName="timeType">
+                    <mat-option *ngFor="let type of dateType" [value]="type.id">
+                        {{ type.name }} {{ type?.showDate }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <div class="grid grid-cols-2 gap-4" *ngIf="filterForm.get('timeType')!.value === 'startandend'">
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>ពី</mat-label>
+                    <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+                    <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #startPicker></mat-datepicker>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>ដល់</mat-label>
+                    <input matInput [matDatepicker]="endPicker" formControlName="endDate">
+                    <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #endPicker></mat-datepicker>
+                </mat-form-field>
+            </div>
+        </form>
+    </div>
+
+    <mat-dialog-actions>
+        <div class="w-full flex justify-end px-1">
+            <button class="helpers-mat-button-md bg-[#264497] text-white" mat-flat-button (click)="submit()"
+                [disabled]="filterForm.invalid || saving">
+                <span *ngIf="!saving">ទាញយក</span>
+                <mat-progress-spinner *ngIf="saving" [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>
+            </button>
+        </div>
+    </mat-dialog-actions>
+</div>

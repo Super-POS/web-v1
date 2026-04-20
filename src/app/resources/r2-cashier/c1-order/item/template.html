@@ -1,0 +1,21 @@
+<div class="max-h-[290px] min-h-[290px] cursor-pointer space-y-4 overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-500 dark:bg-gray-800 hover:shadow-md transition-shadow duration-300 ease-in-out"
+    (click)="onOutput()">
+    <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
+        <img class="mx-auto min-h-44 max-h-44 w-44 object-contain dark:hidden scale-90"
+            [src]="data?.image ? fileUrl + data?.image : 'default-image-url.jpg'" alt="product image" />
+        <img class="mx-auto hidden max-h-44 w-44 object-contain dark:block"
+            [src]="data?.image ? fileUrl + data?.image : 'default-image-url.jpg'" alt="product image" />
+    </div>
+
+    <div>
+        <p class="text-md text-gray-600 dark:text-white ">
+            <span class="text-gray-600 dark:text-gray-300"> {{ data?.type.name }} </span>
+        </p>
+        <p class="text-lg font-semibold text-gray-700 dark:text-white">
+            <span class="text-gray-600 dark:text-gray-300"> {{ data?.name }} </span>
+        </p>
+        <p class="text-sm font-medium text-green-600 dark:text-green-400 mt-1">
+            {{ data?.unit_price | number }} រៀល
+        </p>
+    </div>
+</div>

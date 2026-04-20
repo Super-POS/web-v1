@@ -1,0 +1,55 @@
+    .out-create-section {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+
+        .out-create-body {
+            width: 100%;
+            height: calc(97% - 7.75rem);
+            overflow: auto;
+
+            .out-create-content {
+                width: 100%;
+                height: calc(90% - 8.75rem);
+            }
+
+            .out-create-content::-webkit-scrollbar {
+                width: 0 !important;
+                height: 0 !important;
+            }
+        }
+    }
+
+    ::ng-deep .create-document-main {
+        width: 200px;
+        height: 200px;
+        margin: auto;
+        border: 5px dashed #008ee7;
+        border-radius: 100% !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .create-document-content {
+            width: 100%;
+            height: 100%;
+
+            button {
+                background-color: transparent;
+                background-image: none;
+                width: 100%;
+                height: 100%;
+
+            }
+        }
+    }
+
+    ::ng-deep .ng2-pdf-viewer-section {
+        .ng2-pdf-viewer-container {
+            overflow: hidden;
+        }
+    }
+
+    .color {
+        background-color: #264497;
+    }

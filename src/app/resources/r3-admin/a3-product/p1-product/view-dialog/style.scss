@@ -1,0 +1,17 @@
+
+.out-create-section {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.out-create-body {
+    flex: 1;
+    overflow: auto;
+}
+.mat-tab-flex-grow {
+    .mat-mdc-tab {
+        flex-grow: 1 !important;
+    }
+}

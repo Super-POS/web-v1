@@ -1,0 +1,73 @@
+<div class="out-create-section md-form-field-appearance-outline">
+    <div mat-dialog-title class="min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5">
+        <div class="flex flex-1 items-center text-slate-500">
+            <h1 class="text-3xl">កែប្រែអ្នកប្រើប្រាស់</h1>
+        </div>
+        <div class="flex items-center cursor-pointer"><mat-icon class="-mb-0.5" [svgIcon]="'heroicons_outline:x-mark'"
+                (click)="closeDialog()"></mat-icon>
+        </div>
+    </div>
+    <div class="out-create-body px-4 pb-2">
+        <form class="out-create-content border-t pt-4" [formGroup]="createUser">
+            <div class="rounded-none h-fit lg:h-auto">
+                <div class="p-5">
+                    <div class="w-full md:min-w-64 flex justify-center">
+                        <div class="pr-0 md:pr-5 w-full max-w-50 min-h-50 overflow-hidden relative">
+                            <img [src]="src" (click)="fileInput.click()"
+                                class="cursor-pointer rounded-full w-40 h-40 border-2 border-blue-200 object-cover"
+                                alt="Profile Picture" />
+                            <input type="file" #fileInput style="display: none;" (change)="onFileChange($event)"
+                                accept="image/*" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 flex flex-col">
+                <div class="grid grid-cols-1 lg:grid-cols-1 gap-0 lg:gap-5">
+                    <mat-form-field>
+                        <mat-label>ឈ្មោះអ្នកប្រើប្រាស់</mat-label>
+                        <input matInput [formControlName]="'name'" placeholder="បញ្ចូលឈ្មោះអ្នកប្រើប្រាស់*">
+                        <mat-error>សូមបញ្ចូលឈ្មោះអ្នកប្រើប្រាស់</mat-error>
+                    </mat-form-field>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-1 gap-0 lg:gap-5">
+                    <mat-form-field>
+                        <mat-label>លេខទូរស័ព្ទ</mat-label>
+                        <input matInput [formControlName]="'phone'" placeholder="លេខទូរស័ព្ទ*">
+                        <mat-error>សូមបញ្ចូលលេខទូរស័ព្ទ</mat-error>
+                    </mat-form-field>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-1 gap-0 lg:gap-5">
+                    <mat-form-field>
+                        <mat-label>អុីមែល</mat-label>
+                        <input matInput [formControlName]="'email'" placeholder="អុីមែល*">
+                        <mat-error>សូមបញ្ចូលអុីមែល</mat-error>
+                    </mat-form-field>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-1 gap-0 lg:gap-5">
+                    <mat-form-field appearance="outline" class="w-full">
+                        <mat-label>តួនាទីក្នុងប្រព័ន្ធ</mat-label>
+                        <mat-select formControlName="role_ids" multiple>
+                            <mat-option *ngFor="let role of data.roles" [value]="role.id">{{ role.name }}</mat-option>
+                        </mat-select>
+                        <mat-error *ngIf="createUser.get('role_ids').errors?.required">
+                            សូមជ្រើសរើសតួនាទី
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+        </form>
+    </div>
+    <mat-dialog-actions>
+        <div class="w-full flex justify-end px-1">
+            <button class="helpers-mat-button-md text-white bg-[#264497]" mat-flat-button (click)="submit()"
+                [disabled]="createUser.invalid || isLoading">
+                <span *ngIf="!createUser.disabled">រួចរាល់</span>
+                <mat-progress-spinner *ngIf="createUser.disabled" [diameter]="24"
+                    [mode]="'indeterminate'"></mat-progress-spinner>
+            </button>
+        </div>
+    </mat-dialog-actions>
+
+</div>

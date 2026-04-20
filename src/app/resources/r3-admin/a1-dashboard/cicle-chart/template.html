@@ -1,0 +1,12 @@
+<div #chartContainer2>
+    <apx-chart
+        *ngIf="chartOptions?.series && chartOptions?.chart"
+        [series]="chartOptions?.series"
+        [chart]="chartOptions?.chart"
+        [labels]="chartOptions?.labels"
+        [legend]="chartOptions?.legend"
+        [responsive]="chartOptions?.responsive"
+        [plotOptions]="chartOptions?.plotOptions"
+        [colors]="chartOptions?.colors">
+    </apx-chart>
+</div>

@@ -1,0 +1,22 @@
+.user-create-section {
+    width: 100%;
+    height: calc(100dvh - 4.25rem) !important;
+    overflow: hidden;
+
+    .user-create-body {
+        width: 100%;
+        height: calc(100dvh - 7.75rem);
+        overflow: hidden;
+
+        .user-create-content {
+            width: 100%;
+            height: calc(100dvh - 8.75rem);
+            overflow: auto;
+        }
+
+        .user-create-content::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+        }
+    }
+}

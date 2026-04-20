@@ -1,0 +1,133 @@
+<!-- Header -->
+<div class="h-12 w-full flex items-center justify-between bg-[#F1F5F9] pl-4 gap-2 rounded-lg dark:bg-gray-800">
+    <div class="flex items-center gap-2">
+        <!-- <mat-icon svgIcon="mdi:file-document-outline" /> -->
+        <span class="text-lg md:text-xl ">{{previewFiles.length}}</span>
+        <span class="text-lg md:text-xl">ឯកសារយោង</span>
+    </div>
+    <div class="flex">
+        <ngx-file-drop (onFileDrop)="dropped($event)" accept="image/*,.pdf" dropZoneClassName="select-file-main"
+            contentClassName="select-file-content">
+            <ng-template ngx-file-drop-content-tmp let-openFileSelector="openFileSelector">
+                <button mat-icon-button [disabled]="sending"
+                    (click)="openFileSelectorHandler($event, openFileSelector)">
+                    <mat-icon class="icon-size-5" svgIcon="feather:paperclip"></mat-icon>
+                </button>
+            </ng-template>
+        </ngx-file-drop>
+        <button class="helpers-mat-button-sm mr-1" mat-icon-button (click)="toggleView()">
+            <mat-icon *ngIf="isGridView; else gridIcon" class="icon-size-6" svgIcon="mdi:format-list-bulleted" />
+            <ng-template #gridIcon>
+                <mat-icon class="icon-size-6" svgIcon="mdi:view-grid-outline" />
+            </ng-template>
+        </button>
+    </div>
+</div>
+
+<!-- Listing View -->
+<div *ngIf="!isGridView && previewFiles.length > 0; else gridView" class="w-full mt-2 grid grid-cols-1">
+    <ng-container>
+        <ng-container *ngFor="let previewFile of previewFiles; let i = index">
+            <div [class.bg-black-5]="i%2==0" class="flex items-center justify-between h-14 pl-2">
+                <div class="w-full flex items-center truncate gap-2 ">
+                    <!-- PDF Icon -->
+                    <img class="w-7 h-7" *ngIf="previewFile.file.type === 'application/pdf'" src="images/logo/pdf.svg">
+                    <!-- PNG Icon -->
+                    <mat-icon *ngIf="previewFile.file.type === 'image/png'" [svgIcon]="'mdi:file-png-box'"></mat-icon>
+                    <!-- JPG Icon -->
+                    <mat-icon *ngIf="previewFile.file.type === 'image/jpeg'" [svgIcon]="'mdi:file-jpg-box'"></mat-icon>
+                    <!-- DOCX Icon -->
+                    <img class="w-6 h-6"
+                        *ngIf="previewFile.file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'"
+                        src="images/logo/microsoft-word.png">
+                    <!-- XLSX Icon -->
+                    <img class="w-7 h-7"
+                        *ngIf="previewFile.file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'"
+                        src="images/logo/excel.png">
+                    <!-- CSV Icon -->
+                    <mat-icon *ngIf="previewFile.file.type === 'text/csv'"
+                        [svgIcon]="'mdi:file-delimited-box'"></mat-icon>
+
+                    <div class="truncate">
+                        {{previewFile.file.name}}
+                    </div>
+                </div>
+                <!-- <div class="w-full min-w-50 max-w-50">
+                    {{ (previewFile.file.size / 1048576) | number:'1.2-3' }} MB
+                </div> -->
+                <button (click)="$event.preventDefault()" mat-icon-button [matMenuTriggerFor]="menu" class="mr-1">
+                    <mat-icon [svgIcon]="'mdi:dots-vertical'"></mat-icon>
+                </button>
+                <mat-menu #menu="matMenu">
+                    <button mat-menu-item (click)="viewFile(previewFile)">
+                        <mat-icon [svgIcon]="'mdi:eye-outline'"></mat-icon>
+                        <span>មើល</span>
+                    </button>
+                    <button mat-menu-item (click)="removeFile(previewFile.file.name)">
+                        <mat-icon class="text-red-500" [svgIcon]="'mdi:trash-can-outline'"></mat-icon>
+                        <span class="text-red-500">លុប</span>
+                    </button>
+                </mat-menu>
+            </div>
+        </ng-container>
+
+    </ng-container>
+</div>
+
+<!-- Grid View -->
+<ng-template #gridView>
+    <div class="flex gap-4 flex-wrap mt-4">
+        <ng-container *ngFor="let previewFile of previewFiles">
+            <div
+                class="flex h-fit max-w-[245px] flex-col flex-grow p-3 rounded-2xl bg-[#f2f6fc] transition-all hover:bg-slate-200">
+                <div class="flex flex-auto items-center text-sm font-medium gap-2 mb-1 -mt-2">
+                    <!-- PDF Icon -->
+                    <img class="w-7 h-7" *ngIf="previewFile.file.type === 'application/pdf'" src="images/logo/pdf.svg">
+                    <!-- PNG Icon -->
+                    <mat-icon *ngIf="previewFile.file.type === 'image/png'" [svgIcon]="'mdi:file-png-box'"></mat-icon>
+                    <!-- JPG Icon -->
+                    <mat-icon *ngIf="previewFile.file.type === 'image/jpeg'" [svgIcon]="'mdi:file-jpg-box'"></mat-icon>
+                    <!-- DOCX Icon -->
+                    <img class="w-6 h-6"
+                        *ngIf="previewFile.file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'"
+                        src="images/logo/microsoft-word.png">
+                    <!-- XLSX Icon -->
+                    <img class="w-7 h-7"
+                        *ngIf="previewFile.file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'"
+                        src="images/logo/excel.png">
+                    <!-- CSV Icon -->
+                    <mat-icon *ngIf="previewFile.file.type === 'text/csv'"
+                        [svgIcon]="'mdi:file-delimited-box'"></mat-icon>
+                    <div class="truncate w-full">
+                        {{previewFile.file.name}}
+                    </div>
+                    <button (click)="$event.preventDefault()" mat-icon-button [matMenuTriggerFor]="menu" class="-mr-2">
+                        <mat-icon [svgIcon]="'mdi:dots-vertical'"></mat-icon>
+                    </button>
+                    <mat-menu #menu="matMenu">
+                        <button mat-menu-item (click)="viewFile(previewFile)">
+                            <mat-icon [svgIcon]="'mdi:eye-outline'"></mat-icon>
+                            <span>មើល</span>
+                        </button>
+                        <button mat-menu-item (click)="removeFile(previewFile.file.name)">
+                            <mat-icon class="text-red-500" [svgIcon]="'mdi:trash-can-outline'"></mat-icon>
+                            <span class="text-red-500">លុប</span>
+                        </button>
+                    </mat-menu>
+                </div>
+                <ng-container *ngIf="previewFile.type && previewFile.type.startsWith('image/')">
+                    <div class="aspect-[9/6] w-full bg-white rounded-md overflow-hidden h-[200px]">
+                        <img class="object-cover h-[200px]" [ngStyle]="{'object-position': '100% 20%'}"
+                            [src]="previewFile.url" alt="invalid image uri">
+                    </div>
+                </ng-container>
+                <ng-container *ngIf="previewFile.type === 'application/pdf'">
+                    <div class="ng2-pdf-viewer-section w-ful rounded-md overflow-hidden h-[200px]">
+                        <pdf-viewer class="w-[400px] h-[200px]" [src]="previewFile.url" [render-text]="true"
+                            [original-size]="false"></pdf-viewer>
+                    </div>
+                </ng-container>
+            </div>
+        </ng-container>
+    </div>
+</ng-template>

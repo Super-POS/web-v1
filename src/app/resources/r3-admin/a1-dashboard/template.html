@@ -1,0 +1,341 @@
+<div class="container-dashboard-section p-4 dark:bg-gray-800">
+    <!-- User Greeting Section -->
+    <div class="flex justify-between items-center mb-4">
+        <div class="p-2 flex w-full md:w-auto">
+            <img class="border-2 border-blue-500 w-16 h-16 object-cover rounded-full mr-2"
+                [src]="fileUrl + user?.avatar" alt="avatar" />
+            <div class="flex flex-col">
+                <p class="text-xl md:text-xl">សូមស្វាគមន៍, {{user?.name}}</p>
+                <p class="text-gray-500 text-sm md:text-base">
+                    {{user?.roles[0].name}}
+                </p>
+            </div>
+        </div>
+        <div class="flex gap-3 mt-4 md:mt-0">
+            <!-- First Button -->
+            <div (click)="report()" class=" cursor-pointer flex items-center justify-center border-2 border-blue-300 rounded-xl w-[150px] md:w-[220px] h-[45px]
+                 transform transition-transform duration-50 ease-in-out dark:bg-gray-800
+                dark:hover:bg-gray-700">
+                <p class="text-sm md:text-xl text-blue-400 dark:text-blue-300 text-center w-full ">ទាញយករបាយការណ៍</p>
+            </div>
+        </div>
+    </div>
+    <!-- Data Statistic Dashboard -->
+    <div class="grid grid-cols-1 md:grid-cols-10 gap-4">
+        <!-- First Section -->
+        <div class="md:col-span-4  h-[335px] md:h-[335px] bg-white dark:bg-gray-900 rounded-xl col-span-5">
+            <div class="w-full h-full rounded-xl px-8">
+                <div class="flex items-center justify-between h-16 ">
+                    <span class="text-gray-700 dark:text-slate-300 sm:text-lg md:text-xl text-sm font-semibold">
+                        ស្ថិតិប​ឋម
+                    </span>
+                </div>
+                <div class="relative">
+
+                    <div *ngIf="isCart1Visible; else cart2">
+                        <div
+                            class="w-full h-[225px] bg-gray-100 dark:bg-gray-800 rounded-lg mb-4 p-4 relative flex flex-col justify-between overflow-hidden">
+                            <!-- Title -->
+                            <div class="flex items-center justify-between">
+                                <div class="text-base md:text-lg font-semibold text-gray-800">ការលក់</div>
+                                <!-- Main Date Filter -->
+                                <div class="date-filter">
+                                    <div [matMenuTriggerFor]="mainMenu"
+                                        class="flex gap-2 justify-between cursor-pointer items-center bg-gray-200 dark:bg-slate-700 p-2 rounded-lg min-w-[100px] mr-3">
+                                        <span>{{ selectedDateName }}</span>
+                                        <mat-icon matSuffix svgIcon="heroicons_outline:calendar"></mat-icon>
+
+                                        <mat-menu #mainMenu="matMenu">
+                                            <button *ngFor="let type of dateType.slice(0,4)" mat-menu-item
+                                                (click)="selectDateType(type, 1)">
+                                                <span class="text-lg">{{ type.name }}</span>
+                                            </button>
+                                        </mat-menu>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Centered Number -->
+                            <div class="flex-grow flex items-center -mt-3">
+                                <div class="text-green-600 text-lg md:text-4xl font-semibold">{{dashboardData?.dashboard?.statistic.total ??
+                                    0 | number}} ៛</div>
+                            </div>
+
+                            <!-- Comparison Info -->
+                            <div class="flex gap-1 flex-col md:flex-row">
+                                <span>កើនឡើង</span>
+                                <span [ngClass]="{
+                                  'text-green-500': dashboardData?.dashboard?.statistic.totalPercentageIncrease >= 0,
+                                  'text-red-500': dashboardData?.dashboard?.statistic.totalPercentageIncrease < 0
+                                }">
+                                    {{ dashboardData?.dashboard?.statistic.totalPercentageIncrease ?? 0 }} %
+                                </span>
+
+                                <span [ngClass]="{
+                                    'text-green-500': dashboardData?.dashboard?.statistic.totalPercentageIncrease >= 0,
+                                    'text-red-500': dashboardData?.dashboard?.statistic.totalPercentageIncrease < 0
+                                  }">( {{dashboardData?.dashboard?.statistic.saleIncreasePreviousDay ?? 0 | number }} )</span>
+                                <span>ធៀបនិងម្សិលមិញ</span>
+                            </div>
+
+                            <!-- Icon Positioned Bottom Right -->
+                            <div class="absolute bottom-[-46px] right-[-55px] z-10">
+                                <mat-icon class="w-40 h-40 text-slate-200 dark:text-gray-700"
+                                    svgIcon="mdi:currency-usd"></mat-icon>
+                            </div>
+                        </div>
+
+                    </div>
+                    <ng-template #cart2>
+                        <div class="grid grid-cols-2 md:grid-cols-2 gap-4 mb-4 ">
+                            <div
+                                class="flex items-center bg-gray-50  h-auto dark:bg-gray-800 rounded-lg shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)] dark:shadow-none">
+                                <div class="flex flex-col ml-5">
+                                    <div class="flex gap-4 items-start">
+                                        <div class="p-3 flex items-center rounded-full bg-blue-200 dark:bg-gray-600">
+                                            <mat-icon class="icon-size-6 text-blue-500 dark:text-white"
+                                                svgIcon="mdi:package-variant-closed"></mat-icon>
+                                        </div>
+                                        <div class="flex flex-col gap-1 items-start">
+                                            <div class="flex gap-1 items-center">
+                                                <span
+                                                    class="font-semibold dark:text-white text-sm sm:text-xl md:text-xl">{{dashboardData?.dashboard?.statistic.totalProduct}}</span>
+                                            </div>
+                                            <span class="dark:text-gray-400 text-sm sm:text-lg md:text-xl">ផលិតផល</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                class="flex items-center bg-gray-50  h-auto dark:bg-gray-800 rounded-lg shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)] dark:shadow-none min-h-26">
+                                <div class="flex flex-col ml-5">
+                                    <div class="flex gap-4 items-start">
+                                        <div class="p-3 flex items-center rounded-full bg-[#80CBC4]">
+                                            <mat-icon class="icon-size-6 text-[#00897B] dark:text-white"
+                                                svgIcon="mdi:package-variant-closed"></mat-icon>
+                                        </div>
+                                        <div class="flex flex-col gap-1 items-start">
+                                            <div class="flex gap-1">
+                                                <span
+                                                    class="font-semibold dark:text-white text-sm sm:text-xl md:text-xl">{{dashboardData?.dashboard?.statistic.totalProductType}}</span>
+                                            </div>
+                                            <span class="dark:text-gray-400 text-sm sm:text-lg md:text-xl">ប្រភេទ</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                class="flex items-center bg-gray-50  h-auto dark:bg-gray-800 rounded-lg shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)] dark:shadow-none min-h-26">
+                                <div class="flex flex-col ml-5">
+                                    <div class="flex gap-4 items-start">
+                                        <div class="p-3 flex items-center rounded-full bg-gray-200 dark:bg-blue-600">
+                                            <mat-icon class="icon-size-6 text-gray-600 dark:text-white"
+                                                svgIcon="mdi:account-group-outline"></mat-icon>
+                                        </div>
+                                        <div class="flex flex-col gap-1 items-start">
+                                            <div class="flex gap-1">
+                                                <span
+                                                    class="font-semibold dark:text-white text-sm sm:text-xl md:text-xl">{{dashboardData?.dashboard?.statistic.totalUser}}</span>
+                                            </div>
+                                            <span
+                                                class="dark:text-gray-400 text-sm sm:text-lg md:text-xl">អ្នកប្រើប្រាស់</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                class="flex items-center bg-gray-50  h-auto dark:bg-gray-800 rounded-lg shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)] dark:shadow-none min-h-26">
+                                <div class="flex flex-col ml-5">
+                                    <div class="flex gap-4 items-start">
+                                        <div class="p-3 flex items-center rounded-full bg-[#B2EBF2]">
+                                            <mat-icon class="icon-size-6 text-[#26C6DA] dark:text-white"
+                                                svgIcon="mdi:cart-outline"></mat-icon>
+                                        </div>
+                                        <div class="flex flex-col gap-1 items-start">
+                                            <div class="flex gap-1">
+                                                <span
+                                                    class="font-semibold dark:text-white text-sm sm:text-xl md:text-xl">{{dashboardData?.dashboard?.statistic.totalOrder}}</span>
+                                            </div>
+                                            <span class="dark:text-gray-400 text-sm sm:text-lg md:text-xl">ការលក់</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-template>
+
+                    <!-- Navigation buttons -->
+                    <div
+                        class="absolute z-30 flex left-1/2 -translate-x-1/2 space-x-3 rtl:space-x-reverse justify-center">
+                        <button type="button" class="w-3 h-3 rounded-full" [class.bg-[#0c7ea5]]="isCart1Visible"
+                            [class.bg-gray-300]="!isCart1Visible" aria-label="Slide 1" (click)="showCart(true)">
+                        </button>
+                        <button type="button" class="w-3 h-3 rounded-full" [class.bg-[#0c7ea5]]="!isCart1Visible"
+                            [class.bg-gray-300]="isCart1Visible" aria-label="Slide 2" (click)="showCart(false)">
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Second Section -->
+        <div class="md:col-span-6 h-[335px] md:h-[335px] bg-white dark:bg-gray-900 rounded-xl col-span-5">
+    <div class="w-full h-full rounded-xl px-8 pb-4">
+        <div class="flex items-center justify-between h-16">
+            <span class="text-gray-700 dark:text-slate-300 sm:text-lg md:text-xl text-sm font-semibold">
+                អ្នកគិតប្រាក់
+            </span>
+            <div class="flex gap-2 cursor-pointer items-center">
+                <!-- Cashier Date Filter -->
+                <div [matMenuTriggerFor]="cashierMenu"
+                    class="flex gap-2 justify-between cursor-pointer items-center bg-gray-100 dark:bg-slate-700 p-2 rounded-lg min-w-[100px] mr-3">
+                    <span>{{ selectedDateNameChasier }}</span>
+                    <mat-icon matSuffix svgIcon="heroicons_outline:calendar"></mat-icon>
+
+                    <mat-menu #cashierMenu="matMenu">
+                        <button *ngFor="let type of dateType.slice(0,4)" mat-menu-item
+                            (click)="selectDateType(type, 2)">
+                            <span class="text-lg">{{ type.name }}</span>
+                        </button>
+                    </mat-menu>
+                </div>
+
+                <div class="p-3 flex items-center rounded-full"
+                    [ngClass]="{'bg-gray-100 dark:bg-gray-700': listView, 'cursor-pointer': !listView}"
+                    (click)="showListView()">
+                    <mat-icon class="icon-size-6" svgIcon="mdi:format-list-bulleted"></mat-icon>
+                </div>
+
+                <div class="p-3 flex items-center rounded-full"
+                    [ngClass]="{'bg-gray-100 dark:bg-gray-700': chartView, 'cursor-pointer': !chartView}"
+                    (click)="showChartView()">
+                    <mat-icon class="icon-size-6" svgIcon="mdi:chart-pie-outline"></mat-icon>
+                </div>
+
+                <div class="p-3 flex items-center rounded-full"
+                    [ngClass]="{'bg-gray-100 dark:bg-gray-700': lineView, 'cursor-pointer': !lineView}"
+                    (click)="showLineView()">
+                    <mat-icon class="icon-size-6" svgIcon="mdi:chart-bar"></mat-icon>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <!-- List View -->
+            <ng-container *ngIf="listView">
+                <ng-container *ngIf="cashierData?.data?.length > 0; else noDataTemplate">
+                    <table class="w-full">
+                        <tbody>
+                            <tr *ngFor="let user of cashierData.data | slice:0:3; let i = index" [ngClass]="{
+                                'bg-[#f1f5f9] dark:bg-[#1f2937]': i % 2 === 0,
+                                'bg-white dark:bg-[#111827]': i % 2 !== 0
+                            }">
+                                <td class="p-2">
+                                    <div class="flex items-center">
+                                        <div class="p-2 pl-0">
+                                            <img class="rounded-full border border-blue-600 w-[45px] h-[45px] object-cover"
+                                                [src]="fileUrl + user?.avatar" alt="">
+                                        </div>
+                                        <div class="flex flex-col justify-center pl-2">
+                                            <p class="text-lg text-slate-600">{{ user?.name }}</p>
+                                            <p class="text-sm text-slate-500">{{ user?.role[0]?.role.name }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-right pr-4">
+                                    <div class="flex justify-end items-end gap-1">
+                                        <span> {{ user?.totalAmount | number }} ៛</span>
+                                        <span class="text-green-600"> ({{ user?.percentageChange }}%)</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </ng-container>
+                
+            </ng-container>
+        
+            <!-- Chart View -->
+            <ng-container *ngIf="chartView">
+                <cicle-chart-sale *ngIf="cashierData?.data?.length" [dataSouce]="cashierData"></cicle-chart-sale>
+            </ng-container>
+        
+            <!-- Line Chart View -->
+            <ng-container *ngIf="lineView">
+                <sup-bar-chart-sale *ngIf="cashierData?.data?.length" [dataSouce]="cashierData"></sup-bar-chart-sale>
+            </ng-container>
+        
+            <!-- No Data Template -->
+            <ng-template #noDataTemplate>
+                <div class="flex flex-col justify-center items-center h-full">
+                    <mat-icon class="text-gray-400" svgIcon="toc"></mat-icon>
+                    <span class="text-2xl text-gray-500 mt-2">គ្មានទិន្នន័យ</span>
+                </div>
+            </ng-template>
+        </div>
+        
+    </div>
+</div>
+
+    </div>
+    <br>
+
+    <div class="grid grid-cols-1 md:grid-cols-10 gap-4">
+        <!-- 3 Section -->
+        <div class="md:col-span-4 h-auto md:h-[340px] bg-white dark:bg-gray-900 rounded-xl col-span-5">
+            <div class="w-full h-full rounded-xl px-8">
+                <div class="flex items-center justify-between h-16 ">
+                    <span class="text-gray-700 dark:text-slate-300 sm:text-lg md:text-xl text-sm font-semibold">
+                        ប្រភេទផលិតផល
+                    </span>
+                    <div [matMenuTriggerFor]="ProductMenu"
+                        class="flex gap-2 justify-between cursor-pointer items-center bg-gray-100 dark:bg-slate-700 p-2 rounded-lg min-w-[100px] mr-3">
+                        <span>{{ selectedDateNameProduct }}</span>
+                        <mat-icon matSuffix svgIcon="heroicons_outline:calendar"></mat-icon>
+
+                        <mat-menu #ProductMenu="matMenu">
+                            <button *ngFor="let type of dateType.slice(2)" mat-menu-item
+                                (click)="selectDateType(type, 3)">
+                                <span class="text-lg">{{ type.name }}</span>
+                            </button>
+                        </mat-menu>
+                    </div>
+                </div>
+                <div>
+                    <div class="w-full bg-transparent dark:bg-opacity-5 pb-1 mt-10">
+                        <!-- Pass selectedDate3 to the cicle-chart component -->
+                        <cicle-chart [selectedDate]="selectedDate3"></cicle-chart>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="md:col-span-6 h-auto md:h-[340px] bg-white dark:bg-gray-900 rounded-xl col-span-5">
+            <div class="w-full h-full rounded-xl px-8">
+                <div class="flex items-center justify-between h-16">
+                    <span class="text-gray-700 dark:text-slate-300 sm:text-lg md:text-xl text-sm font-semibold">
+                        ស្ថិតិការលក់
+                    </span>
+                    <div [matMenuTriggerFor]="SaleMenu"
+                        class="flex gap-2 justify-between cursor-pointer items-center bg-gray-100 dark:bg-slate-700 p-2 rounded-lg min-w-[100px] mr-3">
+                        <span>{{ selectedDateNameSale }}</span>
+                        <mat-icon matSuffix svgIcon="heroicons_outline:calendar"></mat-icon>
+
+                        <mat-menu #SaleMenu="matMenu">
+                            <button *ngFor="let type of dateType.slice(2)" mat-menu-item
+                                (click)="selectDateType(type, 4)">
+                                <span class="text-lg">{{ type.name }}</span>
+                            </button>
+                        </mat-menu>
+                    </div>
+                </div>
+                <div>
+                    <div class="w-full bg-transparent dark:bg-opacity-5 -mt-4 pb-1">
+                        <!-- Ensure the chart container has a fixed or dynamic height -->
+                        <sup-bar-chart [selectedDate]="selectedDate4" class="h-[200px]"></sup-bar-chart>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

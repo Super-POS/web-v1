@@ -1,0 +1,170 @@
+<div class="pos-section bg-white dark:bg-gray-800 overflow-hidden h-screen mt-4 mx-4 rounded-tl-lg rounded-tr-lg">
+    <div class="min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5 border-b">
+        <div class="flex flex-1 items-center font-medium">
+            <div class="flex items-center">
+                <mat-icon class="text-gray-600 dark:text-white icon-size-5" matPrefix
+                    [svgIcon]="'heroicons_outline:home'"></mat-icon>
+            </div>
+            <div class="flex items-center ml-1.5">
+                <span class="text-lg text-gray-600 dark:text-white -mb-0.5">ការបញ្ជាទិញ</span>
+            </div>
+        </div>
+    </div>
+    <div class="pos-body">
+        <!-- No Data Display -->
+        <div *ngIf="data.length === 0 && !isLoading" class="no-data">
+            <div class="flex flex-col justify-center items-center mb-4">
+                <mat-icon class="icon-size-24" svgIcon="toc"></mat-icon>
+                <span class="text-2xl"><span>គ្មានទិន្នន័យ</span></span>
+            </div>
+        </div>
+
+        <!-- Data Display -->
+        <div *ngIf="data.length > 0" class="pos-content px-4">
+            <div class="list-pos-left">
+                <!-- Title -->
+                <div class="md:text-3xl font-semibold mt-4 mb-4">ប្រភេទផលិតផល</div>
+
+                <!-- Tab Headers Custom Styling with Tailwind CSS -->
+                <div class="overflow-x-auto scrollbar-hide whitespace-nowrap mb-4">
+                    <div class="flex gap-1">
+                        <div *ngFor="let item of data; trackBy: trackById"
+                            (click)="selectTab(item)"
+                            [class.bg-blue-500]="selectedTab?.id === item?.id"
+                            [class.text-white]="selectedTab?.id === item?.id"
+                            [class.border-blue-500]="selectedTab?.id === item?.id"
+                            [class.bg-gray-100]="selectedTab?.id !== item?.id"
+                            [class.text-gray-600]="selectedTab?.id !== item?.id"
+                            [class.border-gray-200]="selectedTab?.id !== item?.id"
+                            [class.bg-white]="selectedTab?.id !== item?.id"
+                            class="tab-item cursor-pointer px-6 py-2 rounded-lg border-2 text-center dark:bg-gray-800 inline-block">
+                            <div class="flex flex-col">
+                                <span class="text-sm sm:text-base md:text-lg">{{item?.name}}</span>
+                                <span class="text-sm sm:text-base md:text-md">{{item?.products.length}} Items</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="md:text-3xl font-semibold mt-4">ផលិតផល</div>
+                <!-- Mat Tab Group (Hidden, still functional) -->
+                <mat-tab-group class="hidden" disableRipple>
+                    <mat-tab *ngFor="let item of data; trackBy: trackById" [label]="item?.name">
+                        <div class="container-tab-content py-4 pr-3 ">
+                            <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-hidden">
+                                <product-item *ngFor="let product of item.products; trackBy: trackByProductId"
+                                    [data]="product" (result)="addToCart($event, 1)">
+                                </product-item>
+                                <span *ngIf="item.products.length === 0">គ្មានផលិតផល!!!</span>
+                            </div>
+                        </div>
+                    </mat-tab>
+                </mat-tab-group>
+
+                <div class="container-tab-content py-4 pr-3" *ngIf="selectedTab">
+                    <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-hidden">
+                        <product-item *ngFor="let product of selectedTab.products; trackBy: trackByProductId"
+                            [data]="product" (result)="addToCart($event, 1)">
+                        </product-item>
+                        <span *ngIf="selectedTab.products.length === 0">គ្មានផលិតផល!!!</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="list-pos-right bg-gray-50 mt-4 rounded-t-lg dark:bg-gray-800">
+                <div class="w-full p-4">
+                    <div
+                        class="h-14 flex justify-between items-center px-3 border border-gray-300 bg-white rounded-lg dark:bg-gray-800  dark:border-gray-700">
+                        <span class="text-lg">អ្នកគិតបញ្ជី៖ <b class="text-g">{{ user?.name }}</b></span>
+                    </div>
+                </div>
+                <div class="w-full p-4" *ngIf="carts.length > 0">
+                    <div class="border-t border-b pt-5 pb-5 flex justify-between px-5">
+                        <div class="flex gap-1 items-center">
+                            <span>ចំនួនផលិតផល​​</span>
+                            <span
+                                class="w-7 h-7 bg-blue-500 text-white text-center rounded-full text-md flex justify-center items-center">{{carts.length}}​</span>
+                        </div>
+                        <div class="flex items-center gap-1 cursor-pointer" (click)="clearCartAll()">
+                            <mat-icon class="icon-size-5 text-red-400 font-semibold"
+                                svgIcon="mdi:window-close"></mat-icon>
+                            <span class="text-red-400 font-semibold">ជម្រះទាំងអស់​</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="list-pos-right-body max-w-[28rem] px-4" *ngIf="carts.length > 0">
+                    <div *ngFor="let item of carts; let i = index; trackBy: trackById"
+                        class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 md:p-6 mt-2">
+                        <div class="space-y-4 md:flex md:items-center md:justify-between md:gap-6 md:space-y-0">
+                            <div class="flex justify-start items-center gap-4">
+                                <img class="w-12 h-full object-cover rounded-md" [src]="fileUrl + item?.image" alt="">
+                                <div class="flex flex-col">
+                                    <span class="text-sm">{{item.type.name}} | {{item.code}}</span>
+                                    <span>{{item?.name}}</span>
+                                    <span class="text-sm text-green-600">{{ item?.unit_price | number }}
+                                        រៀល</span>
+                                </div>
+                            </div>
+                            <label for="counter-input" class="sr-only">Choose quantity:</label>
+                            <div class="flex items-center justify-between md:order-3 md:justify-end">
+                                <div class="flex items-center">
+                                    <button type="button" id="decrement-button" (click)="decrementQty(i)"
+                                        class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700">
+                                        <svg class="h-2.5 w-2.5 text-gray-900 dark:text-white"
+                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 2">
+                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                                stroke-width="2" d="M1 1h16" />
+                                        </svg>
+                                    </button>
+                                    <input type="text" id="counter-input"
+                                        class="w-10 shrink-0 border-0 bg-transparent text-center text-sm font-medium text-gray-900 focus:outline-none focus:ring-0 dark:text-white"
+                                        [(ngModel)]="item.temp_qty" min="0" max="1000" />
+                                    <button type="button" id="increment-button" (click)="incrementQty(i)"
+                                        class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700">
+                                        <svg class="h-2.5 w-2.5 text-gray-900 dark:text-white"
+                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 18">
+                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                                stroke-width="2" d="M9 1v16M1 9h16" />
+                                        </svg>
+                                    </button>
+                                    <button color="warn" class="remove ml-4" mat-icon-button
+                                        (click)="remove(item.temp_qty,i)">
+                                        <mat-icon class="icon-size-5 text-red-400"
+                                            svgIcon="mdi:trash-can-outline"></mat-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border-t border-b pt-5 pb-5 flex justify-between mt-4 w-full">
+                        <div class=" text-center w-full p-3 flex justify-center rounded-lg bg-[#0f172a]">
+                            <span class="text-white">សរុប​ ៖ {{ totalPrice | number }} ៛</span>
+                        </div>
+                    </div>
+                    <div class="custom-botton-flat p-2 flex justify-end dark:bg-gray-800 mb-10">
+                        <ng-container *ngIf="isOrderBeingMade; else payNowTemplate">
+                            <!-- Loading Spinner -->
+                            <div class="flex justify-center mt-4">
+                                <mat-progress-spinner [diameter]="24" [mode]="'indeterminate'"
+                                    class="flex justify-center "></mat-progress-spinner>
+                            </div>
+                        </ng-container>
+                        <ng-template #payNowTemplate>
+                            <div class="flex justify-end mt-4">
+                                <button
+                                    class="text-white font-semibold p-2 bg-[#102d71] flex justify-center min-w-[130px] rounded-full"
+                                    [disabled]="!canSubmit" (click)="checkOut()">
+                                    បញ្ជាទិញ
+                                </button>
+                            </div>
+                        </ng-template>
+                    </div>
+                </div>
+                <div *ngIf="carts.length === 0" class="flex flex-col justify-center items-center mt-10">
+                    <mat-icon class="icon-size-24" svgIcon="toc"></mat-icon>
+                    <span class="text-2xl">គ្មានទិន្នន័យ</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
