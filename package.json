@@ -1,9 +1,9 @@
 {
-  "name": "camcyber-pos",
+  "name": "coffeeshop-pos",
   "version": "4.0.0",
-  "description": "CamCyber - Angular Admin Template",
+  "description": "CoffeeShop POS - Angular Web App",
   "author": "Yim Klok",
-  "license": "CamCyber Digital Tech Team",
+  "license": "CoffeeShop POS Team",
   "private": true,
   "scripts": {
     "ng": "ng",
