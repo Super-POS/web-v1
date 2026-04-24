@@ -12,7 +12,11 @@ ENV SOCKET_URL=${SOCKET_URL}
 ENV RecaptchaSiteKey=${RecaptchaSiteKey}
 
 WORKDIR /usr/app
-RUN npm uninstall ws
+
+# Toolchain for any native node modules (e.g. utf-8-validate, bufferutil)
+RUN apk add --no-cache python3 make g++ git \
+    && ln -sf python3 /usr/bin/python
+
 COPY ./package.json /usr/app/package.json
 COPY ./package-lock.json /usr/app/package-lock.json
 

@@ -3,6 +3,7 @@ import { CommonModule, DatePipe, DecimalPipe, NgClass, NgIf }  from '@angular/co
 import { HttpErrorResponse }                                   from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnInit, inject }        from '@angular/core';
 import { FormsModule }                                         from '@angular/forms';
+import { Router, RouterModule }                               from '@angular/router';
 
 // ================================================================>> Angular Material Modules
 import { MatButtonModule }                                     from '@angular/material/button';
@@ -50,6 +51,7 @@ import { ProductsDialogComponent } from './create-dialog/component';
         MatPaginatorModule,
         MatMenuModule,
         MatBadgeModule,
+        RouterModule,
     ]
 })
 
@@ -68,6 +70,7 @@ export class ProductComponent implements OnInit {
         'no',
         'product',
         'price',
+        'stock',
         'total_sale',
         'total_sale_price',
         'created',
@@ -95,7 +98,7 @@ export class ProductComponent implements OnInit {
 
 
     public shortedItems: any[] = [
-        { name: 'ឈ្មោះផលិតផល' , value: 'name' },
+        { name: 'ឈ្មោះម៉ឺនុយ' , value: 'name' },
         { name: 'តម្លៃ(រៀល)'   , value: 'unit_price' },
         { name: 'តម្លៃលក់(រៀល)' , value: 'total_sale' },
     ];
@@ -114,7 +117,7 @@ export class ProductComponent implements OnInit {
         private _matDialog                  : MatDialog,
         private _errorHandleService         : ErrorHandleService,
         private _dialogConfigService        : DialogConfigService,
-
+        private _router                     : Router,
     ) { }
 
     // Initialization logic
@@ -130,7 +133,6 @@ export class ProductComponent implements OnInit {
         this._service.getSetupData().subscribe({
             next: (res:any) => {
                 this.setupData = res;
-                console.log(this.setupData);
             },
             error: (err) => {
                 this._errorHandleService.handleHttpError(err);
@@ -270,33 +272,9 @@ export class ProductComponent implements OnInit {
         this.getData();
     }
 
-    // ===>> Method create new product
+    // ===>> Open dedicated create menu page
     create(): void {
-
-        const dialogConfig = new MatDialogConfig();
-
-        dialogConfig.data = {
-
-            title: 'បង្កើតផលិតផល',
-            product: null,
-            setup: this.setupData.productTypes
-        };
-
-        dialogConfig.autoFocus = false;
-        dialogConfig.position = { right: '0px' };
-        dialogConfig.height = '100dvh';
-        dialogConfig.width = '100dvw';
-        dialogConfig.maxWidth = '550px';
-        dialogConfig.panelClass = 'custom-mat-dialog-as-mat-drawer';
-        dialogConfig.enterAnimationDuration = '0s';
-
-        const dialogRef = this.matDialog.open(ProductsDialogComponent, dialogConfig);
-        dialogRef.componentInstance.ResponseData.subscribe((product: Data) => {
-            const data = this.dataSource.data;
-            data.unshift(product);
-            this.getData();
-            this.dataSource.data = data;
-        });
+        void this._router.navigate(['/admin/product/create']);
     }
 
     // Viewing a product using a dialog
@@ -319,9 +297,9 @@ export class ProductComponent implements OnInit {
         const dialogConfig = new MatDialogConfig();
         dialogConfig.data = {
 
-            title: 'កែប្រែផលិតផល',
+            title: 'កែប្រែម៉ឺនុយ',
             product: row,
-            setup: this.setupData.productTypes
+            setup: this.setupData
         };
 
         dialogConfig.autoFocus = false;
@@ -408,10 +386,10 @@ export class ProductComponent implements OnInit {
                 const dateTime = new Date().toISOString().replace(/[:.]/g, '-');
                 if (type === 'PDF') {
                     blob = this.b64toBlob(response.data, 'application/pdf');
-                    fileName = `របាយការណ៍លក់តាមផលិតផល-${dateTime}.pdf`;
+                    fileName = `របាយការណ៍លក់តាមម៉ឺនុយ-${dateTime}.pdf`;
                 } else if (type === 'EXCEL') {
                     blob = this.b64toBlob(response.data, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-                    fileName = `របាយការណ៍លក់តាមផលិតផល-${dateTime}.xlsx`;
+                    fileName = `របាយការណ៍លក់តាមម៉ឺនុយ-${dateTime}.xlsx`;
                 }
                 FileSaver.saveAs(blob, fileName);
                 // Show a success message using the snackBarService

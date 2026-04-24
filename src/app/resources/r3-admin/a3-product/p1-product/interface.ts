@@ -15,10 +15,27 @@ export interface Data {
     name: string,
     image: string,
     unit_price: number,
+    stock?: number,
     total_sale: number,
     created_at: Date,
+    recipe_items?: RecipeItem[],
     type: { id: number, name: string }
     creator: { id: number, name: string, avatar: string }
+}
+
+export interface Ingredient {
+    id: number;
+    name: string;
+    unit: string;
+    stock: number;
+    low_stock_threshold?: number;
+}
+
+export interface RecipeItem {
+    id?: number;
+    ingredient_id: number;
+    qty_required: number;
+    ingredient?: Ingredient;
 }
 
 export interface ProductType {
@@ -33,7 +50,7 @@ export interface User {
 
 // Interface for Setup Response
 export interface SetupResponse {
-   
     productTypes: ProductType[];
     users: User[];
+    ingredients?: Ingredient[];
 }

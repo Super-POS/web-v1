@@ -273,7 +273,7 @@ export class ReportGenerateComponent implements OnInit, OnDestroy {
 
                         this.saving = false;
                         let blob = this.b64toBlob(response.data, 'application/pdf');
-                        FileSaver.saveAs(blob, `របាយការណ៍លក់តាមផលិតផល(${this.getFormattedDateTime()}).pdf`);
+                        FileSaver.saveAs(blob, `របាយការណ៍លក់តាមម៉ឺនុយ(${this.getFormattedDateTime()}).pdf`);
                         // Show a success message using the snackBarService
                         this.snackBarService.openSnackBar('របាយការណ៍ទាញយកបានជោគជ័យ', GlobalConstants.success);
                     },

@@ -29,17 +29,17 @@
                 <mat-form-field appearance="outline" class="w-full">
                     <mat-label>លេខកូដ</mat-label>
                     <input matInput formControlName="code" placeholder="បញ្ចូលលេខកូដ">
-                    <mat-error>សូមបញ្ចូលលេខកូដផលិតផល</mat-error>
+                    <mat-error>សូមបញ្ចូលលេខកូដម៉ឺនុយ</mat-error>
                 </mat-form-field>
                 <mat-form-field appearance="outline" class="w-full">
                     <mat-label>ឈ្មោះ</mat-label>
                     <input matInput formControlName="name" placeholder="បញ្ចូលឈ្មោះ">
-                    <mat-error>សូមបញ្ចូលឈ្មោះផលិតផល</mat-error>
+                    <mat-error>សូមបញ្ចូលឈ្មោះម៉ឺនុយ</mat-error>
                 </mat-form-field>
                 <mat-form-field appearance="outline" class="w-full">
-                    <mat-label>ប្រភេទផលិតផល</mat-label>
+                    <mat-label>ប្រភេទម៉ឺនុយ</mat-label>
                     <mat-select formControlName="type_id">
-                        @for (item of data.setup; track item.id) {
+                        @for (item of data.setup.productTypes || []; track item.id) {
                         <mat-option [value]="item.id">
                             <span>{{item.name}}</span>
                         </mat-option>
@@ -48,13 +48,54 @@
                         <span>គ្មានទិន្នន័យ</span>
                         }
                     </mat-select>
-                    <mat-error>សូមជ្រើសរើសប្រភេទផលិតផល</mat-error>
+                    <mat-error>សូមជ្រើសរើសប្រភេទម៉ឺនុយ</mat-error>
                 </mat-form-field>
                 <mat-form-field appearance="outline" class="w-full">
                     <mat-label>តម្លៃ(៛)</mat-label>
                     <input matInput type="number" formControlName="unit_price" placeholder="បញ្ចូលតម្លៃ(៛)">
                     <mat-error>សូមបញ្ចូលតម្លៃជាលុយខ្មែរ</mat-error>
                 </mat-form-field>
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>ស្តុក (Stock)</mat-label>
+                    <input matInput type="number" min="0" formControlName="stock" placeholder="បញ្ចូលចំនួនស្តុក">
+                    <mat-error>សូមបញ្ចូលចំនួនស្តុកត្រឹមត្រូវ</mat-error>
+                </mat-form-field>
+
+                <div class="w-full border rounded-lg p-3 mt-2">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-semibold">Recipe (គ្រឿងផ្សំក្នុង 1 កែវ)</span>
+                        <button mat-icon-button type="button" (click)="addRecipeRow()">
+                            <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                        </button>
+                    </div>
+
+                    @for (row of recipeRows; track $index) {
+                    <div class="grid grid-cols-12 gap-2 mb-2 items-center">
+                        <mat-form-field appearance="outline" class="col-span-7">
+                            <mat-label>Ingredient</mat-label>
+                            <mat-select [(ngModel)]="row.ingredient_id" [ngModelOptions]="{standalone: true}">
+                                @for (item of data.setup.ingredients || []; track item.id) {
+                                <mat-option [value]="item.id">
+                                    {{item.name}} ({{item.stock}} {{item.unit}})
+                                </mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="col-span-4">
+                            <mat-label>Qty</mat-label>
+                            <input matInput type="number" min="0.01" step="0.01" [(ngModel)]="row.qty_required"
+                                [ngModelOptions]="{standalone: true}">
+                        </mat-form-field>
+
+                        <div class="col-span-1 flex justify-end">
+                            <button mat-icon-button type="button" (click)="removeRecipeRow($index)">
+                                <mat-icon class="text-red-500" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                            </button>
+                        </div>
+                    </div>
+                    }
+                </div>
             </div>
         </form>
     </div>

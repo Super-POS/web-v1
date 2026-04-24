@@ -14,6 +14,20 @@ export interface Data {
     products: Product[],
 }
 
+/** From cashier menu API: recipe line scaling (sugar %, shots) for stock. */
+export interface RecipeItemRow {
+    id: number;
+    ingredient_id: number;
+    qty_required: number;
+    scale_key?: string;
+    ingredient?: {
+        id: number;
+        name: string;
+        unit: string;
+        stock: number;
+    };
+}
+
 // Interface for a product within a sales order
 export interface Product {
 
@@ -21,8 +35,10 @@ export interface Product {
     name    : string,
     image   : string,
     unit_price: number;
+    stock: number;
     code: string,
-    type: ProductType
+    type: ProductType,
+    recipe_items?: RecipeItemRow[],
 }
 
 interface ProductType{

@@ -4,6 +4,8 @@ import { DashboardComponent }   from "./a1-dashboard/component";
 import { SaleComponent }        from "./a2-sale/component";
 import { ProductComponent }     from "./a3-product/p1-product/component";
 import { ProductTypeComponent } from "./a3-product/p2-type/listing/component";
+import { MenuCreateComponent } from "./a3-product/p1-product/create-page/component";
+import { IngredientListingComponent } from "./a3-product/p3-ingredient/listing/component";
 import { UserComponent }        from "./a4-user/u1-listing/component";
 
 export default [
@@ -23,8 +25,16 @@ export default [
                 component       : ProductComponent
             },
             {
+                path            : 'create',
+                component       : MenuCreateComponent
+            },
+            {
                 path            : 'type',
                 component       : ProductTypeComponent
+            },
+            {
+                path            : 'ingredients',
+                component       : IngredientListingComponent
             },
         ]
     },

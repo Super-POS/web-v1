@@ -6,7 +6,7 @@
                     [svgIcon]="'heroicons_outline:home'"></mat-icon>
             </div>
             <div class="flex items-center ml-1.5">
-                <span class="text-lg text-gray-600 dark:text-white -mb-0.5">ការបញ្ជាទិញ</span>
+                <span class="text-lg text-gray-600 dark:text-white -mb-0.5">ការបញ្ជាទិញកាហ្វេ</span>
             </div>
         </div>
     </div>
@@ -23,7 +23,7 @@
         <div *ngIf="data.length > 0" class="pos-content px-4">
             <div class="list-pos-left">
                 <!-- Title -->
-                <div class="md:text-3xl font-semibold mt-4 mb-4">ប្រភេទផលិតផល</div>
+                <div class="md:text-3xl font-semibold mt-4 mb-4">ប្រភេទម៉ឺនុយ</div>
 
                 <!-- Tab Headers Custom Styling with Tailwind CSS -->
                 <div class="overflow-x-auto scrollbar-hide whitespace-nowrap mb-4">
@@ -40,13 +40,23 @@
                             class="tab-item cursor-pointer px-6 py-2 rounded-lg border-2 text-center dark:bg-gray-800 inline-block">
                             <div class="flex flex-col">
                                 <span class="text-sm sm:text-base md:text-lg">{{item?.name}}</span>
-                                <span class="text-sm sm:text-base md:text-md">{{item?.products.length}} Items</span>
+                                <span class="text-sm sm:text-base md:text-md">{{item?.products.length}} មុខ</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="md:text-3xl font-semibold mt-4">ផលិតផល</div>
+                <div class="md:text-3xl font-semibold mt-4">ម៉ឺនុយ</div>
+                <div
+                    class="mt-3 flex items-center h-10 max-w-md border border-slate-300 rounded-[0.65rem] overflow-hidden bg-white dark:bg-gray-800 dark:border-gray-700">
+                    <span class="pl-2">
+                        <mat-icon class="!h-5 !w-5 text-slate-500"
+                            [svgIcon]="'heroicons_outline:magnifying-glass'"></mat-icon>
+                    </span>
+                    <input type="search" placeholder="ស្វែងរកម៉ឺនុយ..."
+                        class="w-full h-10 px-2 bg-transparent outline-none text-gray-800 dark:text-gray-100"
+                        [(ngModel)]="searchKey" (ngModelChange)="onSearchInput()">
+                </div>
                 <!-- Mat Tab Group (Hidden, still functional) -->
                 <mat-tab-group class="hidden" disableRipple>
                     <mat-tab *ngFor="let item of data; trackBy: trackById" [label]="item?.name">
@@ -55,7 +65,7 @@
                                 <product-item *ngFor="let product of item.products; trackBy: trackByProductId"
                                     [data]="product" (result)="addToCart($event, 1)">
                                 </product-item>
-                                <span *ngIf="item.products.length === 0">គ្មានផលិតផល!!!</span>
+                                <span *ngIf="item.products.length === 0">គ្មានម៉ឺនុយ!!!</span>
                             </div>
                         </div>
                     </mat-tab>
@@ -63,10 +73,10 @@
 
                 <div class="container-tab-content py-4 pr-3" *ngIf="selectedTab">
                     <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-hidden">
-                        <product-item *ngFor="let product of selectedTab.products; trackBy: trackByProductId"
+                        <product-item *ngFor="let product of filteredProducts; trackBy: trackByProductId"
                             [data]="product" (result)="addToCart($event, 1)">
                         </product-item>
-                        <span *ngIf="selectedTab.products.length === 0">គ្មានផលិតផល!!!</span>
+                        <span *ngIf="filteredProducts.length === 0">គ្មានម៉ឺនុយ!!!</span>
                     </div>
                 </div>
             </div>
@@ -78,10 +88,30 @@
                         <span class="text-lg">អ្នកគិតបញ្ជី៖ <b class="text-g">{{ user?.name }}</b></span>
                     </div>
                 </div>
+                <div class="w-full px-4 pb-2">
+                    <div class="border border-gray-300 bg-white rounded-lg dark:bg-gray-800 dark:border-gray-700">
+                        <div class="flex justify-between items-center px-3 py-2 border-b dark:border-gray-700">
+                            <span class="font-semibold text-sm">ស្តុកគ្រឿងផ្សំ (មើលបានប៉ុណ្ណោះ)</span>
+                            <span class="text-xs text-slate-500">{{ ingredientStocks.length }} មុខ</span>
+                        </div>
+                        <div class="max-h-52 overflow-auto">
+                            <div *ngFor="let ing of ingredientStocks; trackBy: trackByIngredientId"
+                                class="px-3 py-1.5 text-sm border-b last:border-b-0 dark:border-gray-700 flex items-center justify-between">
+                                <span class="truncate pr-2">{{ ing.name }}</span>
+                                <span class="font-mono tabular-nums"
+                                    [class.text-red-500]="ing.stock <= 0"
+                                    [class.text-slate-600]="ing.stock > 0">
+                                    {{ ing.stock | number : '1.0-2' }} {{ ing.unit }}
+                                </span>
+                            </div>
+                            <div *ngIf="ingredientStocks.length === 0" class="px-3 py-3 text-sm text-slate-500">គ្មានទិន្នន័យគ្រឿងផ្សំ</div>
+                        </div>
+                    </div>
+                </div>
                 <div class="w-full p-4" *ngIf="carts.length > 0">
                     <div class="border-t border-b pt-5 pb-5 flex justify-between px-5">
                         <div class="flex gap-1 items-center">
-                            <span>ចំនួនផលិតផល​​</span>
+                            <span>ចំនួនមុខ</span>
                             <span
                                 class="w-7 h-7 bg-blue-500 text-white text-center rounded-full text-md flex justify-center items-center">{{carts.length}}​</span>
                         </div>
@@ -93,7 +123,7 @@
                     </div>
                 </div>
                 <div class="list-pos-right-body max-w-[28rem] px-4" *ngIf="carts.length > 0">
-                    <div *ngFor="let item of carts; let i = index; trackBy: trackById"
+                    <div *ngFor="let item of carts; let i = index; trackBy: trackByLineId"
                         class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 md:p-6 mt-2">
                         <div class="space-y-4 md:flex md:items-center md:justify-between md:gap-6 md:space-y-0">
                             <div class="flex justify-start items-center gap-4">
@@ -101,6 +131,14 @@
                                 <div class="flex flex-col">
                                     <span class="text-sm">{{item.type.name}} | {{item.code}}</span>
                                     <span>{{item?.name}}</span>
+                                    <span *ngIf="item.sugar_pct !== 100 || item.shots !== 1" class="text-xs text-slate-500 dark:text-slate-400">
+                                        ស្ករ {{ item.sugar_pct }}% · {{ item.shots === 2 ? 'Double shot' : '1 shot' }}
+                                    </span>
+                                    <span class="text-xs mt-0.5"
+                                        [class.text-red-500]="item.stock <= 0"
+                                        [class.text-slate-500]="item.stock > 0">
+                                        ស្តុកសល់: {{ item.stock | number : '1.0-2' }}
+                                    </span>
                                     <span class="text-sm text-green-600">{{ item?.unit_price | number }}
                                         រៀល</span>
                                 </div>
@@ -154,7 +192,7 @@
                                 <button
                                     class="text-white font-semibold p-2 bg-[#102d71] flex justify-center min-w-[130px] rounded-full"
                                     [disabled]="!canSubmit" (click)="checkOut()">
-                                    បញ្ជាទិញ
+                                    ទូទាត់
                                 </button>
                             </div>
                         </ng-template>

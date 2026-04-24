@@ -50,7 +50,7 @@ export class SharedDetailsComponent implements OnInit {
                 this.downloading = false;
                 this.dialogRef.close();
                 let blob = this.b64toBlob(res.data, 'application/pdf');
-                FileSaver.saveAs(blob, 'Invoice-' + this.data.receipt_number + '.pdf');
+                FileSaver.saveAs(blob, 'Receipt-' + this.data.receipt_number + '.pdf');
             },
             error: (err: HttpErrorResponse) => {
                 this.snackBarService.openSnackBar(err.error?.message || GlobalConstants.genericError, GlobalConstants.error);

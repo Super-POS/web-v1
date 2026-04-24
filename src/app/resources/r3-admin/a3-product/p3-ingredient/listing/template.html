@@ -1,0 +1,100 @@
+<div class="ingredient-listing w-full min-w-0 flex flex-1 flex-col bg-white dark:bg-gray-800 mt-4 border border-slate-200/90 shadow-sm dark:border-gray-700 dark:shadow-none md:rounded-tl-lg md:rounded-tr-lg">
+  <div class="bg-white dark:bg-gray-800 min-h-14 flex flex-wrap gap-2 justify-between items-center border-b border-slate-200 px-4 py-3 sm:px-6 dark:border-gray-600">
+    <div class="flex flex-1 items-center font-medium min-w-0">
+      <mat-icon class="text-amber-700 dark:text-amber-400 icon-size-5 mr-1 shrink-0" [svgIcon]="'mdi:fridge-outline'"></mat-icon>
+      <div class="flex items-center text-lg text-gray-700 dark:text-white truncate">
+        <a routerLink="/admin/product/all" class="hover:underline text-[#264497]">ម៉ឺនុយ</a>
+        <mat-icon class="!h-4 !w-4 mx-0.5" [svgIcon]="'mat_solid:chevron_right'"></mat-icon>
+        <span>ស្តុកគ្រឿងផ្សំ</span>
+      </div>
+    </div>
+    <div class="flex flex-1 min-w-0 items-center justify-end gap-2 flex-wrap">
+      <div
+        class="flex items-center w-full min-w-0 sm:min-w-[18rem] sm:max-w-sm h-10 border border-slate-300 dark:border-gray-600 dark:bg-gray-800/80 rounded-[0.65rem] overflow-hidden"
+      >
+        <span class="pl-2 shrink-0">
+          <mat-icon class="!h-5 !w-5 text-slate-500" [svgIcon]="'heroicons_outline:magnifying-glass'"></mat-icon>
+        </span>
+        <input
+          type="search"
+          placeholder="ស្វែងរកគ្រឿងផ្សំ…"
+          class="w-full min-w-0 h-10 pr-2 bg-transparent text-gray-800 dark:text-gray-100 placeholder:text-slate-400 outline-none"
+          [(ngModel)]="searchKey"
+          (ngModelChange)="onSearchInput()"
+        />
+      </div>
+      <button mat-flat-button type="button" (click)="openCreate()" class="!bg-[#264497] !text-white !min-h-10 shrink-0">
+        <mat-icon [svgIcon]="'heroicons_outline:plus'" class="!h-5 !w-5 mr-1" />
+        បន្ថែមគ្រឿងផ្សំ
+      </button>
+    </div>
+  </div>
+
+  <p class="w-full px-4 pt-3 pb-1 text-sm text-slate-500 sm:px-6 dark:text-slate-400">
+    តាមដានស្ករ ទឹកដោះគោ ពពុះពងស្កឹត កែវ ឡុកច្រើង ជាដើម។ រាល់ការបញ្ជាទិញតាមរូបមន្តនឹងដកស្តុកអតិបរមានៅទីនេះដោយស្វ័យប្រវត្តិ។
+  </p>
+
+  <div *ngIf="isLoading" class="flex justify-center py-20">
+    <mat-progress-spinner mode="indeterminate" [diameter]="40"></mat-progress-spinner>
+  </div>
+
+  <div *ngIf="!isLoading" class="w-full min-w-0 flex-1 overflow-x-auto px-4 pb-6 sm:px-6">
+    <table mat-table [dataSource]="dataSource" class="ingredient-table w-full">
+      <ng-container matColumnDef="no">
+        <th mat-header-cell *matHeaderCellDef class="w-12">ល.រ</th>
+        <td mat-cell *matCellDef="let r; let i = index">{{ i + 1 }}</td>
+      </ng-container>
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>គ្រឿងផ្សំ</th>
+        <td mat-cell *matCellDef="let r" class="font-medium">{{ r.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="unit">
+        <th mat-header-cell *matHeaderCellDef>ឯកតា</th>
+        <td mat-cell *matCellDef="let r">{{ r.unit }}</td>
+      </ng-container>
+      <ng-container matColumnDef="stock">
+        <th mat-header-cell *matHeaderCellDef class="text-right">ស្តុក</th>
+        <td mat-cell *matCellDef="let r" class="text-right font-mono tabular-nums">
+          {{ r.stock | number : '1.0-2' }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="low">
+        <th mat-header-cell *matHeaderCellDef class="text-right">ព្រមាន</th>
+        <td mat-cell *matCellDef="let r" class="text-right font-mono tabular-nums text-slate-500">
+          {{ r.low_stock_threshold | number : '1.0-2' }}
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>ស្ថានភាព</th>
+        <td mat-cell *matCellDef="let r">
+          <span
+            *ngIf="isLow(r)"
+            class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900/40 dark:text-red-200"
+          >ទាប</span>
+          <span
+            *ngIf="!isLow(r)"
+            class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200"
+          >គ្រប់គ្រាន់</span>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="action">
+        <th mat-header-cell *matHeaderCellDef class="w-24 text-right">សកម្មភាព</th>
+        <td mat-cell *matCellDef="let r" class="text-right">
+          <button
+            type="button"
+            mat-icon-button
+            (click)="openEdit(r)"
+            matTooltip="កែស្តុក"
+            class="!text-[#264497]"
+          >
+            <mat-icon [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
+          </button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns" class="hover:bg-slate-50/80 dark:hover:bg-gray-700/50"></tr>
+    </table>
+    <div *ngIf="allRows.length === 0" class="text-center py-12 text-slate-500">គ្មានទិន្នន័យ</div>
+    <div *ngIf="allRows.length > 0 && dataSource.data.length === 0" class="text-center py-12 text-slate-500">គ្មានលទ្ធផលសម្រាប់ពាក្យស្វែងរក</div>
+  </div>
+</div>

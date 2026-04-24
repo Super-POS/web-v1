@@ -77,7 +77,7 @@ export class ViewDetailSaleComponent implements OnInit, OnDestroy {
 
                 this.downloading = false;
                 let blob = this.b64toBlob(res.data, 'application/pdf');
-                FileSaver.saveAs(blob, 'Invoice-' + row.receipt_number + '.pdf');
+                FileSaver.saveAs(blob, 'Receipt-' + row.receipt_number + '.pdf');
             },
             error: (err: HttpErrorResponse) => {
                 this._snackbar.openSnackBar(err.error?.message || GlobalConstants.genericError, GlobalConstants.error);

@@ -25,6 +25,7 @@ export interface Detail {
     id: number,
     unit_price: number,
     qty: number,
+    options?: { sugar_pct?: number; shots?: number } | null,
     product: Product
 }
 

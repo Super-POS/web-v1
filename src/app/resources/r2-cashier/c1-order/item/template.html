@@ -17,5 +17,8 @@
         <p class="text-sm font-medium text-green-600 dark:text-green-400 mt-1">
             {{ data?.unit_price | number }} រៀល
         </p>
+        <p class="text-xs mt-1" [class.text-red-500]="(data?.stock || 0) <= 0" [class.text-gray-500]="(data?.stock || 0) > 0">
+            នៅសល់: {{ data?.stock || 0 }}
+        </p>
     </div>
 </div>

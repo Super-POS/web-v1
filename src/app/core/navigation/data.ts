@@ -17,9 +17,9 @@ const adminNavigation: HelperNavigationItem[] = [
     },
     {
         id: 'product',
-        title: 'ផលិតផល',
+        title: 'ម៉ឺនុយ',
         type: 'collapsable',
-        icon: 'mdi:package-variant-closed',
+        icon: 'mdi:coffee-outline',
         children: [
             {
                 id: 'product.all',
@@ -28,10 +28,22 @@ const adminNavigation: HelperNavigationItem[] = [
                 link: '/admin/product/all',
             },
             {
+                id: 'product.create',
+                title: 'បង្កើតម៉ឺនុយ',
+                type: 'basic',
+                link: '/admin/product/create',
+            },
+            {
                 id: 'product.type',
                 title: 'ប្រភេទ',
                 type: 'basic',
                 link: '/admin/product/type',
+            },
+            {
+                id: 'product.ingredients',
+                title: 'ស្តុកគ្រឿងផ្សំ',
+                type: 'basic',
+                link: '/admin/product/ingredients',
             },
         ],
     },
@@ -54,9 +66,9 @@ const adminNavigation: HelperNavigationItem[] = [
 const userNavigation: HelperNavigationItem[] = [
     {
         id: 'order',
-        title: 'ការបញ្ជាទិញ',
+        title: 'ការបញ្ជាទិញកាហ្វេ',
         type: 'basic',
-        icon: 'mdi:monitor',
+        icon: 'mdi:coffee',
         link: '/cashier/order',
     },
     {

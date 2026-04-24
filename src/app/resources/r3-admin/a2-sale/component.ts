@@ -2,13 +2,12 @@
 import { CommonModule }             from '@angular/common';
 import { Component, OnInit }        from '@angular/core';
 import { FormsModule }              from '@angular/forms';
-import { Router }                   from '@angular/router';
 
 // ================================================================================>> Third Party Library
 // ===>> Material
 import { MatBadgeModule }                       from '@angular/material/badge';
 import { MatButtonModule }                      from '@angular/material/button';
-import { MatDialog }                            from '@angular/material/dialog';
+import { MatDialog, MatDialogConfig }           from '@angular/material/dialog';
 import { MatIconModule }                        from '@angular/material/icon';
 import { MatMenuModule }                        from '@angular/material/menu';
 import { MatPaginatorModule, PageEvent }        from '@angular/material/paginator';
@@ -35,9 +34,10 @@ import { SaleService }                  from './service';
 import FileSaver from 'file-saver';
 import GlobalConstants from 'helper/shared/constants';
 import { HttpErrorResponse } from '@angular/common/http';
+import { ViewDetailSaleComponent } from 'app/shared/view/component';
 
 @Component({
-    selector    : 'student-listing',
+    selector    : 'admin-sale-listing',
     standalone  : true,
     templateUrl : './template.html',
     styleUrl    : './style.scss',
@@ -92,7 +92,7 @@ export class SaleComponent implements OnInit {
         },
         {
             value: 'ordered_at', 
-            name: 'ថ្ងៃបញ្ជាទិញ',
+            name: 'ថ្ងៃលក់',
         }
     ];
 
@@ -102,8 +102,6 @@ export class SaleComponent implements OnInit {
 
     // ===>> Download
     public isDownloadingReport      : boolean   = false;
-    public isDownloadingCV          : boolean   = false;
-    public selectedCVDownloadIndex  : number    = -1;
 
     // ===>> File Url
     public FILE_URL         : string = env.FILE_BASE_URL
@@ -112,13 +110,9 @@ export class SaleComponent implements OnInit {
     public page                 : number = 1;
     public limit                : number = 20;
     public total                : number = 0;
-    snackBarService: any;
-
-
     constructor(
         private _service                    : SaleService,
         private _snackbarService            : SnackbarService,
-        private _router                     : Router,
         private _matDialog                  : MatDialog,
         private _errorHandleService         : ErrorHandleService,
         private _dialogConfigService        : DialogConfigService,
@@ -294,75 +288,67 @@ export class SaleComponent implements OnInit {
         this.getData();
     }
 
-    // ====================================================================>> Get Data for Listing
-    view(id: number): void {
-        this._router.navigateByUrl( `/admin/student/view/${id}`);
+    // ====================================================================>> View sale detail
+    viewDetail(row: Data): void {
+        const dialogConfig = new MatDialogConfig();
+        dialogConfig.autoFocus = false;
+        dialogConfig.position = { right: '0px' };
+        dialogConfig.height = '100dvh';
+        dialogConfig.width = '100dvw';
+        dialogConfig.maxWidth = '550px';
+        dialogConfig.panelClass = 'custom-mat-dialog-as-mat-drawer';
+        dialogConfig.enterAnimationDuration = '0s';
+        dialogConfig.data = row;
+        this._matDialog.open(ViewDetailSaleComponent, dialogConfig);
     }
 
-    // ====================================================================>> Delete
-    delete(data:Data): void {
+    // ====================================================================>> Delete sale
+    onDelete(sale: Data): void {
+        const dialogRef = this._helpersConfirmationService.open({
+            title: `Remove <strong>${sale.receipt_number}</strong>`,
+            message: 'Are you sure you want to remove this receipt permanently? <span class="font-medium">This action cannot be undone!</span>',
+            icon: {
+                show: true,
+                name: 'heroicons_outline:exclamation-triangle',
+                color: 'warn',
+            },
+            actions: {
+                confirm: {
+                    show: true,
+                    label: 'Remove',
+                    color: 'warn',
+                },
+                cancel: {
+                    show: true,
+                    label: 'Cancel',
+                },
+            },
+            dismissible: true,
+        });
 
-        // ===>> Open Confirmation Dialog
-        //const dialogRef = this._helpersConfirmationService.open('delete');
+        dialogRef.afterClosed().subscribe((result: string | undefined) => {
+            if (result !== 'confirmed') {
+                return;
+            }
 
-        // dialogRef.afterClosed().subscribe((result: string | undefined) => {
-
-        //     if (result === 'confirmed') {
-
-        //         this.isLoading = true;
-
-        //         this._service.delete('students', data.id).subscribe({
-
-        //             next: (res) => {
-        //                 this.getData();
-        //                 this._snackbarService.openSnackBar(res.message, '');
-        //                 this.isLoading = false;
-        //             },
-
-        //             error: (err) => {
-        //                 this._errorHandleService.handleHttpError(err);
-        //                 this.isLoading = false;
-        //             },
-
-        //         });
-        //     }
-        // });
+            this._service.delete(sale.id).subscribe({
+                next: (response: { status_code: number; message: string }) => {
+                    this.dataSource.data = this.dataSource.data.filter((v: Data) => v.id !== sale.id);
+                    this._snackbarService.openSnackBar(response.message, GlobalConstants.success);
+                    this.getData();
+                },
+                error: (err: HttpErrorResponse) => {
+                    this._snackbarService.openSnackBar(
+                        err?.error?.message || GlobalConstants.genericError,
+                        GlobalConstants.error
+                    );
+                },
+            });
+        });
     }
 
     // ====================================================================>> Upgrade to Member
     
-
-    // ====================================================================>> Download CV
-    downloadInvoice(cvId: number, index:number = 0): void {
-
-
-        this.selectedCVDownloadIndex  = index;
-        this.isDownloadingCV          =   true; // Indicate the download process is ongoing
-
-        // Call the service to fetch the Base64-encoded PDF
-        // this._service.downloadInvoice(cvId).subscribe({
-        //     next: (response:any) => {
-
-        //         if (response.result) {
-
-        //             savePDFFromBlob(`CV-${response.name}-`, response.result);
-
-        //         } else {
-        //             this._snackbarService.openSnackBar('No data available for the report.', 'Close');
-        //         }
-
-        //         this.selectedCVDownloadIndex    = -1
-        //         this.isDownloadingCV            = false;
-        //     },
-        //     error: (err) => {
-
-        //         this.selectedCVDownloadIndex    = -1;
-        //         this.isDownloadingCV            = false;
-        //         this._errorHandleService.handleHttpError(err);
-
-        //     },
-        //);
-    }
 
     // // ====================================================================>> Download Report
     // downloadReport(): void {
@@ -414,7 +400,7 @@ export class SaleComponent implements OnInit {
                 }
                 FileSaver.saveAs(blob, fileName);
                 // Show a success message using the snackBarService
-                this.snackBarService.openSnackBar('របាយការណ៍ទាញយកបានជោគជ័យ', GlobalConstants.success);
+                this._snackbarService.openSnackBar('របាយការណ៍ទាញយកបានជោគជ័យ', GlobalConstants.success);
             },
             error: (err: HttpErrorResponse) => {
                 // Set isaving to false to indicate the operation is completed (even if it failed)
@@ -428,7 +414,7 @@ export class SaleComponent implements OnInit {
                     message = errors.map((obj) => obj.message).join(', ');
                 }
                 // Show an error message using the snackBarService
-                this.snackBarService.openSnackBar(message, GlobalConstants.error);
+                this._snackbarService.openSnackBar(message, GlobalConstants.error);
             },
         });
     }

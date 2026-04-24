@@ -1,0 +1,30 @@
+<h2 mat-dialog-title class="!text-lg font-semibold">កែស្តុកគ្រឿងផ្សំ</h2>
+<mat-dialog-content class="!pt-2">
+  <p class="text-sm text-slate-600 dark:text-slate-300 mb-4">
+    <span class="font-medium text-slate-800 dark:text-white">{{ data.row.name }}</span>
+    <span class="text-slate-400"> · </span>
+    <span>{{ data.row.unit }}</span>
+  </p>
+  <form [formGroup]="form" class="flex flex-col gap-3">
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>ស្តុកបច្ចុប្បន្ន</mat-label>
+      <input matInput type="number" min="0" step="0.01" formControlName="stock" />
+      <mat-hint>ចំនួនពិតក្នុងឃ្លាំង / ហាង</mat-hint>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>កម្រិតព្រមាន (ទាប)</mat-label>
+      <input matInput type="number" min="0" step="0.01" formControlName="low_stock_threshold" />
+      <mat-hint>បង្ហាញការព្រមាននៅពេលស្តុក ≤ តម្លៃនេះ</mat-hint>
+    </mat-form-field>
+    <p *ngIf="isLow" class="text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded-lg px-3 py-2">
+      ស្តុកកំពុងទាបជាងឬស្មើកម្រិតព្រមាន។
+    </p>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end" class="!pb-4">
+  <button mat-stroked-button type="button" (click)="close()" [disabled]="saving">បោះបង់</button>
+  <button mat-flat-button type="button" class="!bg-[#264497] !text-white" (click)="save()" [disabled]="form.invalid || saving">
+    <span *ngIf="!saving">រក្សាទុក</span>
+    <mat-progress-spinner *ngIf="saving" [diameter]="20" mode="indeterminate" />
+  </button>
+</mat-dialog-actions>

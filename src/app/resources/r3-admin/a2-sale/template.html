@@ -100,7 +100,9 @@
 
             <!-- Skeleton Loading -->
             <ng-container *ngIf="isLoading; else content">
-                <admin-student-list-skeleton />
+                <div class="flex items-center justify-center h-48 text-slate-500">
+                    កំពុងទាញយកទិន្នន័យ...
+                </div>
             </ng-container>
 
             <!-- Stop Loading -->

@@ -28,7 +28,7 @@ import { PortraitComponent } from 'helper/components/portrait/component';
 import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
 import { Subject } from 'rxjs';
-import { Data } from '../interface';
+import { Data, Ingredient, RecipeItem } from '../interface';
 import { ProductService } from '../service';
 @Component({
     selector: 'car-product-dialog-create-and-update',
@@ -72,10 +72,11 @@ export class ProductsDialogComponent implements OnInit, OnDestroy {
 
     // Default image source for the product (assuming a default image is used)
     src: string = 'icons/image.jpg';
+    recipeRows: { ingredient_id: number | null; qty_required: number | null; ingredient?: Ingredient }[] = [];
 
     // Constructor with dependency injection
     constructor(
-        @Inject(MAT_DIALOG_DATA) public data: { title: string, product: Data, setup: any },
+        @Inject(MAT_DIALOG_DATA) public data: { title: string, product: Data, setup: { productTypes: { id: number; name: string }[]; ingredients: Ingredient[] } },
         private dialogRef: MatDialogRef<ProductsDialogComponent>,
         private formBuilder: UntypedFormBuilder,
         private snackBarService: SnackbarService,
@@ -85,9 +86,49 @@ export class ProductsDialogComponent implements OnInit, OnDestroy {
     // ngOnInit method
     ngOnInit(): void {
         // Set the image source based on the product data (if available)
-        this.data.product != null ? this.src = `${env.FILE_BASE_URL}${this.data.product.image}` : '';
+        if (this.data.product?.image) {
+            this.src = this.resolveImagePreview(this.data.product.image);
+        }
+        this.recipeRows = (this.data.product?.recipe_items || []).map((item) => ({
+            ingredient_id: item.ingredient_id,
+            qty_required: item.qty_required,
+            ingredient: item.ingredient,
+        }));
+        if (this.recipeRows.length === 0) {
+            this.addRecipeRow();
+        }
         // Initialize the form builder
         this.ngBuilderForm();
+    }
+
+    resolveImagePreview(imagePath: string): string {
+        if (!imagePath) {
+            return 'icons/image.jpg';
+        }
+        if (/^https?:\/\//i.test(imagePath)) {
+            return imagePath;
+        }
+        return `${env.FILE_BASE_URL}${imagePath}`;
+    }
+
+    addRecipeRow(): void {
+        this.recipeRows.push({ ingredient_id: null, qty_required: null });
+    }
+
+    removeRecipeRow(index: number): void {
+        this.recipeRows.splice(index, 1);
+        if (this.recipeRows.length === 0) {
+            this.addRecipeRow();
+        }
+    }
+
+    getRecipePayload(): RecipeItem[] {
+        return this.recipeRows
+            .map((row) => ({
+                ingredient_id: Number(row.ingredient_id),
+                qty_required: Number(row.qty_required),
+            }))
+            .filter((row) => row.ingredient_id > 0 && row.qty_required > 0);
     }
 
     // srcChange method
@@ -118,7 +159,8 @@ export class ProductsDialogComponent implements OnInit, OnDestroy {
             name: [this.data?.product?.name || null, [Validators.required]],
             type_id: [this.data?.product?.type?.id || null, [Validators.required]],
             image: [null, this.data.product == null ? Validators.required : []],
-            unit_price: [this.data?.product?.unit_price || null, [Validators.required]]
+            unit_price: [this.data?.product?.unit_price || null, [Validators.required]],
+            stock: [this.data?.product?.stock ?? 0, [Validators.required, Validators.min(0)]]
         });
     }
 
@@ -136,7 +178,15 @@ export class ProductsDialogComponent implements OnInit, OnDestroy {
         // Set saving to true to indicate that the create operation is in progress
         this.saving = true;
         // Call the productService.create method to create a new product
-        this.productService.create(this.productForm.value).subscribe({
+        const payload = {
+            code: this.productForm.value.code,
+            name: this.productForm.value.name,
+            type_id: this.productForm.value.type_id,
+            image: this.productForm.value.image,
+            unit_price: this.productForm.value.unit_price,
+        };
+
+        this.productService.create(payload).subscribe({
 
             next: response => {
 
@@ -148,17 +198,19 @@ export class ProductsDialogComponent implements OnInit, OnDestroy {
                     name: response.data.name,
                     image: response.data.image,
                     unit_price: response.data.unit_price,
+                    stock: response.data.stock,
                     total_sale: response.data.total_sale,
                     created_at: response.data.created_at,
                     type: {
-                        id: response.data.type_id,
-                        name: this.data.setup.find(v => v.id === response.data.type_id)?.name || ''
+                        id: response.data.type?.id || response.data.type_id,
+                        name: response.data.type?.name || this.data.setup.productTypes.find(v => v.id === response.data.type_id)?.name || ''
                     },
                     creator: {
                         id: response.data.creator.id,
                         name: response.data.creator.name,
                         avatar: response.data.creator.avatar || '',
                     },
+                    recipe_items: response.data.recipe_items || [],
                 };
 
 
@@ -207,7 +259,15 @@ export class ProductsDialogComponent implements OnInit, OnDestroy {
         // Set saving to true to indicate that the update operation is in progress
         this.saving = true;
         // Call the productService.update method to update an existing product
-        this.productService.update(this.data.product.id, this.productForm.value).subscribe({
+        const payload = {
+            code: this.productForm.value.code,
+            name: this.productForm.value.name,
+            type_id: this.productForm.value.type_id,
+            image: this.productForm.value.image,
+            unit_price: this.productForm.value.unit_price,
+        };
+
+        this.productService.update(this.data.product.id, payload).subscribe({
 
             next: response => {
 
@@ -219,17 +279,19 @@ export class ProductsDialogComponent implements OnInit, OnDestroy {
                     name: response.data.name,
                     image: response.data.image,
                     unit_price: response.data.unit_price,
+                    stock: response.data.stock,
                     total_sale: response.data.total_sale,
                     created_at: response.data.created_at,
                     type: {
-                        id: response.data.type_id,
-                        name: this.data.setup.find(v => v.id === response.data.type_id)?.name || ''
+                        id: response.data.type?.id || response.data.type_id,
+                        name: response.data.type?.name || this.data.setup.productTypes.find(v => v.id === response.data.type_id)?.name || ''
                     },
                     creator: {
                         id: response.data.creator.id,
                         name: response.data.creator.name,
                         avatar: response.data.creator.avatar || '',
                     },
+                    recipe_items: response.data.recipe_items || [],
                 };
 
                 // Emit the updated product data to the parent component

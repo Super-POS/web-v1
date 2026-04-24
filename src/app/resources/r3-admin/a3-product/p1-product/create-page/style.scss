@@ -1,0 +1,65 @@
+:host {
+    display: block;
+}
+
+.menu-create-page {
+    --menu-create-accent: #264497;
+    --menu-create-accent-rgb: 38, 68, 151;
+}
+
+.menu-create-shell {
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.06),
+        0 4px 24px rgba(15, 23, 42, 0.04);
+}
+
+.menu-create-form {
+    .mat-mdc-form-field {
+        width: 100%;
+    }
+}
+
+.menu-create-card {
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+}
+
+.menu-create-submit {
+    background: linear-gradient(180deg, #2d55b8 0%, var(--menu-create-accent) 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 1px 2px rgba(var(--menu-create-accent-rgb), 0.35);
+}
+
+.menu-create-submit:disabled {
+    background: #94a3b8 !important;
+    color: #f1f5f9 !important;
+    box-shadow: none;
+}
+
+.menu-create-header {
+    a {
+        text-decoration: none;
+        transition: color 0.15s ease;
+    }
+}
+
+/* Recipe rows: align Material fields on grid */
+.recipe-table-header {
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid rgb(241 245 249 / 0.9);
+}
+
+:host-context(.dark) .recipe-table-header {
+    border-bottom-color: rgb(75 85 99 / 0.6);
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}

@@ -1,0 +1,52 @@
+<h2 mat-dialog-title class="!text-lg !font-semibold pr-8">
+  {{ data.product?.name }}
+</h2>
+<mat-dialog-content class="!max-h-[min(80vh,28rem)]">
+  <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">ជ្រើសរើស % ស្ករ និងចំនួນ shot ដើម្បីដកស្តុកត្រឹមត្រូវ។</p>
+
+  <div class="space-y-4">
+    <div>
+      <div class="text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">% ស្ករ (ធៀបនឹងរូបមន្តពេញ)</div>
+      <div class="flex flex-wrap gap-2">
+        <button
+          type="button"
+          *ngFor="let p of sugarPresets"
+          (click)="sugarPct = p"
+          [class.ring-2]="sugarPct === p"
+          [class.ring-blue-600]="sugarPct === p"
+          class="min-w-14 rounded-lg border border-slate-200 dark:border-slate-600 px-3 py-2 text-sm dark:bg-slate-800"
+        >
+          {{ p }}%
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <div class="text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">ចាំជើញ (Espresso)</div>
+      <div class="flex gap-2">
+        <button
+          type="button"
+          (click)="shots = 1"
+          [class.ring-2]="shots === 1"
+          [class.ring-blue-600]="shots === 1"
+          class="flex-1 rounded-lg border border-slate-200 dark:border-slate-600 px-3 py-2.5 text-sm dark:bg-slate-800"
+        >
+          1 shot
+        </button>
+        <button
+          type="button"
+          (click)="shots = 2"
+          [class.ring-2]="shots === 2"
+          [class.ring-blue-600]="shots === 2"
+          class="flex-1 rounded-lg border border-slate-200 dark:border-slate-600 px-3 py-2.5 text-sm dark:bg-slate-800"
+        >
+          Double shot
+        </button>
+      </div>
+    </div>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end" class="gap-2 !pt-2">
+  <button mat-stroked-button type="button" (click)="cancel()">បោះបង់</button>
+  <button mat-flat-button type="button" class="!bg-[#102d71] !text-white" (click)="confirm()">បន្ថែម</button>
+</mat-dialog-actions>
