@@ -3,6 +3,7 @@ import { CommonModule, DatePipe, DecimalPipe, NgClass, NgIf }  from '@angular/co
 import { HttpErrorResponse }                                   from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnInit, inject }        from '@angular/core';
 import { FormsModule }                                         from '@angular/forms';
+import { Router }                                              from '@angular/router';
 
 // ================================================================>> Angular Material Modules
 import { MatButtonModule }                                     from '@angular/material/button';
@@ -59,6 +60,7 @@ export class ProductComponent implements OnInit {
     private _service = inject(ProductService);
 
     private snackBarService = inject(SnackbarService);
+    private router = inject(Router);
     // Creating a product using a dialog
     private matDialog = inject(MatDialog);
     public data: Data[] = [];
@@ -95,7 +97,7 @@ export class ProductComponent implements OnInit {
 
 
     public shortedItems: any[] = [
-        { name: 'ឈ្មោះផលិតផល' , value: 'name' },
+        { name: 'ឈ្មោះម៉ឺនុយ' , value: 'name' },
         { name: 'តម្លៃ(រៀល)'   , value: 'unit_price' },
         { name: 'តម្លៃលក់(រៀល)' , value: 'total_sale' },
     ];
@@ -272,31 +274,7 @@ export class ProductComponent implements OnInit {
 
     // ===>> Method create new product
     create(): void {
-
-        const dialogConfig = new MatDialogConfig();
-
-        dialogConfig.data = {
-
-            title: 'បង្កើតផលិតផល',
-            product: null,
-            setup: this.setupData.productTypes
-        };
-
-        dialogConfig.autoFocus = false;
-        dialogConfig.position = { right: '0px' };
-        dialogConfig.height = '100dvh';
-        dialogConfig.width = '100dvw';
-        dialogConfig.maxWidth = '550px';
-        dialogConfig.panelClass = 'custom-mat-dialog-as-mat-drawer';
-        dialogConfig.enterAnimationDuration = '0s';
-
-        const dialogRef = this.matDialog.open(ProductsDialogComponent, dialogConfig);
-        dialogRef.componentInstance.ResponseData.subscribe((product: Data) => {
-            const data = this.dataSource.data;
-            data.unshift(product);
-            this.getData();
-            this.dataSource.data = data;
-        });
+        this.router.navigate(['/admin/menu/create']);
     }
 
     // Viewing a product using a dialog
@@ -319,7 +297,7 @@ export class ProductComponent implements OnInit {
         const dialogConfig = new MatDialogConfig();
         dialogConfig.data = {
 
-            title: 'កែប្រែផលិតផល',
+            title: 'កែប្រែម៉ឺនុយ',
             product: row,
             setup: this.setupData.productTypes
         };
@@ -408,10 +386,10 @@ export class ProductComponent implements OnInit {
                 const dateTime = new Date().toISOString().replace(/[:.]/g, '-');
                 if (type === 'PDF') {
                     blob = this.b64toBlob(response.data, 'application/pdf');
-                    fileName = `របាយការណ៍លក់តាមផលិតផល-${dateTime}.pdf`;
+                    fileName = `របាយការណ៍លក់តាមម៉ឺនុយ-${dateTime}.pdf`;
                 } else if (type === 'EXCEL') {
                     blob = this.b64toBlob(response.data, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-                    fileName = `របាយការណ៍លក់តាមផលិតផល-${dateTime}.xlsx`;
+                    fileName = `របាយការណ៍លក់តាមម៉ឺនុយ-${dateTime}.xlsx`;
                 }
                 FileSaver.saveAs(blob, fileName);
                 // Show a success message using the snackBarService

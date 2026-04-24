@@ -30,9 +30,9 @@
         </mat-form-field> -->
 
         <mat-form-field appearance="outline" class="w-full">
-            <mat-label>ប្រភេទផលិតផល</mat-label>
+            <mat-label>ប្រភេទម៉ឺនុយ</mat-label>
             <!-- <mat-icon class="icon-size-5" matPrefix [svgIcon]="'heroicons_solid:map-pin'"></mat-icon> -->
-            <mat-select formControlName="productTypes" placeholder="ជ្រើសរើសប្រភេទផលិតផល">
+            <mat-select formControlName="productTypes" placeholder="ជ្រើសរើសប្រភេទម៉ឺនុយ">
                 <mat-option *ngFor=" let item of setup?.productTypes" [value]=" item.id ">
                     {{ item.name }}
                 </mat-option>

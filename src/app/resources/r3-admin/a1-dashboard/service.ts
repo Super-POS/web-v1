@@ -57,7 +57,7 @@ export class DashbordService {
             .set('startDate', startDate)
             .set('report_type', 'PDF')
             .set('endDate', endDate);
-        return this._httpClient.get<DataSaleResponse>(`${env.API_BASE_URL}/share/report/generate-product-report`, { params });
+        return this._httpClient.get<DataSaleResponse>(`${env.API_BASE_URL}/share/report/generate-menu-report`, { params });
     }
 
 }

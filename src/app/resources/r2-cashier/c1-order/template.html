@@ -23,7 +23,7 @@
         <div *ngIf="data.length > 0" class="pos-content px-4">
             <div class="list-pos-left">
                 <!-- Title -->
-                <div class="md:text-3xl font-semibold mt-4 mb-4">ប្រភេទផលិតផល</div>
+                <div class="md:text-3xl font-semibold mt-4 mb-4">ប្រភេទម៉ឺនុយ</div>
 
                 <!-- Tab Headers Custom Styling with Tailwind CSS -->
                 <div class="overflow-x-auto scrollbar-hide whitespace-nowrap mb-4">
@@ -46,7 +46,7 @@
                     </div>
                 </div>
 
-                <div class="md:text-3xl font-semibold mt-4">ផលិតផល</div>
+                <div class="md:text-3xl font-semibold mt-4">ម៉ឺនុយ</div>
                 <!-- Mat Tab Group (Hidden, still functional) -->
                 <mat-tab-group class="hidden" disableRipple>
                     <mat-tab *ngFor="let item of data; trackBy: trackById" [label]="item?.name">
@@ -55,7 +55,7 @@
                                 <product-item *ngFor="let product of item.products; trackBy: trackByProductId"
                                     [data]="product" (result)="addToCart($event, 1)">
                                 </product-item>
-                                <span *ngIf="item.products.length === 0">គ្មានផលិតផល!!!</span>
+                                <span *ngIf="item.products.length === 0">គ្មានម៉ឺនុយ!!!</span>
                             </div>
                         </div>
                     </mat-tab>
@@ -66,7 +66,7 @@
                         <product-item *ngFor="let product of selectedTab.products; trackBy: trackByProductId"
                             [data]="product" (result)="addToCart($event, 1)">
                         </product-item>
-                        <span *ngIf="selectedTab.products.length === 0">គ្មានផលិតផល!!!</span>
+                        <span *ngIf="selectedTab.products.length === 0">គ្មានម៉ឺនុយ!!!</span>
                     </div>
                 </div>
             </div>
@@ -81,7 +81,7 @@
                 <div class="w-full p-4" *ngIf="carts.length > 0">
                     <div class="border-t border-b pt-5 pb-5 flex justify-between px-5">
                         <div class="flex gap-1 items-center">
-                            <span>ចំនួនផលិតផល​​</span>
+                            <span>ចំនួនម៉ឺនុយ​​</span>
                             <span
                                 class="w-7 h-7 bg-blue-500 text-white text-center rounded-full text-md flex justify-center items-center">{{carts.length}}​</span>
                         </div>

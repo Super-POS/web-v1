@@ -23,20 +23,20 @@ export class ProductTypeService {
     constructor(private _httpClient: HttpClient) { }
 
     getData(){
-        return this._httpClient.get<Data>(`${env.API_BASE_URL}/admin/product/types`, { headers: this._httpOptions.headers });
+        return this._httpClient.get<Data>(`${env.API_BASE_URL}/admin/menu/categories`, { headers: this._httpOptions.headers });
     }
 
     create(req: CreatePayload): Observable<{ data: Item, message: string }> {
-        return this._httpClient.post<{ data: Item, message: string }>(`${env.API_BASE_URL}/admin/product/types`, req, this._httpOptions);
+        return this._httpClient.post<{ data: Item, message: string }>(`${env.API_BASE_URL}/admin/menu/categories`, req, this._httpOptions);
     }
 
     update(id: number, req: UpdatePayload): Observable<{ data: Item, message: string }> {
-        return this._httpClient.put<{ data: Item, message: string }>(`${env.API_BASE_URL}/admin/product/types/${id}`, req, this._httpOptions);
+        return this._httpClient.put<{ data: Item, message: string }>(`${env.API_BASE_URL}/admin/menu/categories/${id}`, req, this._httpOptions);
     }
 
     // Method to delete an existing product type
     delete(id: number = 0): Observable<{ status_code: number, message: string }> {
-        return this._httpClient.delete<{ status_code: number, message: string }>(`${env.API_BASE_URL}/admin/product/types/${id}`, {
+        return this._httpClient.delete<{ status_code: number, message: string }>(`${env.API_BASE_URL}/admin/menu/categories/${id}`, {
             headers: new HttpHeaders().set('Content-Type', 'application/json')
         });
     }

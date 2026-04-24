@@ -98,6 +98,6 @@ export class UserService {
 
     getDataCashierReport(): Observable<any> {
         const params = new HttpParams()
-        return this.httpClient.get<DataSaleResponse>(`${env.API_BASE_URL}/share/report/cashier`, { params });
+        return this.httpClient.get<DataSaleResponse>(`${env.API_BASE_URL}/share/report/generate-cashier-report`, { params });
     }
 }

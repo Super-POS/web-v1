@@ -10,8 +10,8 @@ import { MatInputModule } from '@angular/material/input';
 @Component({
     selector: 'helper-pdf-viewer',
     standalone: true,
-    templateUrl: './pdf-viewer.component.html',
-    styleUrls: ['./pdf-viewer.component.scss'],
+    templateUrl: './template.html',
+    styleUrls: ['./style.scss'],
     imports: [
         CommonModule,
         MatButtonModule,

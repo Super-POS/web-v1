@@ -1,0 +1,74 @@
+<div class="list-sale-section w-full bg-white dark:bg-gray-800 mt-4 mx-4 rounded-tl-lg rounded-tr-lg">
+    <div class="bg-white min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5 dark:bg-gray-800">
+        <div class="flex flex-1 items-center font-medium">
+            <mat-icon class="text-gray-600 dark:text-white icon-size-5" [svgIcon]="'heroicons_outline:home'"></mat-icon>
+            <span class="text-lg text-gray-600 dark:text-white ml-1.5">ម៉ឺនុយ</span>
+            <mat-icon class="-mb-0.5" [svgIcon]="'mat_solid:chevron_right'"></mat-icon>
+            <span class="text-lg text-gray-600 dark:text-white -mb-0.5">គ្រឿងផ្សំ</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <button class="helpers-mat-button-sm w-6" (click)="openCreateDialog()" mat-stroked-button>
+                <mat-icon class="icon-size-6 text-slate-500" svgIcon="heroicons_outline:plus"></mat-icon>
+            </button>
+        </div>
+    </div>
+    <div class="list-sale-body w-full">
+        <div class="p-4">
+        <div *ngIf="isLoading">Getting data from API...</div>
+        <div *ngIf="!isLoading && dataSource.data.length === 0" class="text-center py-8 text-gray-500">
+            គ្មានទិន្នន័យ
+        </div>
+
+        <div *ngIf="!isLoading && dataSource.data.length > 0" class="w-full overflow-x-auto">
+            <table mat-table [dataSource]="dataSource" class="w-full min-w-full">
+                <ng-container matColumnDef="no">
+                    <th mat-header-cell *matHeaderCellDef>ល.រ</th>
+                    <td mat-cell *matCellDef="let item; let i = index">{{ i + 1 }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef>គ្រឿងផ្សំ</th>
+                    <td mat-cell *matCellDef="let item">{{ item.name }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="unit">
+                    <th mat-header-cell *matHeaderCellDef>ឯកតា</th>
+                    <td mat-cell *matCellDef="let item">{{ item.unit || '-' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="quantity">
+                    <th mat-header-cell *matHeaderCellDef>បរិមាណ</th>
+                    <td mat-cell *matCellDef="let item">{{ item.quantity }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="created_at">
+                    <th mat-header-cell *matHeaderCellDef>កាលបរិច្ឆេទ</th>
+                    <td mat-cell *matCellDef="let item">{{ item.created_at | date: 'dd-MMM-yyy' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="action">
+                    <th mat-header-cell *matHeaderCellDef>Action</th>
+                    <td mat-cell *matCellDef="let item; let i = index">
+                        <button mat-icon-button [matMenuTriggerFor]="menu">
+                            <mat-icon class="icon-size-6" svgIcon="mat_outline:more_vert"></mat-icon>
+                        </button>
+                        <mat-menu #menu="matMenu">
+                            <button mat-menu-item (click)="openUpdateDialog(item, i)">
+                                <mat-icon class="icon-size-6" svgIcon="mdi:square-edit-outline"></mat-icon>
+                                <span class="text-lg">កែប្រែ</span>
+                            </button>
+                            <button mat-menu-item (click)="onDelete(item)">
+                                <mat-icon class="icon-size-6 text-red-400" svgIcon="mdi:trash-can-outline"></mat-icon>
+                                <span class="text-red-400">លុបទិន្នន័យ</span>
+                            </button>
+                        </mat-menu>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            </table>
+        </div>
+    </div>
+    </div>
+</div>

@@ -30,8 +30,8 @@ import { HelperUtilsService } from 'helper/services/utils/utils.service';
 
 @Component({
     selector: 'helper-drawer',
-    templateUrl: './drawer.component.html',
-    styleUrls: ['./drawer.component.scss'],
+    templateUrl: './template.html',
+    styleUrls: ['./style.scss'],
     encapsulation: ViewEncapsulation.None,
     exportAs: 'helperDrawer',
     standalone: true,

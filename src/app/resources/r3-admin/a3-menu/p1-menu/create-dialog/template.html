@@ -29,15 +29,15 @@
                 <mat-form-field appearance="outline" class="w-full">
                     <mat-label>លេខកូដ</mat-label>
                     <input matInput formControlName="code" placeholder="បញ្ចូលលេខកូដ">
-                    <mat-error>សូមបញ្ចូលលេខកូដផលិតផល</mat-error>
+                    <mat-error>សូមបញ្ចូលលេខកូដម៉ឺនុយ</mat-error>
                 </mat-form-field>
                 <mat-form-field appearance="outline" class="w-full">
                     <mat-label>ឈ្មោះ</mat-label>
                     <input matInput formControlName="name" placeholder="បញ្ចូលឈ្មោះ">
-                    <mat-error>សូមបញ្ចូលឈ្មោះផលិតផល</mat-error>
+                    <mat-error>សូមបញ្ចូលឈ្មោះម៉ឺនុយ</mat-error>
                 </mat-form-field>
                 <mat-form-field appearance="outline" class="w-full">
-                    <mat-label>ប្រភេទផលិតផល</mat-label>
+                    <mat-label>ប្រភេទម៉ឺនុយ</mat-label>
                     <mat-select formControlName="type_id">
                         @for (item of data.setup; track item.id) {
                         <mat-option [value]="item.id">
@@ -48,7 +48,7 @@
                         <span>គ្មានទិន្នន័យ</span>
                         }
                     </mat-select>
-                    <mat-error>សូមជ្រើសរើសប្រភេទផលិតផល</mat-error>
+                    <mat-error>សូមជ្រើសរើសប្រភេទម៉ឺនុយ</mat-error>
                 </mat-form-field>
                 <mat-form-field appearance="outline" class="w-full">
                     <mat-label>តម្លៃ(៛)</mat-label>

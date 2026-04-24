@@ -4,7 +4,7 @@ import { UserService } from 'app/core/user/service';
 import { User } from 'app/core/user/interface';
 import { Notification } from 'app/layout/common/notifications/interface';
 import { env } from 'envs/env';
-import { map, Observable, ReplaySubject, switchMap, take } from 'rxjs';
+import { map, Observable, of, ReplaySubject, switchMap, take } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 
 @Injectable({ providedIn: 'root' })
@@ -100,21 +100,18 @@ export class NotificationsService implements OnDestroy {
     markAllAsRead(): Observable<boolean> {
         return this.notifications$.pipe(
             take(1),
-            switchMap(notifications =>
-                this._httpClient.get<boolean>('api/common/notifications/mark-all-as-read').pipe(
-                    map((isUpdated: boolean) => {
-                        if (isUpdated) {
-                            const updatedNotifications = notifications.map(notification => ({
-                                ...notification,
-                                read: true,
-                            }));
-                            this._notificationsCache = updatedNotifications;
-                            this._notifications.next(updatedNotifications);
-                        }
-                        return isUpdated;
-                    })
-                )
-            )
+            map(notifications => {
+                // No bulk "mark all as read" endpoint exists in current API.
+                // Keep UI behavior consistent by updating client state only.
+                const updatedNotifications = notifications.map(notification => ({
+                    ...notification,
+                    read: true,
+                }));
+                this._notificationsCache = updatedNotifications;
+                this._notifications.next(updatedNotifications);
+                return true;
+            }),
+            switchMap((isUpdated: boolean) => of(isUpdated))
         );
     }
 

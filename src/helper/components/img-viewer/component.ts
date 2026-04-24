@@ -9,8 +9,8 @@ import { MatInputModule } from '@angular/material/input';
 @Component({
     selector: 'helper-img-viewer',
     standalone: true,
-    templateUrl: './img-viewer.component.html',
-    styleUrls: ['./img-viewer.component.scss'],
+    templateUrl: './template.html',
+    styleUrls: ['./style.scss'],
     imports: [
         CommonModule,
         MatButtonModule,
