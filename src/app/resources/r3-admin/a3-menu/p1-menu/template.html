@@ -163,12 +163,12 @@
                         </td>
                     </ng-container>
 
-                    <ng-container matColumnDef="product">
+                    <ng-container matColumnDef="menu">
                         <th mat-header-cell *matHeaderCellDef class="w-[70%]">ម៉ឺនុយ</th>
                         <td mat-cell *matCellDef="let element">
                             <div class="flex items-center gap-3 pt-1 pb-1">
                                 <img class="w-14 h-14 scale-90 object-cover dark:bg-white dark:bg-opacity-5  transition-all rounded-lg hover:border-green-300"
-                                    [src]="fileUrl+element.image" alt="invalid img">
+                                    [src]="mediaUrl(element.image)" alt="Menu item">
                                 <div class="flex flex-col gap-1">
                                     <p>{{element.name}}</p>
                                     <p class="text-md text-gray-400">{{element.type?.name}} | {{element.code}}</p>
@@ -210,7 +210,7 @@
                         <td mat-cell *matCellDef="let element" class="text-right">
                             <div class="flex items-center justify-end space-x-2">
                                 <img class="border border-blue-200 min-w-8 max-w-8 min-h-8 max-h-8 object-cover rounded-full"
-                                    [src]="fileUrl + element.creator?.avatar" alt="profile">
+                                    [src]="mediaUrl(element.creator?.avatar)" alt="profile">
                                 <!-- <span class="ml-1">{{ element.cashier?.name }}</span> -->
                             </div>
                         </td>

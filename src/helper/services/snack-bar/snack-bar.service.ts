@@ -13,6 +13,8 @@ export class SnackbarService {
         config.verticalPosition = 'bottom';
         if (action === 'error') {
             config.panelClass = ['red-snackbar'];
+        } else if (action === 'pending') {
+            config.panelClass = ['amber-snackbar'];
         } else {
             config.panelClass = ['green-snackbar'];
         }

@@ -2,7 +2,7 @@
 // ================================================================================>> Core Library
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { Component, EventEmitter, Inject, OnDestroy, OnInit } from '@angular/core';
-import { FormsModule, ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { FormArray, FormsModule, ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
 // ================================================================================>> Thrid Party Library
@@ -29,9 +29,11 @@ import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
 import { Subject } from 'rxjs';
 import { Data } from '../interface';
-import { ProductService } from '../service';
+import { MenuService } from '../service';
+import { MenuIngredientService } from '../../p3-ingredient/service';
+import { IngredientItem } from '../../p3-ingredient/interface';
 @Component({
-    selector: 'car-product-dialog-create-and-update',
+    selector: 'app-menu-form-dialog',
     templateUrl: './template.html',
     styleUrls: ['./style.scss'],
     standalone: true,
@@ -58,42 +60,101 @@ import { ProductService } from '../service';
         PortraitComponent
     ]
 })
-export class ProductsDialogComponent implements OnInit, OnDestroy {
+export class MenuFormDialogComponent implements OnInit, OnDestroy {
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     // EventEmitter to emit response data after create or update operations
     ResponseData = new EventEmitter<Data>();
 
     // Form related properties
-    productForm: UntypedFormGroup;
+    menuForm: UntypedFormGroup;
 
     // Flag to indicate whether the form is currently being saved
     saving: boolean = false;
 
-    // Default image source for the product (assuming a default image is used)
+    // Default image for the menu item
     src: string = 'icons/image.jpg';
+    /** Stock ingredients for recipe lines */
+    ingredients: IngredientItem[] = [];
 
     // Constructor with dependency injection
     constructor(
-        @Inject(MAT_DIALOG_DATA) public data: { title: string, product: Data, setup: any },
-        private dialogRef: MatDialogRef<ProductsDialogComponent>,
+        @Inject(MAT_DIALOG_DATA) public data: { title: string, menu: Data, setup: any },
+        private dialogRef: MatDialogRef<MenuFormDialogComponent>,
         private formBuilder: UntypedFormBuilder,
         private snackBarService: SnackbarService,
-        private productService: ProductService
+        private menuService: MenuService,
+        private _ingredientService: MenuIngredientService,
     ) { }
 
     // ngOnInit method
     ngOnInit(): void {
-        // Set the image source based on the product data (if available)
-        this.data.product != null ? this.src = `${env.FILE_BASE_URL}${this.data.product.image}` : '';
-        // Initialize the form builder
+        this.data.menu != null ? this.src = `${env.FILE_BASE_URL}${this.data.menu.image}` : '';
+        this._ingredientService.getData().subscribe({
+            next: (res) => (this.ingredients = res.data ?? []),
+        });
         this.ngBuilderForm();
+    }
+
+    get recipeRows(): FormArray {
+        return this.menuForm?.get('recipes') as FormArray;
+    }
+
+    addRecipeRow(): void {
+        this.recipeRows.push(this._recipeGroup());
+    }
+
+    removeRecipeRow(index: number): void {
+        this.recipeRows.removeAt(index);
+    }
+
+    private _recipeGroup(
+        r?: { ingredient_id: number; quantity: number },
+    ): UntypedFormGroup {
+        return this.formBuilder.group({
+            ingredient_id: [r?.ingredient_id ?? null, Validators.required],
+            quantity: [
+                r?.quantity ?? null,
+                [Validators.required, Validators.min(0.0001)],
+            ],
+        });
+    }
+
+    private _buildPayload(): {
+        code: string;
+        name: string;
+        type_id: number;
+        image: string;
+        unit_price: number;
+        recipes: { ingredient_id: number; quantity: number }[];
+    } | null {
+        const raw = this.menuForm.getRawValue();
+        const seen = new Set<number>();
+        const lines = (raw.recipes ?? [])
+            .filter(
+                (row: { ingredient_id: number | null; quantity: number | null }) =>
+                    row?.ingredient_id != null && Number(row.quantity) > 0,
+            )
+            .map((row: { ingredient_id: number; quantity: number }) => ({
+                ingredient_id: Number(row.ingredient_id),
+                quantity: Number(row.quantity),
+            }));
+        const recipes: { ingredient_id: number; quantity: number }[] = [];
+        for (const line of lines) {
+            if (seen.has(line.ingredient_id)) {
+                this.snackBarService.openSnackBar('Duplicate ingredient in recipe; keep one row per ingredient.', GlobalConstants.error);
+                return null;
+            }
+            seen.add(line.ingredient_id);
+            recipes.push(line);
+        }
+        return { ...raw, recipes };
     }
 
     // srcChange method
     srcChange(base64: string): void {
         // Set the 'image' form control value with the provided base64 image data
-        this.productForm.get('image').setValue(base64);
+        this.menuForm.get('image').setValue(base64);
     }
 
     onFileChange(event: any): void {
@@ -102,7 +163,7 @@ export class ProductsDialogComponent implements OnInit, OnDestroy {
             const reader = new FileReader();
             reader.onload = (e: any) => {
                 this.src = e.target.result; // Preview image
-                this.productForm.get('image')?.setValue(e.target.result);
+                this.menuForm.get('image')?.setValue(e.target.result);
             };
             reader.readAsDataURL(file);
         } else {
@@ -112,37 +173,40 @@ export class ProductsDialogComponent implements OnInit, OnDestroy {
 
     // ngBuilderForm method
     ngBuilderForm(): void {
-        // Use the form builder to create the productForm with default values from the data
-        this.productForm = this.formBuilder.group({
-            code: [this.data?.product?.code || null, [Validators.required]],
-            name: [this.data?.product?.name || null, [Validators.required]],
-            type_id: [this.data?.product?.type?.id || null, [Validators.required]],
-            image: [null, this.data.product == null ? Validators.required : []],
-            unit_price: [this.data?.product?.unit_price || null, [Validators.required]]
+        const existing = this.data?.menu?.recipes ?? [];
+        const recipeArray = this.formBuilder.array(
+            existing.length
+                ? existing.map((r) => this._recipeGroup(r))
+                : [],
+        ) as FormArray;
+        this.menuForm = this.formBuilder.group({
+            code: [this.data?.menu?.code || null, [Validators.required]],
+            name: [this.data?.menu?.name || null, [Validators.required]],
+            type_id: [this.data?.menu?.type?.id || null, [Validators.required]],
+            image: [null, this.data.menu == null ? Validators.required : []],
+            unit_price: [this.data?.menu?.unit_price || null, [Validators.required]],
+            recipes: recipeArray,
         });
     }
 
     // submit method
     submit() {
-        // If data.product is null, call create(); otherwise, call update()
-        this.data.product == null ? this.create() : this.update();
+        // If data.menu is null, call create(); otherwise, call update()
+        this.data.menu == null ? this.create() : this.update();
     }
 
     // create method
     create(): void {
-        // Disable closing the dialog during the create process
+        const body = this._buildPayload();
+        if (!body) {
+            return;
+        }
         this.dialogRef.disableClose = true;
-
-        // Set saving to true to indicate that the create operation is in progress
         this.saving = true;
-        // Call the productService.create method to create a new product
-        this.productService.create(this.productForm.value).subscribe({
+        this.menuService.create(body).subscribe({
 
             next: response => {
-
-                // Transform the response data into the format expected by the parent component
-                const product: Data = {
-
+                const result: Data = {
                     id: response.data.id,
                     code: response.data.code,
                     name: response.data.name,
@@ -159,11 +223,9 @@ export class ProductsDialogComponent implements OnInit, OnDestroy {
                         name: response.data.creator.name,
                         avatar: response.data.creator.avatar || '',
                     },
+                    recipes: (response.data as { recipes?: Data['recipes'] }).recipes,
                 };
-
-
-                // Emit the created product data to the parent component
-                this.ResponseData.emit(product);
+                this.ResponseData.emit(result);
 
                 // Close the dialog
                 this.dialogRef.close();
@@ -200,20 +262,16 @@ export class ProductsDialogComponent implements OnInit, OnDestroy {
 
     // update method
     update(): void {
-
-        // Disable closing the dialog during the update process
+        const body = this._buildPayload();
+        if (!body) {
+            return;
+        }
         this.dialogRef.disableClose = true;
-
-        // Set saving to true to indicate that the update operation is in progress
         this.saving = true;
-        // Call the productService.update method to update an existing product
-        this.productService.update(this.data.product.id, this.productForm.value).subscribe({
+        this.menuService.update(this.data.menu.id, body).subscribe({
 
             next: response => {
-
-                // Transform the response data into the format expected by the parent component
-                const product: Data = {
-
+                const result: Data = {
                     id: response.data.id,
                     code: response.data.code,
                     name: response.data.name,
@@ -230,10 +288,9 @@ export class ProductsDialogComponent implements OnInit, OnDestroy {
                         name: response.data.creator.name,
                         avatar: response.data.creator.avatar || '',
                     },
+                    recipes: (response.data as { recipes?: Data['recipes'] }).recipes,
                 };
-
-                // Emit the updated product data to the parent component
-                this.ResponseData.emit(product);
+                this.ResponseData.emit(result);
 
                 // Close the dialog
                 this.dialogRef.close();

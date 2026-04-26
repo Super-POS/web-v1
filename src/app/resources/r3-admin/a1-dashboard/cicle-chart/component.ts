@@ -78,8 +78,9 @@ export class CicleChartComponent implements OnInit, OnChanges {
 
 
 
-                if (response && response.dashboard.productTypeData.labels && response.dashboard.productTypeData.data) {
-                    this._updateChart(response.dashboard.productTypeData.labels, response.dashboard.productTypeData.data);
+                const pt = response?.dashboard?.productTypeData;
+                if (pt?.labels?.length && pt?.data?.length) {
+                    this._updateChart(pt.labels, pt.data);
 
                 } else {
                     this._snackBarService.openSnackBar('No data available', 'Info');

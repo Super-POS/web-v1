@@ -52,9 +52,12 @@ export class ViewDetailSaleComponent implements OnInit, OnDestroy {
 
     // Method to initialize the component
     ngOnInit(): void {
-        if (this.row && this.row.details) {
-            // Assuming row.details contains the data for the table
-            this.dataSource.data = this.row.details;
+        const raw = this.row?.orderDetails || this.row?.details;
+        if (this.row && raw?.length) {
+            this.dataSource.data = raw.map((d: any) => ({
+                ...d,
+                product: d?.product || d?.menu,
+            }));
         }
     }
 

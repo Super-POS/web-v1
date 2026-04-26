@@ -79,12 +79,15 @@
                     <ng-container matColumnDef="device">
                         <th mat-header-cell *matHeaderCellDef class="text-right">តាមរយះ</th>
                         <td mat-cell *matCellDef="let element" class="text-center">
-                            <mat-icon *ngIf="element.platform === 'Web'" class="icon-size-6 text-gray-500"
-                                svgIcon="mdi:monitor"></mat-icon>
-                            <mat-icon *ngIf="element.platform === 'Mobile'" class="icon-size-6 text-gray-500"
-                                svgIcon="mdi:cellphone"></mat-icon>
-                            <mat-icon *ngIf="element.platform === 'Unknown' || element.platform === null"
-                                class="icon-size-6 text-gray-500" svgIcon="mdi:crosshairs-question"></mat-icon>
+                            <span class="inline-flex items-center justify-center" [matTooltip]="element.channel || element.platform || ''">
+                                <mat-icon *ngIf="element.platform === 'Web' || element.channel === 'website'" class="icon-size-6 text-gray-500"
+                                    svgIcon="mdi:monitor"></mat-icon>
+                                <mat-icon *ngIf="element.platform === 'POS' || element.channel === 'walk_in'" class="icon-size-6 text-gray-500"
+                                    svgIcon="mdi:storefront-outline"></mat-icon>
+                                <mat-icon *ngIf="element.platform === 'Telegram' || element.channel === 'telegram' || element.platform === 'Mobile'" class="icon-size-6 text-gray-500"
+                                    svgIcon="mdi:cellphone"></mat-icon>
+                                <mat-icon *ngIf="element.platform === 'Unknown'" class="icon-size-6 text-gray-500" svgIcon="mdi:crosshairs-question"></mat-icon>
+                            </span>
                         </td>
                     </ng-container>
                     <!-- Seller Column -->

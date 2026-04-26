@@ -1,4 +1,20 @@
-<div class="pos-section bg-white dark:bg-gray-800 overflow-hidden h-screen mt-4 mx-4 rounded-tl-lg rounded-tr-lg">
+<div class="pos-section relative bg-white dark:bg-gray-800 overflow-hidden h-screen mt-4 mx-4 rounded-tl-lg rounded-tr-lg">
+    <div *ngIf="isAwaitingBarayPayment"
+        class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+        <div
+            class="max-w-sm w-full rounded-xl bg-white dark:bg-gray-900 p-6 shadow-xl flex flex-col items-center gap-4 border border-gray-200 dark:border-gray-700">
+            <mat-progress-spinner [diameter]="40" [mode]="'indeterminate'"></mat-progress-spinner>
+            <p class="text-center text-gray-800 dark:text-gray-100 text-sm leading-relaxed">
+                <span class="block font-medium">រង់ចាំការទូទាត់ Baray…</span>
+                <span class="block text-gray-600 dark:text-gray-400 mt-1">រក្សា​ទំព័រ​នេះ​កុំចាក (Closing can lose the “paid” signal if webhook is slow). Scan the QR in the new tab, then
+                    return here.</span>
+            </p>
+            <button type="button" mat-flat-button (click)="cancelBarayWait()"
+                class="!bg-red-600 !text-white w-full !py-2">
+                បោះបង់ (អតិថិជនមិនទូទាត់)
+            </button>
+        </div>
+    </div>
     <div class="min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5 border-b">
         <div class="flex flex-1 items-center font-medium">
             <div class="flex items-center">
@@ -52,9 +68,9 @@
                     <mat-tab *ngFor="let item of data; trackBy: trackById" [label]="item?.name">
                         <div class="container-tab-content py-4 pr-3 ">
                             <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-hidden">
-                                <product-item *ngFor="let product of item.products; trackBy: trackByProductId"
-                                    [data]="product" (result)="addToCart($event, 1)">
-                                </product-item>
+                                <menu-item *ngFor="let menuItem of item.products; trackBy: trackByMenuItemId"
+                                    [data]="menuItem" (result)="addToCart($event, 1)">
+                                </menu-item>
                                 <span *ngIf="item.products.length === 0">គ្មានម៉ឺនុយ!!!</span>
                             </div>
                         </div>
@@ -63,9 +79,9 @@
 
                 <div class="container-tab-content py-4 pr-3" *ngIf="selectedTab">
                     <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-hidden">
-                        <product-item *ngFor="let product of selectedTab.products; trackBy: trackByProductId"
-                            [data]="product" (result)="addToCart($event, 1)">
-                        </product-item>
+                        <menu-item *ngFor="let menuItem of selectedTab.products; trackBy: trackByMenuItemId"
+                            [data]="menuItem" (result)="addToCart($event, 1)">
+                        </menu-item>
                         <span *ngIf="selectedTab.products.length === 0">គ្មានម៉ឺនុយ!!!</span>
                     </div>
                 </div>

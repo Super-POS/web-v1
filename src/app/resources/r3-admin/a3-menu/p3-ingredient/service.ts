@@ -13,7 +13,7 @@ import {
 @Injectable({
     providedIn: 'root',
 })
-export class ProductIngredientService {
+export class MenuIngredientService {
     private _httpOptions = {
         headers: new HttpHeaders().set('Content-Type', 'application/json'),
     };

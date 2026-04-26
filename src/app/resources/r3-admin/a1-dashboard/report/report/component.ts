@@ -266,7 +266,7 @@ export class ReportGenerateComponent implements OnInit, OnDestroy {
                     },
                 });
             } else {
-                this._service.getDataProductReport(this.formatDate(startDate), this.formatDate(endDate)).subscribe({
+                this._service.getDataMenuReport(this.formatDate(startDate), this.formatDate(endDate)).subscribe({
                     next: (response) => {
                         // Close the dialog
                         this.dialogRef.close();

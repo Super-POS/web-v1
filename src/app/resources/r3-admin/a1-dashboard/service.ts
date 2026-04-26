@@ -52,7 +52,7 @@ export class DashbordService {
 
 
     // Method to fetch a list of products from the POS system
-    getDataProductReport(startDate?: string, endDate?: string): Observable<any> {
+    getDataMenuReport(startDate?: string, endDate?: string): Observable<any> {
         const params = new HttpParams()
             .set('startDate', startDate)
             .set('report_type', 'PDF')

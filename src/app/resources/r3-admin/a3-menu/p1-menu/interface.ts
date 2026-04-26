@@ -18,7 +18,9 @@ export interface Data {
     total_sale: number,
     created_at: Date,
     type: { id: number, name: string }
-    creator: { id: number, name: string, avatar: string }
+    creator?: { id: number, name: string, avatar: string }
+    /** Per-serving recipe lines (from API) */
+    recipes?: { ingredient_id: number; quantity: number }[];
 }
 
 export interface ProductType {

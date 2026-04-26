@@ -12,6 +12,8 @@ class GlobalConstants {
 
     //Success
     public static success: string = 'success';
+    /** Snackbar style: not final (e.g. Baray not yet paid) — use amber, not green. */
+    public static pending: string = 'pending';
 
     //Auth
     public static unauthorized: string = 'You are not authorize person to access this page';

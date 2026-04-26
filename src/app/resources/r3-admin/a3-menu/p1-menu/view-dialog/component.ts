@@ -1,4 +1,4 @@
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -12,8 +12,12 @@ import { env } from 'envs/env';
 import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import { Subject } from 'rxjs';
 
-import { Data } from './interface';
-import { ProductService } from '../service';
+import { Data as SaleOrderViewRow } from './interface';
+import { Data as MenuRow } from '../interface';
+import { MenuService } from '../service';
+import { MenuIngredientService } from '../../p3-ingredient/service';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
     selector: 'dashboard-gm-fast-view-customer',
@@ -31,21 +35,25 @@ import { ProductService } from '../service';
         MatMenuModule,
         MatCheckboxModule,
         DatePipe,
+        DecimalPipe,
     ]
 })
 export class ViewDialogComponent implements OnInit, OnDestroy {
     private _unsubscribeAll: Subject<any> = new Subject<any>();
     displayedColumns: string[] = ['no', 'receipt', 'price', 'ordered_at', 'ordered_at_time', 'seller'];
-    dataSource: MatTableDataSource<Data> = new MatTableDataSource<Data>([]);
+    dataSource: MatTableDataSource<SaleOrderViewRow> = new MatTableDataSource<SaleOrderViewRow>([]);
     fileUrl = env.FILE_BASE_URL;
     public isLoading: boolean;
+    /** Recipe lines with resolved ingredient names for the General tab */
+    displayRecipes: { name: string; unit: string; qty: number }[] = [];
 
     constructor(
-        @Inject(MAT_DIALOG_DATA) public element: any,
+        @Inject(MAT_DIALOG_DATA) public element: MenuRow,
         private _dialogRef: MatDialogRef<ViewDialogComponent>,
         private cdr: ChangeDetectorRef,
         private _snackbar: SnackbarService,
-        private productService: ProductService,
+        private menuService: MenuService,
+        private _ingredientService: MenuIngredientService,
     ) { }
 
     ngOnInit(): void {
@@ -54,18 +62,44 @@ export class ViewDialogComponent implements OnInit, OnDestroy {
 
     viewData() {
         this.isLoading = true;
-        this.productService.view(this.element.id).subscribe(
-            (res) => {
-                this.dataSource.data = res.data;
+        const needsIngredients = (this.element?.recipes?.length ?? 0) > 0;
+        const ing$ = needsIngredients
+            ? this._ingredientService.getData().pipe(
+                catchError(() => of({ data: [] as { id: number; name: string; unit?: string }[] })),
+            )
+            : of({ data: [] as { id: number; name: string; unit?: string }[] });
+
+        forkJoin({
+            sales: this.menuService.view(this.element.id).pipe(
+                catchError(() => of({ data: [] as SaleOrderViewRow[] })),
+            ),
+            ingredients: ing$,
+        }).subscribe({
+            next: ({ sales, ingredients }) => {
+                this.dataSource.data = sales.data;
+                this._resolveRecipes(ingredients.data);
                 this.isLoading = false;
-                this.cdr.detectChanges(); // Manually trigger change detection
+                this.cdr.markForCheck();
             },
-            (err) => {
+            error: (err) => {
                 this.isLoading = false;
-                this.cdr.detectChanges(); // Ensure change detection is updated for error as well
-                this._snackbar.openSnackBar(err.error.message, 'Dismiss');
-            }
-        );
+                this.cdr.markForCheck();
+                this._snackbar.openSnackBar(err?.error?.message ?? 'Error', 'Dismiss');
+            },
+        });
+    }
+
+    private _resolveRecipes(ingredients: { id: number; name: string; unit?: string }[]): void {
+        const byId = new Map(ingredients.map((i) => [i.id, i]));
+        const lines = this.element?.recipes ?? [];
+        this.displayRecipes = lines.map((r) => {
+            const row = byId.get(r.ingredient_id);
+            return {
+                name: row?.name ?? `Ingredient #${r.ingredient_id}`,
+                unit: row?.unit?.trim() ? row.unit : '—',
+                qty: r.quantity,
+            };
+        });
     }
 
     closeDialog() {

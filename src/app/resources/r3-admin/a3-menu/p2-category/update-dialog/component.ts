@@ -29,10 +29,10 @@ import { SnackbarService }                                  from 'helper/service
 import GlobalConstants                                      from 'helper/shared/constants';
 import { env }                                              from 'envs/env';
 
-import { ProductTypeService }                               from '../service';
+import { MenuCategoryService }                               from '../service';
 import { Item }                                             from '../interface';
 @Component({
-    selector: 'update-product-type',
+    selector: 'update-menu-category',
     templateUrl: './template.html',
     styleUrls: ['./style.scss'],
     standalone: true,
@@ -75,7 +75,7 @@ export class UpdateDialogComponent implements OnInit {
         private _dialogRef          : MatDialogRef<UpdateDialogComponent>,
         private _formBuilder        : UntypedFormBuilder, // Build form for getting data from teplate
         private _snackBarService    : SnackbarService, // Display quick message
-        private _service            : ProductTypeService // for calling API
+        private _service            : MenuCategoryService // for calling API
 
     ) { }
 

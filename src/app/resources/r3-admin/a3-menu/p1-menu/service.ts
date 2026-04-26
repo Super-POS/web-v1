@@ -3,7 +3,7 @@ import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams }   from '@angul
 import * as core                                                    from '@angular/core';
 
 // ================================================================>> Third party Library
-import { Observable, catchError, of, switchMap, throwError }        from 'rxjs';
+import { Observable, catchError, map, of, switchMap, throwError }        from 'rxjs';
 
 // ================================================================>> Custom Library (Application-specific)
 import { env } from 'envs/env';
@@ -16,7 +16,7 @@ import { Data, List, SetupResponse } from './interface';
     providedIn: 'root',
 })
 
-export class ProductService {
+export class MenuService {
 
     private _httpOptions = {
         headers: new HttpHeaders({
@@ -27,9 +27,18 @@ export class ProductService {
 
     constructor(private httpClient: HttpClient) { };
 
-    // Method to fetch setup data
+    // Method to fetch setup data (API returns menuTypes; UI uses productTypes)
     getSetupData(){
-        return this.httpClient.get<SetupResponse>(`${env.API_BASE_URL}/admin/menus/setup-data`, this._httpOptions);
+        return this.httpClient.get<SetupResponse & { menuTypes?: { id: number; name: string }[] }>(
+            `${env.API_BASE_URL}/admin/menus/setup-data`, this._httpOptions,
+        ).pipe(
+            map((res) => ({
+                ...res,
+                productTypes: (res as { productTypes?: { id: number; name: string }[] }).productTypes
+                    ?? (res as { menuTypes?: { id: number; name: string }[] }).menuTypes
+                    ?? [],
+            })),
+        );
     }
 
     // Method to fetch all products
@@ -37,15 +46,30 @@ export class ProductService {
         return this.httpClient.get<List>(`${env.API_BASE_URL}/admin/menus`, { headers: this._httpOptions.headers, params });
     }
 
-    // Method to create a new product
-    create(body: { code: string, name: string, type_id: number, image: string }): Observable<{ data: Data, message: string }> {
-        return this.httpClient.post<{ data: Data, message: string }>(`${env.API_BASE_URL}/admin/menus`, body, {
+    // CreateMenuDto requires recipes (empty array = no stock depletion per recipe)
+    create(body: {
+        code: string;
+        name: string;
+        type_id: number;
+        image: string;
+        unit_price: number;
+        recipes?: { ingredient_id: number; quantity: number }[];
+    }): Observable<{ data: Data, message: string }> {
+        const payload = { ...body, recipes: body.recipes ?? [] };
+        return this.httpClient.post<{ data: Data, message: string }>(`${env.API_BASE_URL}/admin/menus`, payload, {
             headers: new HttpHeaders().set('Content-Type', 'application/json')
         });
     }
 
     // Method to update an existing product
-    update(id: number, body: { code: string, name: string, type_id: number, image?: string }): Observable<{ data: Data, message: string }> {
+    update(id: number, body: {
+        code: string;
+        name: string;
+        type_id: number;
+        image?: string;
+        unit_price: number;
+        recipes?: { ingredient_id: number; quantity: number }[];
+    }): Observable<{ data: Data, message: string }> {
         return this.httpClient.put<{ data: Data, message: string }>(`${env.API_BASE_URL}/admin/menus/${id}`, body, {
             headers: new HttpHeaders().set('Content-Type', 'application/json')
         });
@@ -57,7 +81,7 @@ export class ProductService {
     }
 
     // Method to fetch product report
-    getDataProductReport(params = {}): Observable<any> {
+    getDataMenuReport(params = {}): Observable<any> {
         // const params = new HttpParams()
         return this.httpClient.get<DataSaleResponse>(`${env.API_BASE_URL}/share/report/generate-menu-report`, { params });
     }

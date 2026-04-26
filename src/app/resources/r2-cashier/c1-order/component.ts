@@ -11,7 +11,7 @@ import { MatIconModule }                from '@angular/material/icon';
 import { MatProgressSpinnerModule }     from '@angular/material/progress-spinner';
 import { MatTabsModule }                from '@angular/material/tabs';
 
-import { Subject, takeUntil }           from 'rxjs';
+import { Subject, takeUntil, take, Subscription }           from 'rxjs';
 
 // ================================================================>> Custom Library
 import { UserService }      from 'app/core/user/service';
@@ -19,10 +19,11 @@ import { User }             from 'app/core/user/interface';
 import { env }              from 'envs/env';
 import { SnackbarService }  from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants      from 'helper/shared/constants';
-import { ProductType }      from '../c2-sale/interface';
-import { ItemComponent }    from './item/component';
+import { Data as OrderReceiptData, ProductType } from '../c2-sale/interface';
+import { MenuItemComponent }    from './item/component';
+import { BarayPaidWatcherService } from './baray-paid-watcher.service';
 import { OrderService }     from './service';
-import { Data, Product }    from './interface';
+import { Data, MenuItem }    from './interface';
 import { ViewDetailSaleComponent } from 'app/shared/view/component';
 interface CartItem {
 
@@ -48,7 +49,7 @@ interface CartItem {
         DecimalPipe,
         MatIconModule,
         MatTabsModule,
-        ItemComponent,
+        MenuItemComponent,
         FormsModule,
         NgIf,
         NgForOf,
@@ -65,11 +66,15 @@ export class OrderComponent implements OnInit, OnDestroy {
     // Define the base URL for file uploads
     fileUrl: string = env.FILE_BASE_URL;
     data: Data[] = [];
-    allProducts: Product[] = [];
+    allMenuItems: MenuItem[] = [];
     isLoading: boolean = false;
     carts: CartItem[] = [];
     user: User;
     isOrderBeingMade: boolean = false;
+    /** Full-screen wait after Baray pay link opens until paid, timeout, or cashier cancels. */
+    isAwaitingBarayPayment: boolean = false;
+    private _barayPendingOrderId: number | null = null;
+    private _barayWaitSub: Subscription | null = null;
     canSubmit: boolean = false;
     totalPrice: number = 0;
     selectedTab: any;
@@ -79,6 +84,7 @@ export class OrderComponent implements OnInit, OnDestroy {
         private _userService: UserService,
         private _service: OrderService,
         private _snackBarService: SnackbarService,
+        private _barayPaid: BarayPaidWatcherService,
     ) {
 
         // Subscribe to changes in the user's data
@@ -99,23 +105,26 @@ export class OrderComponent implements OnInit, OnDestroy {
         // Subscribe to the list method of the orderService
         this._service.getData().subscribe({
             next: (response) => {
-                this.data = response.data;
+                // API groups by menu type with `menus`; legacy UI used `products`
+                this.data = (response.data || []).map((cat: Data) => ({
+                    ...cat,
+                    products: (cat as Data & { menus?: MenuItem[] }).menus || cat.products || [],
+                }));
 
-                // Create the "ALL" category
-                this.allProducts = this.data.reduce((all, item) => {
-                    return all.concat(item.products);
+                this.allMenuItems = this.data.reduce((all: MenuItem[], item: Data) => {
+                    return all.concat((item as Data & { menus?: MenuItem[] }).menus || item.products || []);
                 }, []);
 
-                // Add the "ALL" category to the data array
                 this.data.unshift({
-                    id: 0, // Use a unique id for the "ALL" category
+                    id: 0,
                     name: 'All Categories',
-                    products: this.allProducts
-                });
+                    products: this.allMenuItems
+                } as Data);
                 if (this.data && this.data.length > 0) {
-                    this.selectedTab = this.data[0]; // Automatically select the first tab
-                    this._changeDetectorRef.detectChanges(); // Manually trigger change detection
+                    this.selectedTab = this.data[0];
+                    this._changeDetectorRef.detectChanges();
                 }
+                this.isLoading = false;
             },
             error: (err) => {
                 this.isLoading = false;
@@ -123,6 +132,14 @@ export class OrderComponent implements OnInit, OnDestroy {
             },
         });
 
+    }
+
+    trackById(_index: number, item: { id: number }): number {
+        return item?.id;
+    }
+
+    trackByMenuItemId(_index: number, row: { id: number }): number {
+        return row?.id;
     }
 
     // Function to handle tab selection
@@ -134,6 +151,7 @@ export class OrderComponent implements OnInit, OnDestroy {
     // Function to handle the ngOnDestroy
     ngOnDestroy(): void {
 
+        this._endBarayWaitUi();
         // Emit a value through the _unsubscribeAll subject to trigger the unsubscription
         this._unsubscribeAll.next(null);
         // Complete the subject to release resources
@@ -166,7 +184,7 @@ export class OrderComponent implements OnInit, OnDestroy {
         }
     }   
     // Function to add an item to the cart
-    addToCart(incomingItem: Product, qty = 0): void {
+    addToCart(incomingItem: MenuItem, qty = 0): void {
 
         // Find an existing item in the cart with the same id as the incoming item
         const existingItem = this.carts.find(item => item.id === incomingItem.id);
@@ -266,6 +284,56 @@ export class OrderComponent implements OnInit, OnDestroy {
 
     // Function to handle the keydown event on the quantity input field
     private matDialog = inject(MatDialog);
+
+    private openOrderDetailDrawer(order: OrderReceiptData): void {
+        const dialogConfig = new MatDialogConfig<OrderReceiptData>();
+        dialogConfig.data = order;
+        dialogConfig.autoFocus = false;
+        dialogConfig.position = { right: '0px' };
+        dialogConfig.height = '100dvh';
+        dialogConfig.width = '100dvw';
+        dialogConfig.maxWidth = '550px';
+        dialogConfig.panelClass = 'custom-mat-dialog-as-mat-drawer';
+        dialogConfig.enterAnimationDuration = '0s';
+        this.matDialog.open(ViewDetailSaleComponent, dialogConfig);
+    }
+
+    private _clearBarayWaitSub(): void {
+        this._barayWaitSub?.unsubscribe();
+        this._barayWaitSub = null;
+    }
+
+    /** Stop waiting for Baray without calling the API (natural completion). */
+    private _endBarayWaitUi(): void {
+        this.isAwaitingBarayPayment = false;
+        this._barayPendingOrderId = null;
+        this._clearBarayWaitSub();
+    }
+
+    /** Cashier gives up: stop listening and cancel the order on the server. */
+    cancelBarayWait(): void {
+        if (this._barayPendingOrderId == null) {
+            this._endBarayWaitUi();
+            return;
+        }
+        const id = this._barayPendingOrderId;
+        this._endBarayWaitUi();
+        this._service.cancelOrder(id).subscribe({
+            next: () => {
+                this._snackBarService.openSnackBar(
+                    "បានបោះបង់វិក័យ — អតិថិជនមិនទាន់ទូទាត់។",
+                    GlobalConstants.success,
+                );
+            },
+            error: (err: HttpErrorResponse) => {
+                this._snackBarService.openSnackBar(
+                    err?.error?.message || "មិនអាចបោះបង់បញ្ជាទិញបានទេ",
+                    GlobalConstants.error,
+                );
+            },
+        });
+    }
+
     checkOut(): void {
 
         // Create a dictionary to represent the cart with item IDs and quantities
@@ -288,36 +356,91 @@ export class OrderComponent implements OnInit, OnDestroy {
         // Make the API call to create an order using the order service
         this._service.create(body).subscribe({
 
-            next: response => {
+            next: (response) => {
 
-                // Reset the order in progress flag
                 this.isOrderBeingMade = false;
-
-                // Clear the cart after a successful order
                 this.carts = [];
-
-                // Display a success message
-                this._snackBarService.openSnackBar(response.message, GlobalConstants.success);
-
-                // Open a dialog to display order details
-                const dialogConfig = new MatDialogConfig();
-                dialogConfig.data = response.data;
-                dialogConfig.autoFocus = false;
-                dialogConfig.position = { right: '0px' };
-                dialogConfig.height = '100dvh';
-                dialogConfig.width = '100dvw';
-                dialogConfig.maxWidth = '550px';
-                dialogConfig.panelClass = 'custom-mat-dialog-as-mat-drawer';
-                dialogConfig.enterAnimationDuration = '0s';
-                this.matDialog.open(ViewDetailSaleComponent, dialogConfig);
+                // Do not show “success” when the order is not paid yet — only after Baray pay link is ready.
+                const order = response.data;
+                if (order?.id != null) {
+                    this._service.createBarayPaymentIntent(order.id).subscribe({
+                        next: (baray) => {
+                            const payUrl = baray.data?.url?.trim();
+                            if (payUrl) {
+                                // Real Baray page — do not show “paid” here; only after webhook / status change
+                                this._clearBarayWaitSub();
+                                this._barayPendingOrderId = order.id;
+                                this.isAwaitingBarayPayment = true;
+                                window.open(payUrl, "_blank", "noopener,noreferrer");
+                                const cashierId = this.user?.id ?? order.cashier?.id ?? 0;
+                                this._barayWaitSub = this._barayPaid
+                                    .waitUntilSettled(order.id, cashierId)
+                                    .pipe(take(1), takeUntil(this._unsubscribeAll))
+                                    .subscribe((outcome) => {
+                                        this.isAwaitingBarayPayment = false;
+                                        this._barayPendingOrderId = null;
+                                        this._barayWaitSub = null;
+                                        if (outcome === 'paid') {
+                                            this._snackBarService.openSnackBar(
+                                                "Baray: ទូទាត់រួច — វិក័យ " + String(order.receipt_number ?? "") + "។",
+                                                GlobalConstants.success,
+                                            );
+                                            this._service.getOrderViewForBaray(order.id).subscribe({
+                                                next: (v) => {
+                                                    const d: Record<string, unknown> = (v.data ||
+                                                        {}) as Record<string, unknown>;
+                                                    const details =
+                                                        (d['orderDetails'] as unknown[]) ||
+                                                        (d['details'] as unknown[]) ||
+                                                        [];
+                                                    this.openOrderDetailDrawer({
+                                                        ...order,
+                                                        ...d,
+                                                        details,
+                                                        orderDetails: details,
+                                                    } as OrderReceiptData);
+                                                },
+                                                error: () =>
+                                                    this.openOrderDetailDrawer({
+                                                        ...order,
+                                                        status: 'pending',
+                                                    } as OrderReceiptData),
+                                            });
+                                        } else if (outcome === 'cancelled') {
+                                            this._snackBarService.openSnackBar(
+                                                "វិក័យ " + String(order.receipt_number ?? "") + " — បានផ្លាស់ / បោះបង់",
+                                                GlobalConstants.error,
+                                            );
+                                        } else {
+                                            this._snackBarService.openSnackBar(
+                                                "Baray: អស់ពេលរង (5 នាទី) — ពិនិត្យទូទាត់ដៃ។",
+                                                GlobalConstants.error,
+                                            );
+                                        }
+                                    });
+                            } else {
+                                this._snackBarService.openSnackBar(
+                                    "Baray: គ្មានតំណទូទាត់",
+                                    GlobalConstants.error,
+                                );
+                            }
+                        },
+                        error: (err: HttpErrorResponse) => {
+                            this._snackBarService.openSnackBar(
+                                err?.error?.message || "មិនអាចបើកទូទាត់ Baray បានទេ",
+                                GlobalConstants.error,
+                            );
+                        },
+                    });
+                } else {
+                    this._snackBarService.openSnackBar(response.message, GlobalConstants.success);
+                    this.openOrderDetailDrawer(order);
+                }
             },
 
             error: (err: HttpErrorResponse) => {
 
-                // Reset the order in progress flag on error
                 this.isOrderBeingMade = false;
-
-                // Display an error message
                 this._snackBarService.openSnackBar(err?.error?.message || GlobalConstants.genericError, GlobalConstants.error);
             }
         });

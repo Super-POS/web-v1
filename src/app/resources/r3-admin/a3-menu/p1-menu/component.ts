@@ -25,14 +25,15 @@ import GlobalConstants                                          from 'helper/sha
 import { DialogConfigService }                                  from 'app/shared/dialog-config.service';
 import { ErrorHandleService }                                   from 'app/shared/error-handle.service';
 import { MatBadgeModule }                                       from '@angular/material/badge';
-import { ProductService } from './service';
+import { MenuService } from './service';
 import { Data, List } from './interface';
 import { FilterDialogComponent } from './filter-dialog/component';
 import { ViewDialogComponent } from './view-dialog/component';
-import { ProductsDialogComponent } from './create-dialog/component';
+import { MenuFormDialogComponent } from './create-dialog/component';
+import { resolveFileUrl } from 'helper/utils/resolve-file-url';
 
 @Component({
-    selector: 'app-product',
+    selector: 'app-menu-list',
     standalone: true,
     templateUrl: './template.html',
     styleUrl: './style.scss',
@@ -54,21 +55,21 @@ import { ProductsDialogComponent } from './create-dialog/component';
     ]
 })
 
-export class ProductComponent implements OnInit {
+export class MenuListComponent implements OnInit {
 
     // Injecting necessary services
-    private _service = inject(ProductService);
+    private _service = inject(MenuService);
 
     private snackBarService = inject(SnackbarService);
     private router = inject(Router);
-    // Creating a product using a dialog
+    // Create / edit menu via dialog
     private matDialog = inject(MatDialog);
     public data: Data[] = [];
     public setupData        : any     = {};
     // Component properties
     displayedColumns: string[] = [
         'no',
-        'product',
+        'menu',
         'price',
         'total_sale',
         'total_sale_price',
@@ -81,6 +82,11 @@ export class ProductComponent implements OnInit {
     dataSource: MatTableDataSource<Data> = new MatTableDataSource<Data>([]);
 
     fileUrl: string = env.FILE_BASE_URL;
+
+    /** Resolves `FILE_BASE_URL` + API path, or returns absolute URLs as-is. */
+    mediaUrl(path: string | null | undefined): string {
+        return resolveFileUrl(this.fileUrl, path);
+    }
 
     public total                   :   number         = 0;
     public limit                   :   number         = 20;
@@ -132,7 +138,6 @@ export class ProductComponent implements OnInit {
         this._service.getSetupData().subscribe({
             next: (res:any) => {
                 this.setupData = res;
-                console.log(this.setupData);
             },
             error: (err) => {
                 this._errorHandleService.handleHttpError(err);
@@ -155,7 +160,7 @@ export class ProductComponent implements OnInit {
                 this.dataSource.data = res.data;
                 this.total = res.pagination.total;
                 this.limit = res.pagination.limit;
-                this.page = res.pagination.totalPage;
+                this.page = res.pagination.page;
                 this.isLoading = false;
             },
             error: (err: HttpErrorResponse) => {
@@ -182,7 +187,7 @@ export class ProductComponent implements OnInit {
         }
 
         if (this.productTypes) {
-            params.type = this.productTypes; // Product type filter
+            params.type = this.productTypes; // Menu category filter
         }
 
         if (this.users) {
@@ -272,12 +277,12 @@ export class ProductComponent implements OnInit {
         this.getData();
     }
 
-    // ===>> Method create new product
+    // ===>> Create new menu item
     create(): void {
         this.router.navigate(['/admin/menu/create']);
     }
 
-    // Viewing a product using a dialog
+    // View menu detail
     view(element: Data) {
         const dialogConfig = new MatDialogConfig();
         dialogConfig.autoFocus = false;
@@ -291,14 +296,14 @@ export class ProductComponent implements OnInit {
         const dialogRef = this.matDialog.open(ViewDialogComponent, dialogConfig);
     }
 
-    // Updating a product using a dialog
+    // Edit menu in dialog
     update(row: Data): void {
 
         const dialogConfig = new MatDialogConfig();
         dialogConfig.data = {
 
             title: 'កែប្រែម៉ឺនុយ',
-            product: row,
+            menu: row,
             setup: this.setupData.productTypes
         };
 
@@ -309,13 +314,13 @@ export class ProductComponent implements OnInit {
         dialogConfig.maxWidth = '550px';
         dialogConfig.panelClass = 'custom-mat-dialog-as-mat-drawer';
         dialogConfig.enterAnimationDuration = '0s';
-        const dialogRef = this.matDialog.open(ProductsDialogComponent, dialogConfig);
+        const dialogRef = this.matDialog.open(MenuFormDialogComponent, dialogConfig);
 
-        dialogRef.componentInstance.ResponseData.subscribe((product: Data) => {
+        dialogRef.componentInstance.ResponseData.subscribe((rowResult: Data) => {
 
             const index = this.dataSource.data.indexOf(row);
             const data = this.dataSource.data;
-            data[index] = product;
+            data[index] = rowResult;
             this.getData()
             this.dataSource.data = data;
         });
@@ -330,7 +335,7 @@ export class ProductComponent implements OnInit {
     //     const params = this.prepareSearchSortFilterParam();
     //     this.isaving = true;
 
-    //     this._service.getDataProductReport(params).subscribe({
+    //     this._service.getDataMenuReport(params).subscribe({
     //         next: (response) => {
     //             this.isaving = false;
 
@@ -378,7 +383,7 @@ export class ProductComponent implements OnInit {
         this.report_type = type;
         console.log(this.report_type);
         const params = this.prepareSearchSortFilterParam();
-        this._service.getDataProductReport(params).subscribe({
+        this._service.getDataMenuReport(params).subscribe({
             next: (response) => {
                 this.isaving = false;
                 let blob;
@@ -473,15 +478,15 @@ export class ProductComponent implements OnInit {
         return blob;
     }
 
-    // Deleting a product with confirmation
+    // Delete menu item (with confirmation)
     private helpersConfirmationService = inject(HelperConfirmationService)
 
-    onDelete(product: Data): void {
+    onDelete(item: Data): void {
 
         // Build the config form
         const configAction: HelperConfirmationConfig = {
 
-            title: `Remove <strong> ${product.name} </strong>`,
+            title: `Remove <strong> ${item.name} </strong>`,
             message: 'Are you sure you want to remove this receipt number permanently? <span class="font-medium">This action cannot be undone!</span>',
             icon: ({
 
@@ -517,14 +522,13 @@ export class ProductComponent implements OnInit {
 
             if (result && typeof result === 'string' && result === 'confirmed') {
 
-                // If the result is 'confirmed', proceed with the product deletion
-                this._service.delete(product.id).subscribe({
+                // If the result is 'confirmed', proceed with deletion
+                this._service.delete(item.id).subscribe({
 
                     // Handle the successful response from the delete operation
                     next: (response: { status_code: number, message: string }) => {
 
-                        // Update the data source by filtering out the deleted product
-                        this.dataSource.data = this.dataSource.data.filter((v: Data) => v.id != product.id);
+                        this.dataSource.data = this.dataSource.data.filter((v: Data) => v.id != item.id);
                         this.getData()
                         // Show a success message using the SnackbarService
                         this.snackBarService.openSnackBar(response.message, GlobalConstants.success);

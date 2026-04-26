@@ -80,6 +80,25 @@
                         </div>
                     </div>
                 </div>
+                <div class="w-full max-w-2xl mt-6 px-4 self-stretch text-left">
+                    <div class="flex items-center gap-2 mb-3 border-b border-slate-200 dark:border-slate-600 pb-2">
+                        <mat-icon svgIcon="mdi:flask" class="text-slate-600"></mat-icon>
+                        <h2 class="text-lg font-medium text-slate-800 dark:text-slate-200">រូបមន្ត (ក្នុង ១ កែវ)</h2>
+                    </div>
+                    <ul *ngIf="displayRecipes.length > 0" class="space-y-2 w-full">
+                        <li *ngFor="let r of displayRecipes"
+                            class="flex flex-wrap justify-between gap-2 text-base border-b border-slate-100 dark:border-slate-700 py-2.5">
+                            <span class="text-slate-800 dark:text-slate-200 pr-2">{{ r.name }}</span>
+                            <span class="text-slate-600 dark:text-slate-300 shrink-0">
+                                <span class="text-green-700 dark:text-green-400 font-medium">{{ r.qty | number }}</span>
+                                <span *ngIf="r.unit && r.unit !== '—'" class="text-sm text-slate-500 ml-1">({{ r.unit }})</span>
+                            </span>
+                        </li>
+                    </ul>
+                    <p *ngIf="displayRecipes.length === 0" class="text-slate-500 text-sm">
+                        គ្មានរូបមន្តគ្រឿងផ្សំ (មិនដកស្តុកតាមបញ្ជីនេះពេលលក់)
+                    </p>
+                </div>
             </mat-tab>
             <mat-tab label="ការលក់">
                 <div class="list-sale-body">

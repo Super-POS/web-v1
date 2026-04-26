@@ -15,6 +15,7 @@ import { MatFormFieldModule }   from '@angular/material/form-field';
 import { MatIconModule }        from '@angular/material/icon';
 import { MatInputModule }       from '@angular/material/input';
 import { MatMenuModule }        from '@angular/material/menu';
+import { MatTooltipModule }     from '@angular/material/tooltip';
 import { MatPaginatorModule, PageEvent }        from '@angular/material/paginator';
 import { MatTableDataSource, MatTableModule }   from '@angular/material/table';
 import FileSaver from 'file-saver';
@@ -51,6 +52,7 @@ import { Data, List } from './interface';
         MatButtonModule,
         MatPaginatorModule,
         MatMenuModule,
+        MatTooltipModule,
         RouterLink
     ]
 })
@@ -91,7 +93,7 @@ export class SaleComponent implements OnInit {
     ): void {
         const params: {
             page: number;
-            page_size: number;
+            limit: number;
             key?: string;
             timeType?: string;
             platform?: string;
@@ -100,8 +102,8 @@ export class SaleComponent implements OnInit {
             endDate?: string;
         } = {
             page: _page,
-            page_size: _page_size,
-            ...filter_data // Spread operator to add filters dynamically
+            limit: _page_size,
+            ...filter_data
         };
 
         if (this.key !== '') {
@@ -113,9 +115,9 @@ export class SaleComponent implements OnInit {
         this.saleService.getData(params).subscribe({
             next: (res: List) => {
                 this.dataSource.data = res.data ?? [];
-                this.total = res.pagination.totalItems;
-                this.limit = res.pagination.perPage;
-                this.page = res.pagination.currentPage;
+                this.total = res.pagination.total;
+                this.limit = res.pagination.limit;
+                this.page = res.pagination.page;
                 this.isLoading = false;
             },
             error: (err) => {

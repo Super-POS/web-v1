@@ -1,7 +1,7 @@
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject } from '@angular/core';
-import { FormsModule, ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { FormArray, FormsModule, ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
@@ -18,10 +18,12 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { env } from 'envs/env';
 import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
-import { ProductService } from '../service';
+import { MenuService } from '../service';
+import { MenuIngredientService } from '../../p3-ingredient/service';
+import { IngredientItem } from '../../p3-ingredient/interface';
 
 @Component({
-    selector: 'app-product-create-page',
+    selector: 'app-menu-create-page',
     standalone: true,
     templateUrl: './template.html',
     styleUrl: './style.scss',
@@ -45,34 +47,88 @@ import { ProductService } from '../service';
         MatRadioModule
     ]
 })
-export class ProductCreatePageComponent implements OnInit {
+export class MenuCreatePageComponent implements OnInit {
     private formBuilder = inject(UntypedFormBuilder);
     private snackBarService = inject(SnackbarService);
-    private productService = inject(ProductService);
+    private menuService = inject(MenuService);
+    private _ingredientService = inject(MenuIngredientService);
     private router = inject(Router);
 
-    productForm: UntypedFormGroup;
+    menuForm: UntypedFormGroup;
     saving = false;
     src = 'icons/image.jpg';
     setup: any[] = [];
+    ingredients: IngredientItem[] = [];
     fileUrl: string = env.FILE_BASE_URL;
 
     ngOnInit(): void {
-        this.productForm = this.formBuilder.group({
+        this.menuForm = this.formBuilder.group({
             code: [null, [Validators.required]],
             name: [null, [Validators.required]],
             type_id: [null, [Validators.required]],
             image: [null, [Validators.required]],
-            unit_price: [null, [Validators.required]]
+            unit_price: [null, [Validators.required]],
+            recipes: this.formBuilder.array([]) as FormArray,
         });
 
         this.loadSetup();
+        this._ingredientService.getData().subscribe({
+            next: (res) => (this.ingredients = res.data ?? []),
+        });
+    }
+
+    get recipeRows(): FormArray {
+        return this.menuForm.get('recipes') as FormArray;
+    }
+
+    addRecipeRow(): void {
+        this.recipeRows.push(this._recipeGroup());
+    }
+
+    removeRecipeRow(index: number): void {
+        this.recipeRows.removeAt(index);
+    }
+
+    private _recipeGroup(
+        r?: { ingredient_id: number; quantity: number },
+    ): UntypedFormGroup {
+        return this.formBuilder.group({
+            ingredient_id: [r?.ingredient_id ?? null, Validators.required],
+            quantity: [
+                r?.quantity ?? null,
+                [Validators.required, Validators.min(0.0001)],
+            ],
+        });
+    }
+
+    private _buildPayload() {
+        const raw = this.menuForm.getRawValue();
+        const seen = new Set<number>();
+        const lines = (raw.recipes ?? [])
+            .filter(
+                (row: { ingredient_id: number | null; quantity: number | null }) =>
+                    row?.ingredient_id != null && Number(row.quantity) > 0,
+            )
+            .map((row: { ingredient_id: number; quantity: number }) => ({
+                ingredient_id: Number(row.ingredient_id),
+                quantity: Number(row.quantity),
+            }));
+        const recipes: { ingredient_id: number; quantity: number }[] = [];
+        for (const line of lines) {
+            if (seen.has(line.ingredient_id)) {
+                this.snackBarService.openSnackBar('Duplicate ingredient in recipe; keep one row per ingredient.', GlobalConstants.error);
+                return null;
+            }
+            seen.add(line.ingredient_id);
+            recipes.push(line);
+        }
+        return { ...raw, recipes };
     }
 
     loadSetup(): void {
-        this.productService.getSetupData().subscribe({
+        this.menuService.getSetupData().subscribe({
             next: (res: any) => {
-                this.setup = res?.productTypes ?? [];
+                this.setup = res?.productTypes ?? res?.menuTypes ?? [];
             },
             error: (err: HttpErrorResponse) => {
                 this.snackBarService.openSnackBar(
@@ -89,7 +145,7 @@ export class ProductCreatePageComponent implements OnInit {
             const reader = new FileReader();
             reader.onload = (e: any) => {
                 this.src = e.target.result;
-                this.productForm.get('image')?.setValue(e.target.result);
+                this.menuForm.get('image')?.setValue(e.target.result);
             };
             reader.readAsDataURL(file);
             return;
@@ -99,10 +155,12 @@ export class ProductCreatePageComponent implements OnInit {
     }
 
     submit(): void {
-        if (this.productForm.invalid || this.saving) return;
+        if (this.menuForm.invalid || this.saving) return;
+        const body = this._buildPayload();
+        if (!body) return;
 
         this.saving = true;
-        this.productService.create(this.productForm.value).subscribe({
+        this.menuService.create(body).subscribe({
             next: (response) => {
                 this.saving = false;
                 this.snackBarService.openSnackBar(response.message, GlobalConstants.success);

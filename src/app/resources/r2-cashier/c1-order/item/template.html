@@ -2,9 +2,9 @@
     (click)="onOutput()">
     <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
         <img class="mx-auto min-h-44 max-h-44 w-44 object-contain dark:hidden scale-90"
-            [src]="data?.image ? fileUrl + data?.image : 'default-image-url.jpg'" alt="product image" />
+            [src]="data?.image ? fileUrl + data?.image : '/icons/photo.svg'" alt="Menu item" />
         <img class="mx-auto hidden max-h-44 w-44 object-contain dark:block"
-            [src]="data?.image ? fileUrl + data?.image : 'default-image-url.jpg'" alt="product image" />
+            [src]="data?.image ? fileUrl + data?.image : '/icons/photo.svg'" alt="Menu item" />
     </div>
 
     <div>

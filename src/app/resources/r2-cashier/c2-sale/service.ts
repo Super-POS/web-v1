@@ -3,13 +3,54 @@ import { HttpClient }           from '@angular/common/http';
 import { inject, Injectable }   from '@angular/core';
 
 // ================================================================>> Third-Party Library (RxJS)
-import { catchError, Observable, of, switchMap, tap } from 'rxjs';
+import { catchError, map, Observable, of, switchMap, tap } from 'rxjs';
 
 // ================================================================>> Custom Library
 import { env }  from 'envs/env';
 import { LoadingSpinnerService } from 'helper/shared/loading/service';
-import { List } from './interface';
+import { Data, Detail, List } from './interface';
 
+function mapUiPlatformFilterToChannel(platform: string | null | undefined): string | undefined {
+    if (platform == null) return undefined;
+    if (platform === 'Web') return 'website';
+    if (platform === 'Mobile') return 'telegram';
+    return platform;
+}
+
+function detailWithProduct(d: any): Detail {
+    return {
+        ...d,
+        product: d?.product || d?.menu,
+    } as Detail;
+}
+
+function legacyPlatformFromChannel(channel: string | undefined): string {
+    if (!channel) return 'Unknown';
+    if (channel === 'website') return 'Web';
+    if (channel === 'walk_in') return 'POS';
+    if (channel === 'telegram') return 'Telegram';
+    return 'Unknown';
+}
+
+function resolveOrderChannel(o: any): string | undefined {
+    if (o?.channel) return o.channel;
+    if (o?.platform === 'Web') return 'website';
+    if (o?.platform === 'Mobile') return 'telegram';
+    if (o?.platform === 'POS') return 'walk_in';
+    return undefined;
+}
+
+function normalizeSaleRow(o: any): Data {
+    const details = (o?.orderDetails || o?.details || []).map((d: any) => detailWithProduct(d));
+    const ch = resolveOrderChannel(o);
+    return {
+        ...o,
+        details,
+        orderDetails: o?.orderDetails,
+        channel: ch,
+        platform: legacyPlatformFromChannel(ch),
+    } as Data;
+}
 
 @Injectable({
     providedIn: 'root',
@@ -27,7 +68,7 @@ export class SaleService {
     private loadingSpinner = inject(LoadingSpinnerService);
     getData(params?: {
         page: number;
-        page_size: number;
+        limit: number;
         key?: string;
         timeType?: string;
         platform?: string;
@@ -35,15 +76,26 @@ export class SaleService {
         startDate?: string;
         endDate?: string;
     }): Observable<List> {
-        // Filter out null or undefined parameters
         const filteredParams: { [key: string]: any } = {};
         Object.keys(params || {}).forEach(key => {
-            if (params![key] !== null && params![key] !== undefined) {
-                filteredParams[key] = params![key];
+            if (params![key] === null || params![key] === undefined) {
+                return;
             }
+            if (key === 'platform') {
+                const ch = mapUiPlatformFilterToChannel(params!.platform);
+                if (ch) {
+                    filteredParams['channel'] = ch;
+                }
+                return;
+            }
+            filteredParams[key] = params![key];
         });
 
         return this.httpClient.get<List>(`${env.API_BASE_URL}/cashier/sales`, { params: filteredParams }).pipe(
+            map((response: List) => ({
+                ...response,
+                data: (response.data || []).map((row) => normalizeSaleRow(row)),
+            })),
             switchMap((response: List) => {
                 this.loadingSpinner.open();
                 return of(response);

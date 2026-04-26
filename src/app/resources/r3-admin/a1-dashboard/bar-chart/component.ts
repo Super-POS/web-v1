@@ -64,8 +64,9 @@ export class BarChartComponent implements OnInit, OnChanges, AfterViewInit {
                 // console.log('Full API Response:', response);
                 // console.log('Sales Data:', response?.dashboard.salesData);
     
-                const labels = response?.dashboard.salesData.labels.map(label => this.dayMapping[label] || label) || [];
-                const data = response?.dashboard.salesData.data || [];
+                const sales = response?.dashboard?.salesData;
+                const labels = sales?.labels?.map(label => this.dayMapping[label] || label) ?? [];
+                const data = sales?.data ?? [];
     
                 // console.log('Processed Labels:', labels);
                 // console.log('Processed Data:', data);

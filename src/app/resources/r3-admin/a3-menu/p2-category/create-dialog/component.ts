@@ -28,7 +28,7 @@ import { MatTooltipModule }                                 from '@angular/mater
 import { SnackbarService }                                  from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants                                      from 'helper/shared/constants';
 
-import { ProductTypeService }                               from '../service';
+import { MenuCategoryService }                               from '../service';
 import { Item }                                             from '../interface';
 
 @Component({
@@ -72,7 +72,7 @@ export class CreateDialogComponent implements OnInit {
         private _dialogRef          : MatDialogRef<CreateDialogComponent>,
         private _formBuilder        : UntypedFormBuilder, // Build form for getting data from teplate
         private _snackBarService    : SnackbarService, // Display quick message
-        private _service            : ProductTypeService // for calling API
+        private _service            : MenuCategoryService // for calling API
 
     ) { }
 

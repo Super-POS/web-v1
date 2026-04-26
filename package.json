@@ -50,7 +50,6 @@
     "ngx-ui-switch": "^15.0.0",
     "perfect-scrollbar": "1.5.5",
     "postcss-import": "^16.1.0",
-    "qrcode": "^1.5.4",
     "quill": "2.0.2",
     "rxjs": "7.8.1",
     "socket.io-client": "^4.8.0",

@@ -1,23 +1,30 @@
-// Interface representing a list of data with pagination information
+// Cashier sales list — matches api-v1 (page, limit, total, totalPage)
 export interface List {
-    data: Data[],
+    data: Data[];
+    status?: string;
     pagination: {
-        currentPage: number,
-        perPage: number,
-        totalItems: number,
-        totalPages: number
-    }
+        page: number;
+        limit: number;
+        total: number;
+        totalPage: number;
+    };
 }
 
 // Interface representing data for a receipt
 export interface Data {
 
-    id: number,
-    receipt_number: number,
-    total_price: number,
-    ordered_at?: Date,
-    cashier: { id: number, name: string },
-    details: Detail[]
+    id: number;
+    receipt_number: number;
+    total_price: number;
+    ordered_at?: Date;
+    /** api-v1 OrderChannelEnum */
+    channel?: string;
+    /** Legacy UI field; normalized in SaleService from channel */
+    platform?: string;
+    status?: string;
+    cashier: { id: number; name: string; avatar?: string };
+    details: Detail[];
+    orderDetails?: Detail[];
 }
 
 // Interface representing details of a product in a receipt

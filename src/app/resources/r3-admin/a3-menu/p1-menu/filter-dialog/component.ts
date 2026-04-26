@@ -14,7 +14,7 @@ import { MatSelectModule }                                                      
 import { MatProgressSpinnerModule }                                               from '@angular/material/progress-spinner';
 import { SetupResponse }                                                          from '../interface';
 @Component({
-    selector: 'admin-product-filter-dialog',
+    selector: 'admin-menu-filter-dialog',
     standalone: true,
     templateUrl: './template.html',
     styleUrls: ['./style.scss'],

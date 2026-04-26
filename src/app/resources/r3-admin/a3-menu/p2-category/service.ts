@@ -14,7 +14,7 @@ import { Data, Item, CreatePayload, UpdatePayload} from './interface';
     providedIn: 'root',
 })
 
-export class ProductTypeService {
+export class MenuCategoryService {
 
     private _httpOptions = {
         headers: new HttpHeaders().set('Content-Type', 'application/json'),

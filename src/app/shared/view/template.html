@@ -10,8 +10,10 @@
     <div mat-dialog-title class="min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5 border-b">
         <div class="flex flex-1 items-center text-slate-500 gap-3">
             <h1 class="text-3xl">វិក្ក័យប័ត្រ {{ row?.receipt_number }} .</h1>
-            <mat-icon *ngIf="row.platform === 'Web'" class="icon-size-6 text-gray-500" svgIcon="mdi:monitor"></mat-icon>
-            <mat-icon *ngIf="row.platform === 'Mobile'" class="icon-size-6 text-gray-500"
+            <mat-icon *ngIf="row.platform === 'Web' || row.channel === 'website'" class="icon-size-6 text-gray-500" svgIcon="mdi:monitor"></mat-icon>
+            <mat-icon *ngIf="row.platform === 'POS' || row.channel === 'walk_in'" class="icon-size-6 text-gray-500"
+                svgIcon="mdi:storefront-outline"></mat-icon>
+            <mat-icon *ngIf="row.platform === 'Telegram' || row.channel === 'telegram' || row.platform === 'Mobile'" class="icon-size-6 text-gray-500"
                 svgIcon="mdi:cellphone"></mat-icon>
             <mat-icon *ngIf="row.platform === 'Unknown' || row.platform === null" class="icon-size-6 text-gray-500"
                 svgIcon="mdi:crosshairs-question"></mat-icon>

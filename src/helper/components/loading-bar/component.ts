@@ -1,6 +1,7 @@
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
 
 import {
+    ChangeDetectorRef,
     Component,
     inject,
     Input,
@@ -25,6 +26,7 @@ import { Subject, takeUntil } from 'rxjs';
 })
 export class HelperLoadingBarComponent implements OnChanges, OnInit, OnDestroy {
     private _helperLoadingService = inject(HelperLoadingService);
+    private _cdr = inject(ChangeDetectorRef);
 
     @Input() autoMode: boolean = true;
     mode: 'determinate' | 'indeterminate';
@@ -60,18 +62,21 @@ export class HelperLoadingBarComponent implements OnChanges, OnInit, OnDestroy {
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((value) => {
                 this.mode = value;
+                this._cdr.markForCheck();
             });
 
         this._helperLoadingService.progress$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((value) => {
-                this.progress = value;
+                this.progress = value ?? 0;
+                this._cdr.markForCheck();
             });
 
         this._helperLoadingService.show$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((value) => {
                 this.show = value;
+                this._cdr.markForCheck();
             });
     }
 

@@ -12,10 +12,10 @@ import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import { CreateDialogComponent } from './create-dialog/component';
 import { IngredientItem } from './interface';
 import { UpdateDialogComponent } from './update-dialog/component';
-import { ProductIngredientService } from './service';
+import { MenuIngredientService } from './service';
 
 @Component({
-    selector: 'product-ingredient',
+    selector: 'menu-ingredient',
     standalone: true,
     templateUrl: './template.html',
     imports: [
@@ -27,8 +27,8 @@ import { ProductIngredientService } from './service';
         MatTableModule,
     ],
 })
-export class ProductIngredientComponent implements OnInit {
-    private _service = inject(ProductIngredientService);
+export class MenuIngredientComponent implements OnInit {
+    private _service = inject(MenuIngredientService);
     private _matDialog = inject(MatDialog);
     private _snackBarService = inject(SnackbarService);
 

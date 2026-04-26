@@ -7,12 +7,12 @@ import { MatIconModule } from '@angular/material/icon';
 
 // ================================================================>> Custom Libraries (Application-specific)
 import { env } from 'envs/env';
-import { Product } from '../interface';
+import { MenuItem } from '../interface';
 
 
 @Component({
 
-    selector: 'product-item',
+    selector: 'menu-item',
     standalone: true,
     templateUrl: './template.html',
     styleUrl: './style.scss',
@@ -22,10 +22,10 @@ import { Product } from '../interface';
         DecimalPipe
     ],
 })
-export class ItemComponent {
+export class MenuItemComponent {
 
-    @Input() data: Product;
-    @Output() result = new EventEmitter<Product>;
+    @Input() data: MenuItem;
+    @Output() result = new EventEmitter<MenuItem>;
     public fileUrl: string = env.FILE_BASE_URL;
 
     // ===> Method to emit the data to the parent component

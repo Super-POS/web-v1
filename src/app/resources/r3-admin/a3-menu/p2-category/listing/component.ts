@@ -18,7 +18,7 @@ import GlobalConstants                                          from 'helper/sha
 
 import { CreateDialogComponent }                                from '../create-dialog/component';
 import { UpdateDialogComponent }                                from '../update-dialog/component';
-import { ProductTypeService }                                   from '../service';
+import { MenuCategoryService }                                   from '../service';
 import { Data, Item }                                           from '../interface';
 
 @Component({
@@ -38,11 +38,11 @@ import { Data, Item }                                           from '../interfa
     ]
 })
 
-export class ProductTypeComponent implements OnInit {
+export class MenuCategoryComponent implements OnInit {
 
 
     // ===>> Variable Declaration
-    private _service                                            = inject(ProductTypeService); // for calling to API
+    private _service                                            = inject(MenuCategoryService); // for calling to API
     private _snackBarService                                    = inject(SnackbarService); // for display quick message
     private _helpersConfirmationService                         = inject(HelperConfirmationService); // for Confirmation
     private _matDialog                                          = inject(MatDialog); // Dialog

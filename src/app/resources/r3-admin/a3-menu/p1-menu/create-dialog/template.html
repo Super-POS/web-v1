@@ -8,7 +8,7 @@
         </div>
     </div>
     <div class="out-create-body px-4 pb-2">
-        <form [formGroup]="productForm" class="out-create-content border-t pt-4">
+        <form [formGroup]="menuForm" class="out-create-content border-t pt-4">
             <div class="rounded-none h-fit lg:h-auto">
                 <div class="p-5">
                     <div class="w-full md:min-w-64 flex justify-center">
@@ -55,15 +55,48 @@
                     <input matInput type="number" formControlName="unit_price" placeholder="បញ្ចូលតម្លៃ(៛)">
                     <mat-error>សូមបញ្ចូលតម្លៃជាលុយខ្មែរ</mat-error>
                 </mat-form-field>
+
+                <div class="w-full border-t border-slate-200 dark:border-slate-600 pt-4 mt-2" *ngIf="menuForm">
+                    <div class="flex items-center justify-between gap-2 mb-3">
+                        <span class="text-base font-medium text-slate-800 dark:text-slate-200">រូបមន្ត (ក្នុង ១ កែវ)</span>
+                        <button type="button" mat-stroked-button (click)="addRecipeRow()">
+                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                            <span class="ml-1">ថែមជួរ</span>
+                        </button>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-2" *ngIf="!ingredients.length">កំពុងផ្ទុកគ្រឿងផ្សំ…</p>
+                    <div formArrayName="recipes">
+                    <ng-container *ngFor="let row of recipeRows.controls; let i = index">
+                        <div [formGroupName]="i" class="flex flex-wrap items-start gap-2 w-full mb-2">
+                            <mat-form-field appearance="outline" class="flex-1 min-w-[200px]">
+                                <mat-label>គ្រឿងផ្សំ</mat-label>
+                                <mat-select formControlName="ingredient_id">
+                                    <mat-option *ngFor="let ing of ingredients" [value]="ing.id">
+                                        {{ ing.name }}<ng-container *ngIf="ing.unit"> ({{ ing.unit }})</ng-container>
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                            <mat-form-field appearance="outline" class="w-28 min-w-[7rem]">
+                                <mat-label>ចំនួន</mat-label>
+                                <input matInput type="number" step="any" min="0" formControlName="quantity" />
+                            </mat-form-field>
+                            <button type="button" mat-icon-button (click)="removeRecipeRow(i)" [attr.aria-label]="'យកចេញ'">
+                                <mat-icon [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                            </button>
+                        </div>
+                    </ng-container>
+                    </div>
+                    <p class="text-xs text-slate-500" *ngIf="!recipeRows.length">ទទេ = គ្មានរូបមន្ត (គ្មានការដកស្តុកគ្រឿង)</p>
+                </div>
             </div>
         </form>
     </div>
     <mat-dialog-actions>
         <div class="w-full flex justify-end px-1">
             <button class="helpers-mat-button-md bg-[#264497] text-white" mat-flat-button (click)="submit()"
-                [disabled]="productForm.invalid || saving">
-                <span *ngIf="!productForm.disabled">រួចរាល់</span>
-                <mat-progress-spinner *ngIf="productForm.disabled" [diameter]="24"
+                [disabled]="menuForm.invalid || saving">
+                <span *ngIf="!menuForm.disabled">រួចរាល់</span>
+                <mat-progress-spinner *ngIf="menuForm.disabled" [diameter]="24"
                     [mode]="'indeterminate'"></mat-progress-spinner>
             </button>
         </div>

@@ -12,10 +12,10 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
 import { IngredientItem } from '../interface';
-import { ProductIngredientService } from '../service';
+import { MenuIngredientService } from '../service';
 
 @Component({
-    selector: 'update-product-ingredient',
+    selector: 'update-menu-ingredient',
     templateUrl: './template.html',
     standalone: true,
     imports: [
@@ -34,7 +34,7 @@ export class UpdateDialogComponent implements OnInit {
 
     private _dialogRef = inject(MatDialogRef<UpdateDialogComponent>);
     private _formBuilder = inject(UntypedFormBuilder);
-    private _service = inject(ProductIngredientService);
+    private _service = inject(MenuIngredientService);
     private _snackBarService = inject(SnackbarService);
 
     isSaving = false;
