@@ -69,6 +69,7 @@ export class OrderComponent implements OnInit, OnDestroy {
     totalPrice: number = 0;
     selectedTab: any;
     menuSearchTerm: string = '';
+    isCartSidebarOpen: boolean = false;
 
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
@@ -249,6 +250,15 @@ export class OrderComponent implements OnInit, OnDestroy {
             this.carts.push(line);
         }
         this.canSubmit = true;
+        this.isCartSidebarOpen = true;
+    }
+
+    toggleCartSidebar(): void {
+        this.isCartSidebarOpen = !this.isCartSidebarOpen;
+    }
+
+    closeCartSidebar(): void {
+        this.isCartSidebarOpen = false;
     }
 
     // Function to handle tab selection
@@ -519,6 +529,7 @@ export class OrderComponent implements OnInit, OnDestroy {
                 this.carts = [];
                 this.totalPrice = 0;
                 this.canSubmit = false;
+                this.isCartSidebarOpen = false;
                 // Do not show “success” when the order is not paid yet — only after Baray pay link is ready.
                 const order = response.data;
                 if (order?.id != null) {

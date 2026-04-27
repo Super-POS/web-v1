@@ -14,7 +14,7 @@
             display: flex;
 
             .list-pos-left {
-                width: calc(100% - 28rem); /* Remaining space after subtracting the right section */
+                width: 100%;
                 min-width: 20rem;
                 height: 100%; /* Full available height for left content */
 
@@ -23,19 +23,17 @@
                     overflow: auto; /* Ensure content is scrollable */
                 }
             }
-
-            .list-pos-right {
-                min-width: 28rem;
-                max-width: 28rem;
-                height: auto; /* Ensure the right side also takes full available height */
-
-                .list-pos-right-body {
-                    height: calc(100vh - 11rem); /* Same logic for the right content, ensuring it fits the viewport */
-                    overflow: auto;
-                }
-            }
         }
     }
+}
+
+.cart-sidebar {
+    transform: translateX(-105%);
+    transition: transform 220ms ease;
+}
+
+.cart-sidebar.open {
+    transform: translateX(0);
 }
 
 

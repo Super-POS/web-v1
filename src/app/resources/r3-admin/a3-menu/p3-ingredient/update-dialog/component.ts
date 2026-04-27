@@ -43,6 +43,7 @@ export class UpdateDialogComponent implements OnInit {
         name: [null, [Validators.required]],
         unit: [''],
         quantity: [1, [Validators.required, Validators.min(0.0001)]],
+        low_stock_threshold: [1000, [Validators.required, Validators.min(0)]],
     });
 
     constructor(@Inject(MAT_DIALOG_DATA) public data: IngredientItem) {}
@@ -52,6 +53,7 @@ export class UpdateDialogComponent implements OnInit {
             name: this.data.name,
             unit: this.data.unit ?? '',
             quantity: Number(this.data.quantity),
+            low_stock_threshold: Number(this.data.low_stock_threshold ?? 1000),
         });
     }
 
@@ -68,6 +70,7 @@ export class UpdateDialogComponent implements OnInit {
             name: this.form.value.name ?? '',
             unit: this.form.value.unit ?? '',
             quantity: Number(this.form.value.quantity),
+            low_stock_threshold: Number(this.form.value.low_stock_threshold ?? 1000),
         }).subscribe({
             next: (response) => {
                 this.resData.emit(response.data);

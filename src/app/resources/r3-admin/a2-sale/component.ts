@@ -149,6 +149,39 @@ export class SaleComponent implements OnInit {
         });
     }
 
+    // ====================================================================>> Export CSV (same filters as list, no page limit)
+    exportToCsv(): void {
+        const p: Record<string, string | number> = {};
+        if (this.key) {
+            p.key = this.key;
+        }
+        if (this.cashier && this.cashier !== 0) {
+            p.cashier = this.cashier;
+        }
+        if (this.platform && this.platform !== 0) {
+            p.channel = this.platform;
+        }
+        if (this.from) {
+            p.from = this.from;
+        }
+        if (this.to) {
+            p.to = this.to;
+        }
+        this._service.exportCsv(p).subscribe({
+            next: (blob) => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'sales-export.csv';
+                a.click();
+                window.URL.revokeObjectURL(url);
+            },
+            error: (err) => {
+                this._errorHandleService.handleHttpError(err);
+            },
+        });
+    }
+
     // ====================================================================>> Get Data for Listing
     getData(){
 

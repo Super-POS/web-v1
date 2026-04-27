@@ -4,6 +4,7 @@ export interface IngredientItem {
     name: string;
     unit?: string;
     quantity: number;
+    low_stock_threshold?: number;
     created_at: Date;
 }
 
@@ -15,10 +16,12 @@ export interface IngredientCreatePayload {
     name: string;
     unit?: string;
     quantity: number;
+    low_stock_threshold?: number;
 }
 
 export interface IngredientUpdatePayload {
     name: string;
     unit?: string;
     quantity: number;
+    low_stock_threshold?: number;
 }

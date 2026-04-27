@@ -29,7 +29,7 @@ import { SaleCashierBarChartComponent } from './bar-chart-sale/component';
 import { CicleChartComponent }          from './cicle-chart/component';
 import { SaleCicleChartComponent }      from './cicle-chart-sale/component';
 import { DashbordService }              from './service';
-import {  CashierData, DashboardResponse, ProductTypeData, SalesData, StataticData }    from './interface'; //CashierData
+import {  CashierData, DailySalesSummary, DashboardResponse, ProductTypeData, SalesData, StataticData }    from './interface'; //CashierData
 import { ReportComponent }              from './report/component';
 
 @Component({
@@ -94,6 +94,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     form: FormGroup;
     stataticData: StataticData;
+
+    /** Single-day snapshot (defaults to today) */
+    dailySummary: DailySalesSummary | null = null;
    
     activeTab: string = 'all';
     displayedColumns: string[] = ['number_doc', 'title_doc', 'ministry_doc', 'action_doc'];
@@ -131,6 +134,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.getCashierData({ thisWeek });
         this.getProductType({ thisWeek });
         this.getSale({ thisWeek });
+        this._service.getDailySummary(this.today).subscribe({
+            next: (d) => {
+                this.dailySummary = d;
+                this._changeDetectorRef.markForCheck();
+            },
+            error: () => {
+                this.dailySummary = null;
+            },
+        });
     }
 
 

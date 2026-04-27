@@ -11,6 +11,7 @@ export interface IngredientStock {
     name: string;
     unit: string | null;
     quantity: number;
+    low_stock_threshold: number;
 }
 
 // Per menu type group; API may return `menus` or legacy `products`

@@ -47,4 +47,10 @@ export class MenuIngredientService {
             headers: this._httpOptions.headers,
         });
     }
+
+    getRestockList(): Observable<IngredientResponse> {
+        return this._httpClient.get<IngredientResponse>(`${env.API_BASE_URL}/admin/menu/ingredients/restock/list`, {
+            headers: this._httpOptions.headers,
+        });
+    }
 }

@@ -1,3 +1,11 @@
+export interface DailySalesSummary {
+    date: string;
+    orderCount: number;
+    revenueRiel: number;
+    cancelledCount: number;
+    awaitingPaymentCount: number;
+}
+
 export interface DashboardResponse {
     statatics: StataticData;
     message: string;

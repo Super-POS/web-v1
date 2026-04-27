@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DashboardResponse, DataSaleResponse } from './interface';
+import { DailySalesSummary, DashboardResponse, DataSaleResponse } from './interface';
 // Helper
 // ================================================================================>> Thrid Party Library
 // RxJS
@@ -12,6 +12,16 @@ export class DashbordService {
     constructor(private _httpClient: HttpClient) { }
     private httpOptions = {
         headers: new HttpHeaders().set('Content-Type', 'application/json'),
+    }
+
+    getDailySummary(date?: string): Observable<DailySalesSummary> {
+        let httpParams = new HttpParams();
+        if (date) {
+            httpParams = httpParams.set('date', date);
+        }
+        return this._httpClient.get<DailySalesSummary>(`${env.API_BASE_URL}/admin/dashboard/daily-summary`, {
+            params: httpParams,
+        });
     }
 
     // Method call to api to get data

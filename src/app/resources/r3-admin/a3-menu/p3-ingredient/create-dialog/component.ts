@@ -43,6 +43,7 @@ export class CreateDialogComponent implements OnInit {
         name: [null, [Validators.required]],
         unit: [''],
         quantity: [1, [Validators.required, Validators.min(0.0001)]],
+        low_stock_threshold: [1000, [Validators.required, Validators.min(0)]],
     });
 
     constructor() {}
@@ -62,6 +63,7 @@ export class CreateDialogComponent implements OnInit {
             name: this.form.value.name ?? '',
             unit: this.form.value.unit ?? '',
             quantity: Number(this.form.value.quantity),
+            low_stock_threshold: Number(this.form.value.low_stock_threshold ?? 1000),
         }).subscribe({
             next: (response) => {
                 this.resData.emit(response.data);

@@ -32,10 +32,11 @@ export class MenuIngredientComponent implements OnInit {
     private _matDialog = inject(MatDialog);
     private _snackBarService = inject(SnackbarService);
 
-    displayedColumns: string[] = ['no', 'name', 'unit', 'quantity', 'created_at', 'action'];
+    displayedColumns: string[] = ['no', 'name', 'unit', 'quantity', 'low_stock_threshold', 'created_at', 'action'];
     dataSource: MatTableDataSource<IngredientItem> = new MatTableDataSource<IngredientItem>([]);
 
     isLoading = false;
+    restockMode = false;
 
     ngOnInit(): void {
         this.loadIngredients();
@@ -43,7 +44,23 @@ export class MenuIngredientComponent implements OnInit {
 
     loadIngredients(): void {
         this.isLoading = true;
+        this.restockMode = false;
         this._service.getData().subscribe({
+            next: (res) => {
+                this.dataSource.data = res?.data ?? [];
+                this.isLoading = false;
+            },
+            error: (err: HttpErrorResponse) => {
+                this.isLoading = false;
+                this._snackBarService.openSnackBar(err?.error?.message ?? GlobalConstants.genericError, GlobalConstants.error);
+            },
+        });
+    }
+
+    openRestockView(): void {
+        this.isLoading = true;
+        this.restockMode = true;
+        this._service.getRestockList().subscribe({
             next: (res) => {
                 this.dataSource.data = res?.data ?? [];
                 this.isLoading = false;

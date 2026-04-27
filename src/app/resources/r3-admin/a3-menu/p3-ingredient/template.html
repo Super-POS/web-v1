@@ -7,6 +7,8 @@
             <span class="text-lg text-gray-600 dark:text-white -mb-0.5">Ingredients</span>
         </div>
         <div class="flex items-center gap-2">
+            <button *ngIf="restockMode" type="button" class="!text-sm" mat-stroked-button (click)="loadIngredients()">All ingredients</button>
+            <button type="button" class="!text-sm" mat-stroked-button (click)="openRestockView()">Restock list</button>
             <button class="helpers-mat-button-sm w-6" (click)="openCreateDialog()" mat-stroked-button>
                 <mat-icon class="icon-size-6 text-slate-500" svgIcon="heroicons_outline:plus"></mat-icon>
             </button>
@@ -15,8 +17,11 @@
     <div class="list-sale-body w-full">
         <div class="p-4">
         <div *ngIf="isLoading">Getting data from API...</div>
-        <div *ngIf="!isLoading && dataSource.data.length === 0" class="text-center py-8 text-gray-500">
+        <div *ngIf="!isLoading && dataSource.data.length === 0 && !restockMode" class="text-center py-8 text-gray-500">
             No data
+        </div>
+        <div *ngIf="!isLoading && dataSource.data.length === 0 && restockMode" class="text-center py-8 text-gray-500">
+            No items need restock.
         </div>
 
         <div *ngIf="!isLoading && dataSource.data.length > 0" class="w-full overflow-x-auto">
@@ -39,6 +44,11 @@
                 <ng-container matColumnDef="quantity">
                     <th mat-header-cell *matHeaderCellDef>Quantity</th>
                     <td mat-cell *matCellDef="let item">{{ item.quantity }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="low_stock_threshold">
+                    <th mat-header-cell *matHeaderCellDef>Low at</th>
+                    <td mat-cell *matCellDef="let item">{{ item.low_stock_threshold ?? 1000 }}</td>
                 </ng-container>
 
                 <ng-container matColumnDef="created_at">

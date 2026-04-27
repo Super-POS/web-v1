@@ -74,6 +74,21 @@ export class SaleService {
         return this.httpClient.get<List>(`${env.API_BASE_URL}/admin/sales`, { headers: this._httpOptions.headers, params });
     }
 
+    /** CSV export with same filters as list (no pagination). */
+    exportCsv(params: Record<string, string | number>): Observable<Blob> {
+        let httpParams = new HttpParams();
+        Object.keys(params).forEach((k) => {
+            const v = params[k];
+            if (v !== undefined && v !== null && v !== '' && v !== 0) {
+                httpParams = httpParams.set(k, String(v));
+            }
+        });
+        return this.httpClient.get(`${env.API_BASE_URL}/admin/sales/export/csv`, {
+            params: httpParams,
+            responseType: 'blob',
+        });
+    }
+
     //Method to delete data
     delete(id: number = 0): Observable<{ status_code: number, message: string }> {
         return this.httpClient.delete<{ status_code: number, message: string }>(`${env.API_BASE_URL}/admin/sales/${id}`);
