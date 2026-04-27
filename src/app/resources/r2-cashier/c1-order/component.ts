@@ -19,23 +19,13 @@ import { User }             from 'app/core/user/interface';
 import { env }              from 'envs/env';
 import { SnackbarService }  from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants      from 'helper/shared/constants';
-import { Data as OrderReceiptData, ProductType } from '../c2-sale/interface';
+import { Data as OrderReceiptData } from '../c2-sale/interface';
 import { MenuItemComponent }    from './item/component';
 import { BarayPaidWatcherService } from './baray-paid-watcher.service';
 import { OrderService }     from './service';
-import { Data, MenuItem }    from './interface';
+import { Data, MenuItem, MenuItemType, NormalizedModifierGroup, OrderCartLine } from './interface';
+import { ModifierPickDialogComponent, ModifierPickResult } from './modifier-dialog/component';
 import { ViewDetailSaleComponent } from 'app/shared/view/component';
-interface CartItem {
-
-    id: number;
-    name: string;
-    qty: number;
-    temp_qty: number;
-    unit_price: number;
-    image: string,
-    code: string,
-    type: ProductType,
-}
 
 
 @Component({
@@ -68,7 +58,7 @@ export class OrderComponent implements OnInit, OnDestroy {
     data: Data[] = [];
     allMenuItems: MenuItem[] = [];
     isLoading: boolean = false;
-    carts: CartItem[] = [];
+    carts: OrderCartLine[] = [];
     user: User;
     isOrderBeingMade: boolean = false;
     /** Full-screen wait after Baray pay link opens until paid, timeout, or cashier cancels. */
@@ -78,6 +68,7 @@ export class OrderComponent implements OnInit, OnDestroy {
     canSubmit: boolean = false;
     totalPrice: number = 0;
     selectedTab: any;
+    menuSearchTerm: string = '';
 
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
@@ -106,13 +97,16 @@ export class OrderComponent implements OnInit, OnDestroy {
         this._service.getData().subscribe({
             next: (response) => {
                 // API groups by menu type with `menus`; legacy UI used `products`
-                this.data = (response.data || []).map((cat: Data) => ({
-                    ...cat,
-                    products: (cat as Data & { menus?: MenuItem[] }).menus || cat.products || [],
-                }));
+                this.data = (response.data || []).map((cat: Data) => {
+                    const menus = ((cat as Data & { menus?: unknown[] }).menus || cat.products || []) as unknown[];
+                    return {
+                        ...cat,
+                        products: menus.map((m) => this._normalizeMenuItem(m as MenuItem)),
+                    };
+                });
 
                 this.allMenuItems = this.data.reduce((all: MenuItem[], item: Data) => {
-                    return all.concat((item as Data & { menus?: MenuItem[] }).menus || item.products || []);
+                    return all.concat(item.products || (item as Data & { menus?: MenuItem[] }).menus || []);
                 }, []);
 
                 this.data.unshift({
@@ -138,14 +132,144 @@ export class OrderComponent implements OnInit, OnDestroy {
         return item?.id;
     }
 
+    trackByLineKey(_index: number, line: OrderCartLine): string {
+        return line?.lineKey;
+    }
+
     trackByMenuItemId(_index: number, row: { id: number }): number {
         return row?.id;
+    }
+
+    /** Map API / Sequelize menu JSON into `MenuItem` + normalized modifier groups. */
+    private _normalizeMenuItem(raw: unknown): MenuItem {
+        const m = raw as Record<string, unknown> & {
+            id: number;
+            name: string;
+            code: string;
+        };
+        const typeSource = m['type'] ?? m['MenuType'] ?? m['menuType'];
+        const type: MenuItemType =
+            typeof typeSource === 'object' && typeSource !== null && 'name' in (typeSource as object)
+                ? (typeSource as MenuItemType)
+                : { name: String((typeSource as { name?: string } | undefined)?.name ?? 'Menu') };
+
+        const rawGroups = (m['modifierGroups'] as unknown[]) || [];
+        const groups: NormalizedModifierGroup[] = (rawGroups as Record<string, unknown>[])
+            .map((g) => {
+                const gr = g as Record<string, unknown> & { id: number; name: string; code: string; sort_order?: number };
+                const through =
+                    (gr['MenuModifierGroup'] as Record<string, unknown> | undefined) ||
+                    (gr['menuModifierGroup'] as Record<string, unknown> | undefined) ||
+                    (gr['menu_modifier_group'] as Record<string, unknown> | undefined) ||
+                    {};
+                const sortOrder = Number(
+                    through['sort_order'] ?? (gr as { sort_order?: number }).sort_order ?? gr['sort_order'] ?? 0,
+                );
+                const isRequired = Boolean(
+                    through['is_required'] ?? (gr as { is_required?: boolean }).is_required ?? false,
+                );
+                const options = ((gr['options'] as unknown[]) || [])
+                    .map((o) => o as Record<string, unknown> & { id: number; label: string })
+                    .filter((o) => o['is_active'] !== false)
+                    .map((o) => ({
+                        id: o.id,
+                        label: String(o['label'] ?? ''),
+                        code: o['code'] != null ? String(o['code']) : undefined,
+                        price_delta: Number(o['price_delta'] ?? 0),
+                        sort_order: Number(o['sort_order'] ?? 0),
+                        is_active: o['is_active'] !== false,
+                        is_default: Boolean(o['is_default']),
+                    }))
+                    .sort((a, b) => a.sort_order - b.sort_order);
+
+                return {
+                    id: gr.id,
+                    name: String(gr['name'] ?? ''),
+                    code: String(gr['code'] ?? ''),
+                    sort_order: sortOrder,
+                    is_required: isRequired,
+                    options,
+                };
+            })
+            .filter((g) => g.id != null)
+            .sort((a, b) => a.sort_order - b.sort_order);
+
+        return {
+            id: m.id,
+            name: String(m['name'] ?? ''),
+            image: String(m['image'] ?? ''),
+            unit_price: Number(m['unit_price'] ?? 0),
+            code: m.code,
+            type,
+            modifierGroups: groups.length > 0 ? groups : undefined,
+        };
+    }
+
+    private _lineKey(menuId: number, optionIds: number[], lineNote?: string): string {
+        const sorted = [...optionIds].filter((n) => n > 0).sort((a, b) => a - b);
+        const note = (lineNote || '').trim();
+        return `${menuId}|${sorted.join(',')}|${note}`;
+    }
+
+    private _unitPriceForOptions(menu: MenuItem, optionIds: number[]): number {
+        const base = Number(menu.unit_price ?? 0);
+        const set = new Set(optionIds);
+        let delta = 0;
+        for (const g of menu.modifierGroups || []) {
+            for (const o of g.options || []) {
+                if (set.has(o.id)) {
+                    delta += Number(o.price_delta || 0);
+                }
+            }
+        }
+        return base + delta;
+    }
+
+    private _modifierSummary(menu: MenuItem, optionIds: number[]): string {
+        if (!optionIds.length) {
+            return '';
+        }
+        const set = new Set(optionIds);
+        const parts: string[] = [];
+        for (const g of [...(menu.modifierGroups || [])].sort((a, b) => a.sort_order - b.sort_order)) {
+            const opt = (g.options || []).find((o) => set.has(o.id));
+            if (opt) {
+                parts.push(`${g.name}: ${opt.label}`);
+            }
+        }
+        return parts.join(' · ');
+    }
+
+    private _mergeOrPushLine(line: OrderCartLine): void {
+        const existing = this.carts.find((c) => c.lineKey === line.lineKey);
+        if (existing) {
+            existing.qty += line.qty;
+            existing.temp_qty = existing.qty;
+        } else {
+            this.carts.push(line);
+        }
+        this.canSubmit = true;
     }
 
     // Function to handle tab selection
     selectTab(item: any): void {
         this.selectedTab = item;
         this._changeDetectorRef.detectChanges(); // Trigger change detection manually
+    }
+
+    get filteredSelectedTabProducts(): MenuItem[] {
+        const products = this.selectedTab?.products || [];
+        const keyword = this.menuSearchTerm.trim().toLowerCase();
+        if (!keyword) {
+            return products;
+        }
+
+        return products.filter((item: MenuItem) => {
+            const name = String(item?.name || '').toLowerCase();
+            const code = String(item?.code || '').toLowerCase();
+            const typeName = String(item?.type?.name || '').toLowerCase();
+            return name.includes(keyword) || code.includes(keyword) || typeName.includes(keyword);
+        });
     }
 
     // Function to handle the ngOnDestroy
@@ -185,36 +309,60 @@ export class OrderComponent implements OnInit, OnDestroy {
     }   
     // Function to add an item to the cart
     addToCart(incomingItem: MenuItem, qty = 0): void {
+        const addQty = qty > 0 ? qty : 1;
+        const hasModifiers = (incomingItem.modifierGroups?.length ?? 0) > 0;
 
-        // Find an existing item in the cart with the same id as the incoming item
-        const existingItem = this.carts.find(item => item.id === incomingItem.id);
-
-        if (existingItem) {
-
-            // If the item already exists, update its quantity and temp_qty
-            existingItem.qty += qty;
-            existingItem.temp_qty = existingItem.qty;
-
-        } else {
-
-            // If the item doesn't exist, create a new CartItem and add it to the cart
-            const newItem: CartItem = {
-
-                id: incomingItem.id,
-                name: incomingItem.name,
-                qty: qty,
-                temp_qty: qty,
-                unit_price: incomingItem.unit_price,
-                image: incomingItem.image,
-                code: incomingItem.code,
-                type: incomingItem.type,
-            };
-            this.carts.push(newItem);
-            // Set canSubmit to true, indicating that there is at least one item in the cart
-            this.canSubmit = true;
+        if (hasModifiers) {
+            this.matDialog
+                .open(ModifierPickDialogComponent, {
+                    data: { ...incomingItem, _qty: addQty } as MenuItem & { _qty: number },
+                    width: '100%',
+                    maxWidth: '520px',
+                    autoFocus: false,
+                })
+                .afterClosed()
+                .pipe(take(1), takeUntil(this._unsubscribeAll))
+                .subscribe((res: ModifierPickResult | undefined) => {
+                    if (!res) {
+                        return;
+                    }
+                    const optionIds = res.modifier_option_ids || [];
+                    const lineKey = this._lineKey(incomingItem.id, optionIds, res.line_note);
+                    const line: OrderCartLine = {
+                        lineKey,
+                        id: incomingItem.id,
+                        name: incomingItem.name,
+                        qty: addQty,
+                        temp_qty: addQty,
+                        unit_price: this._unitPriceForOptions(incomingItem, optionIds),
+                        image: incomingItem.image,
+                        code: incomingItem.code,
+                        type: incomingItem.type,
+                        modifier_option_ids: optionIds,
+                        line_note: res.line_note,
+                        modifierSummary: this._modifierSummary(incomingItem, optionIds),
+                    };
+                    this._mergeOrPushLine(line);
+                    this.getTotalPrice();
+                });
+            return;
         }
 
-        // Calculate and update the total price of the items in the cart
+        const lineKey = this._lineKey(incomingItem.id, [], undefined);
+        const newLine: OrderCartLine = {
+            lineKey,
+            id: incomingItem.id,
+            name: incomingItem.name,
+            qty: addQty,
+            temp_qty: addQty,
+            unit_price: Number(incomingItem.unit_price ?? 0),
+            image: incomingItem.image,
+            code: incomingItem.code,
+            type: incomingItem.type,
+            modifier_option_ids: [],
+            modifierSummary: '',
+        };
+        this._mergeOrPushLine(newLine);
         this.getTotalPrice();
     }
 
@@ -224,6 +372,9 @@ export class OrderComponent implements OnInit, OnDestroy {
 
         // Calculate the total price by iterating over items in the cart and summing the product of quantity and unit price
         this.totalPrice = this.carts.reduce((total, item) => total + (item.qty * item.unit_price), 0);
+        if (this.carts.length === 0) {
+            this.canSubmit = false;
+        }
     }
 
     // Function to remove an item from the cart
@@ -321,13 +472,13 @@ export class OrderComponent implements OnInit, OnDestroy {
         this._service.cancelOrder(id).subscribe({
             next: () => {
                 this._snackBarService.openSnackBar(
-                    "បានបោះបង់វិក័យ — អតិថិជនមិនទាន់ទូទាត់។",
+                    "Receipt cancelled — customer has not paid.",
                     GlobalConstants.success,
                 );
             },
             error: (err: HttpErrorResponse) => {
                 this._snackBarService.openSnackBar(
-                    err?.error?.message || "មិនអាចបោះបង់បញ្ជាទិញបានទេ",
+                    err?.error?.message || "Unable to cancel this order.",
                     GlobalConstants.error,
                 );
             },
@@ -335,19 +486,25 @@ export class OrderComponent implements OnInit, OnDestroy {
     }
 
     checkOut(): void {
-
-        // Create a dictionary to represent the cart with item IDs and quantities
-        const carts: { [itemId: number]: number } = {};
-
-        this.carts.forEach((item: CartItem) => {
-
-            carts[item.id] = item.qty;
+        const cartArray = this.carts.map((line) => {
+            const entry: {
+                menu_id: number;
+                qty: number;
+                modifier_option_ids: number[];
+                line_note?: string;
+            } = {
+                menu_id: line.id,
+                qty: line.qty,
+                modifier_option_ids: line.modifier_option_ids || [],
+            };
+            if (line.line_note?.trim()) {
+                entry.line_note = line.line_note.trim().slice(0, 500);
+            }
+            return entry;
         });
 
-        // Prepare the request body with the serialized cart data
         const body = {
-
-            cart: JSON.stringify(carts)
+            cart: JSON.stringify(cartArray),
         };
 
         // Set the flag to indicate that an order is being made
@@ -360,6 +517,8 @@ export class OrderComponent implements OnInit, OnDestroy {
 
                 this.isOrderBeingMade = false;
                 this.carts = [];
+                this.totalPrice = 0;
+                this.canSubmit = false;
                 // Do not show “success” when the order is not paid yet — only after Baray pay link is ready.
                 const order = response.data;
                 if (order?.id != null) {
@@ -382,7 +541,7 @@ export class OrderComponent implements OnInit, OnDestroy {
                                         this._barayWaitSub = null;
                                         if (outcome === 'paid') {
                                             this._snackBarService.openSnackBar(
-                                                "Baray: ទូទាត់រួច — វិក័យ " + String(order.receipt_number ?? "") + "។",
+                                                "Baray: Payment completed — receipt " + String(order.receipt_number ?? "") + ".",
                                                 GlobalConstants.success,
                                             );
                                             this._service.getOrderViewForBaray(order.id).subscribe({
@@ -408,26 +567,26 @@ export class OrderComponent implements OnInit, OnDestroy {
                                             });
                                         } else if (outcome === 'cancelled') {
                                             this._snackBarService.openSnackBar(
-                                                "វិក័យ " + String(order.receipt_number ?? "") + " — បានផ្លាស់ / បោះបង់",
+                                                "Receipt " + String(order.receipt_number ?? "") + " — changed/cancelled",
                                                 GlobalConstants.error,
                                             );
                                         } else {
                                             this._snackBarService.openSnackBar(
-                                                "Baray: អស់ពេលរង (5 នាទី) — ពិនិត្យទូទាត់ដៃ។",
+                                                "Baray: Waiting timeout (5 minutes) — please verify payment manually.",
                                                 GlobalConstants.error,
                                             );
                                         }
                                     });
                             } else {
                                 this._snackBarService.openSnackBar(
-                                    "Baray: គ្មានតំណទូទាត់",
+                                    "Baray: Payment link not available.",
                                     GlobalConstants.error,
                                 );
                             }
                         },
                         error: (err: HttpErrorResponse) => {
                             this._snackBarService.openSnackBar(
-                                err?.error?.message || "មិនអាចបើកទូទាត់ Baray បានទេ",
+                                err?.error?.message || "Unable to start Baray payment.",
                                 GlobalConstants.error,
                             );
                         },

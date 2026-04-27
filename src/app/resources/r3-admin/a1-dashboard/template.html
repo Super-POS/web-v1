@@ -5,7 +5,7 @@
             <img class="border-2 border-blue-500 w-16 h-16 object-cover rounded-full mr-2"
                 [src]="fileUrl + user?.avatar" alt="avatar" />
             <div class="flex flex-col">
-                <p class="text-xl md:text-xl">សូមស្វាគមន៍, {{user?.name}}</p>
+                <p class="text-xl md:text-xl">Welcome, {{user?.name}}</p>
                 <p class="text-gray-500 text-sm md:text-base">
                     {{user?.roles[0].name}}
                 </p>
@@ -16,7 +16,7 @@
             <div (click)="report()" class=" cursor-pointer flex items-center justify-center border-2 border-blue-300 rounded-xl w-[150px] md:w-[220px] h-[45px]
                  transform transition-transform duration-50 ease-in-out dark:bg-gray-800
                 dark:hover:bg-gray-700">
-                <p class="text-sm md:text-xl text-blue-400 dark:text-blue-300 text-center w-full ">ទាញយករបាយការណ៍</p>
+                <p class="text-sm md:text-xl text-blue-400 dark:text-blue-300 text-center w-full ">Download report</p>
             </div>
         </div>
     </div>
@@ -27,7 +27,7 @@
             <div class="w-full h-full rounded-xl px-8">
                 <div class="flex items-center justify-between h-16 ">
                     <span class="text-gray-700 dark:text-slate-300 sm:text-lg md:text-xl text-sm font-semibold">
-                        ស្ថិតិប​ឋម
+                        Primary Statistics
                     </span>
                 </div>
                 <div class="relative">
@@ -37,7 +37,7 @@
                             class="w-full h-[225px] bg-gray-100 dark:bg-gray-800 rounded-lg mb-4 p-4 relative flex flex-col justify-between overflow-hidden">
                             <!-- Title -->
                             <div class="flex items-center justify-between">
-                                <div class="text-base md:text-lg font-semibold text-gray-800">ការលក់</div>
+                                <div class="text-base md:text-lg font-semibold text-gray-800">Sales</div>
                                 <!-- Main Date Filter -->
                                 <div class="date-filter">
                                     <div [matMenuTriggerFor]="mainMenu"
@@ -62,7 +62,7 @@
 
                             <!-- Comparison Info -->
                             <div class="flex gap-1 flex-col md:flex-row">
-                                <span>កើនឡើង</span>
+                                <span>Increase</span>
                                 <span [ngClass]="{
                                   'text-green-500': dashboardData?.dashboard?.statistic.totalPercentageIncrease >= 0,
                                   'text-red-500': dashboardData?.dashboard?.statistic.totalPercentageIncrease < 0
@@ -74,7 +74,7 @@
                                     'text-green-500': dashboardData?.dashboard?.statistic.totalPercentageIncrease >= 0,
                                     'text-red-500': dashboardData?.dashboard?.statistic.totalPercentageIncrease < 0
                                   }">( {{dashboardData?.dashboard?.statistic.saleIncreasePreviousDay ?? 0 | number }} )</span>
-                                <span>ធៀបនិងម្សិលមិញ</span>
+                                <span>Compared to yesterday</span>
                             </div>
 
                             <!-- Icon Positioned Bottom Right -->
@@ -100,7 +100,7 @@
                                                 <span
                                                     class="font-semibold dark:text-white text-sm sm:text-xl md:text-xl">{{dashboardData?.dashboard?.statistic.totalProduct}}</span>
                                             </div>
-                                            <span class="dark:text-gray-400 text-sm sm:text-lg md:text-xl">ម៉ឺនុយ</span>
+                                            <span class="dark:text-gray-400 text-sm sm:text-lg md:text-xl">Menu</span>
                                         </div>
                                     </div>
                                 </div>
@@ -118,7 +118,7 @@
                                                 <span
                                                     class="font-semibold dark:text-white text-sm sm:text-xl md:text-xl">{{dashboardData?.dashboard?.statistic.totalProductType}}</span>
                                             </div>
-                                            <span class="dark:text-gray-400 text-sm sm:text-lg md:text-xl">ប្រភេទ</span>
+                                            <span class="dark:text-gray-400 text-sm sm:text-lg md:text-xl">Category</span>
                                         </div>
                                     </div>
                                 </div>
@@ -137,7 +137,7 @@
                                                     class="font-semibold dark:text-white text-sm sm:text-xl md:text-xl">{{dashboardData?.dashboard?.statistic.totalUser}}</span>
                                             </div>
                                             <span
-                                                class="dark:text-gray-400 text-sm sm:text-lg md:text-xl">អ្នកប្រើប្រាស់</span>
+                                                class="dark:text-gray-400 text-sm sm:text-lg md:text-xl">Users</span>
                                         </div>
                                     </div>
                                 </div>
@@ -155,7 +155,7 @@
                                                 <span
                                                     class="font-semibold dark:text-white text-sm sm:text-xl md:text-xl">{{dashboardData?.dashboard?.statistic.totalOrder}}</span>
                                             </div>
-                                            <span class="dark:text-gray-400 text-sm sm:text-lg md:text-xl">ការលក់</span>
+                                            <span class="dark:text-gray-400 text-sm sm:text-lg md:text-xl">Sales</span>
                                         </div>
                                     </div>
                                 </div>
@@ -182,7 +182,7 @@
     <div class="w-full h-full rounded-xl px-8 pb-4">
         <div class="flex items-center justify-between h-16">
             <span class="text-gray-700 dark:text-slate-300 sm:text-lg md:text-xl text-sm font-semibold">
-                អ្នកគិតប្រាក់
+                Cashier
             </span>
             <div class="flex gap-2 cursor-pointer items-center">
                 <!-- Cashier Date Filter -->
@@ -268,7 +268,7 @@
             <ng-template #noDataTemplate>
                 <div class="flex flex-col justify-center items-center h-full">
                     <mat-icon class="text-gray-400" svgIcon="toc"></mat-icon>
-                    <span class="text-2xl text-gray-500 mt-2">គ្មានទិន្នន័យ</span>
+                    <span class="text-2xl text-gray-500 mt-2">No data</span>
                 </div>
             </ng-template>
         </div>
@@ -285,7 +285,7 @@
             <div class="w-full h-full rounded-xl px-8">
                 <div class="flex items-center justify-between h-16 ">
                     <span class="text-gray-700 dark:text-slate-300 sm:text-lg md:text-xl text-sm font-semibold">
-                        ប្រភេទម៉ឺនុយ
+                        Menu type
                     </span>
                     <div [matMenuTriggerFor]="ProductMenu"
                         class="flex gap-2 justify-between cursor-pointer items-center bg-gray-100 dark:bg-slate-700 p-2 rounded-lg min-w-[100px] mr-3">
@@ -314,7 +314,7 @@
             <div class="w-full h-full rounded-xl px-8">
                 <div class="flex items-center justify-between h-16">
                     <span class="text-gray-700 dark:text-slate-300 sm:text-lg md:text-xl text-sm font-semibold">
-                        ស្ថិតិការលក់
+                        Sales statistics
                     </span>
                     <div [matMenuTriggerFor]="SaleMenu"
                         class="flex gap-2 justify-between cursor-pointer items-center bg-gray-100 dark:bg-slate-700 p-2 rounded-lg min-w-[100px] mr-3">

@@ -2,9 +2,9 @@
     <div class="bg-white min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5 dark:bg-gray-800">
         <div class="flex flex-1 items-center font-medium">
             <mat-icon class="text-gray-600 dark:text-white icon-size-5" [svgIcon]="'heroicons_outline:home'"></mat-icon>
-            <span class="text-lg text-gray-600 dark:text-white ml-1.5">ម៉ឺនុយ</span>
+            <span class="text-lg text-gray-600 dark:text-white ml-1.5">Menu</span>
             <mat-icon class="-mb-0.5" [svgIcon]="'mat_solid:chevron_right'"></mat-icon>
-            <span class="text-lg text-gray-600 dark:text-white -mb-0.5">គ្រឿងផ្សំ</span>
+            <span class="text-lg text-gray-600 dark:text-white -mb-0.5">Ingredients</span>
         </div>
         <div class="flex items-center gap-2">
             <button class="helpers-mat-button-sm w-6" (click)="openCreateDialog()" mat-stroked-button>
@@ -16,33 +16,33 @@
         <div class="p-4">
         <div *ngIf="isLoading">Getting data from API...</div>
         <div *ngIf="!isLoading && dataSource.data.length === 0" class="text-center py-8 text-gray-500">
-            គ្មានទិន្នន័យ
+            No data
         </div>
 
         <div *ngIf="!isLoading && dataSource.data.length > 0" class="w-full overflow-x-auto">
             <table mat-table [dataSource]="dataSource" class="w-full min-w-full">
                 <ng-container matColumnDef="no">
-                    <th mat-header-cell *matHeaderCellDef>ល.រ</th>
+                    <th mat-header-cell *matHeaderCellDef>No.</th>
                     <td mat-cell *matCellDef="let item; let i = index">{{ i + 1 }}</td>
                 </ng-container>
 
                 <ng-container matColumnDef="name">
-                    <th mat-header-cell *matHeaderCellDef>គ្រឿងផ្សំ</th>
+                    <th mat-header-cell *matHeaderCellDef>Ingredients</th>
                     <td mat-cell *matCellDef="let item">{{ item.name }}</td>
                 </ng-container>
 
                 <ng-container matColumnDef="unit">
-                    <th mat-header-cell *matHeaderCellDef>ឯកតា</th>
+                    <th mat-header-cell *matHeaderCellDef>Unit</th>
                     <td mat-cell *matCellDef="let item">{{ item.unit || '-' }}</td>
                 </ng-container>
 
                 <ng-container matColumnDef="quantity">
-                    <th mat-header-cell *matHeaderCellDef>បរិមាណ</th>
+                    <th mat-header-cell *matHeaderCellDef>Quantity</th>
                     <td mat-cell *matCellDef="let item">{{ item.quantity }}</td>
                 </ng-container>
 
                 <ng-container matColumnDef="created_at">
-                    <th mat-header-cell *matHeaderCellDef>កាលបរិច្ឆេទ</th>
+                    <th mat-header-cell *matHeaderCellDef>Date</th>
                     <td mat-cell *matCellDef="let item">{{ item.created_at | date: 'dd-MMM-yyy' }}</td>
                 </ng-container>
 
@@ -55,11 +55,11 @@
                         <mat-menu #menu="matMenu">
                             <button mat-menu-item (click)="openUpdateDialog(item, i)">
                                 <mat-icon class="icon-size-6" svgIcon="mdi:square-edit-outline"></mat-icon>
-                                <span class="text-lg">កែប្រែ</span>
+                                <span class="text-lg">Edit</span>
                             </button>
                             <button mat-menu-item (click)="onDelete(item)">
                                 <mat-icon class="icon-size-6 text-red-400" svgIcon="mdi:trash-can-outline"></mat-icon>
-                                <span class="text-red-400">លុបទិន្នន័យ</span>
+                                <span class="text-red-400">Delete data</span>
                             </button>
                         </mat-menu>
                     </td>

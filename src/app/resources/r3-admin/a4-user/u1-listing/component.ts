@@ -274,9 +274,9 @@ export class UserComponent implements OnInit, OnDestroy {
             next: (response) => {
                 this.saving = false;
                 let blob = this.b64toBlob(response.data, 'application/pdf');
-                FileSaver.saveAs(blob, 'របាយការណ៍លក់តាមអ្នក គិតប្រាក់' + '.pdf');
+                FileSaver.saveAs(blob, 'Cashier Sales Report' + '.pdf');
                 // Show a success message using the snackBarService
-                this.snackBarService.openSnackBar('របាយការណ៍ទាញយកបានជោគជ័យ', GlobalConstants.success);
+                this.snackBarService.openSnackBar('Report Download Success', GlobalConstants.success);
             },
             error: (err: HttpErrorResponse) => {
                 // Set saving to false to indicate the operation is completed (even if it failed)

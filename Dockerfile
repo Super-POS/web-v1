@@ -1,5 +1,5 @@
 # Stage 1
-FROM node:18-alpine as node
+FROM node:18-alpine AS node
 
 # Build-time URLs (browser must reach host-mapped ports; see docker-compose build args)
 ARG API_BASE_URL
@@ -10,6 +10,10 @@ ENV API_BASE_URL=${API_BASE_URL}
 ENV FILE_BASE_URL=${FILE_BASE_URL}
 ENV SOCKET_URL=${SOCKET_URL}
 ENV RecaptchaSiteKey=${RecaptchaSiteKey}
+
+# utf-8-validate / bufferutil (transitive of ws) need node-gyp → Python + build tools on Alpine
+RUN apk add --no-cache python3 make g++ \
+    && ln -sf python3 /usr/bin/python
 
 WORKDIR /usr/app
 RUN npm uninstall ws

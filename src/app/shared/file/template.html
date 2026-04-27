@@ -3,7 +3,7 @@
     <div class="flex items-center gap-2">
         <!-- <mat-icon svgIcon="mdi:file-document-outline" /> -->
         <span class="text-lg md:text-xl ">{{previewFiles.length}}</span>
-        <span class="text-lg md:text-xl">ឯកសារយោង</span>
+        <span class="text-lg md:text-xl">References</span>
     </div>
     <div class="flex">
         <ngx-file-drop (onFileDrop)="dropped($event)" accept="image/*,.pdf" dropZoneClassName="select-file-main"
@@ -61,11 +61,11 @@
                 <mat-menu #menu="matMenu">
                     <button mat-menu-item (click)="viewFile(previewFile)">
                         <mat-icon [svgIcon]="'mdi:eye-outline'"></mat-icon>
-                        <span>មើល</span>
+                        <span>Look</span>
                     </button>
                     <button mat-menu-item (click)="removeFile(previewFile.file.name)">
                         <mat-icon class="text-red-500" [svgIcon]="'mdi:trash-can-outline'"></mat-icon>
-                        <span class="text-red-500">លុប</span>
+                        <span class="text-red-500">Delete</span>
                     </button>
                 </mat-menu>
             </div>
@@ -107,11 +107,11 @@
                     <mat-menu #menu="matMenu">
                         <button mat-menu-item (click)="viewFile(previewFile)">
                             <mat-icon [svgIcon]="'mdi:eye-outline'"></mat-icon>
-                            <span>មើល</span>
+                            <span>Look</span>
                         </button>
                         <button mat-menu-item (click)="removeFile(previewFile.file.name)">
                             <mat-icon class="text-red-500" [svgIcon]="'mdi:trash-can-outline'"></mat-icon>
-                            <span class="text-red-500">លុប</span>
+                            <span class="text-red-500">Delete</span>
                         </button>
                     </mat-menu>
                 </div>

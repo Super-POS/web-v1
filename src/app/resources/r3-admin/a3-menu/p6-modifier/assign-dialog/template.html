@@ -1,0 +1,37 @@
+<h2 mat-dialog-title>Link modifiers to a menu</h2>
+<mat-dialog-content class="max-h-[70vh] overflow-y-auto min-w-[min(100vw-2rem,420px)]">
+    <p class="text-sm text-slate-500 mb-3">Choose a product, then add groups in display order (sugar → ice → milk, etc.).</p>
+    <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Menu item</mat-label>
+        <mat-select [(ngModel)]="selectedMenuId" (ngModelChange)="onMenuChange()">
+            <mat-option [value]="null">—</mat-option>
+            <mat-option *ngFor="let m of menus" [value]="m.id">{{ m.name }} ({{ m.code }})</mat-option>
+        </mat-select>
+    </mat-form-field>
+
+    <div *ngIf="isLoading" class="py-4 text-center text-slate-500">Loading…</div>
+
+    <div *ngIf="!isLoading && selectedMenuId" class="flex flex-col gap-2">
+        <div *ngFor="let row of rows; let i = index" class="flex flex-wrap items-center gap-2 border border-slate-200 rounded p-2">
+            <mat-form-field appearance="outline" class="flex-1 min-w-[140px]">
+                <mat-label>Group</mat-label>
+                <mat-select [ngModel]="row.modifier_group_id" (ngModelChange)="onGroupChange(i, $event)">
+                    <mat-option *ngFor="let g of availableGroupsFor(i)" [value]="g.id">{{ g.name }}</mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-24">
+                <mat-label>Order</mat-label>
+                <input matInput type="number" [(ngModel)]="row.sort_order" />
+            </mat-form-field>
+            <mat-slide-toggle [(ngModel)]="row.is_required">Required</mat-slide-toggle>
+            <button mat-icon-button type="button" color="warn" (click)="removeRow(i)" aria-label="Remove">
+                <span class="text-lg leading-none">×</span>
+            </button>
+        </div>
+        <button mat-stroked-button type="button" (click)="addRow()">Add group</button>
+    </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="cancel()">Close</button>
+    <button mat-flat-button color="primary" type="button" [disabled]="isSaving || selectedMenuId == null" (click)="save()">Save links</button>
+</mat-dialog-actions>

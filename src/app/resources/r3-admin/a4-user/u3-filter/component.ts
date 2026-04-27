@@ -59,17 +59,17 @@ export class FilterUserComponent implements OnInit, OnDestroy {
     filterForm: FormGroup;
 
     public dateType = [
-        { id: 'today', name: 'ថ្ងៃនេះ' },
-        { id: 'thisMonth', name: 'ខែនេះ' },
-        { id: 'lastMonth', name: 'ខែមុន' },
-        { id: '3MonthAgo', name: '3 ខែមុន' },
-        { id: '6MonthAgo', name: '6 ខែមុន' },
-        { id: 'startandend', name: 'ជ្រើសរើសអំឡុងពេល' }
+        { id: 'today', name: 'Today' },
+        { id: 'thisMonth', name: 'This month' },
+        { id: 'lastMonth', name: 'Last month' },
+        { id: '3MonthAgo', name: '3 Last month' },
+        { id: '6MonthAgo', name: '6 Last month' },
+        { id: 'startandend', name: 'Select Period' }
     ];
 
     public types = [
-        { id: 1, name: 'អ្នកគ្រប់គ្រង' },
-        { id: 2, name: 'អ្នកគិតប្រាក់' }
+        { id: 1, name: 'Administrator' },
+        { id: 2, name: 'Cashier' }
     ]
     constructor(
         @Inject(MAT_DIALOG_DATA) public setup: any,

@@ -17,7 +17,7 @@ export class PortraitComponent {
     @Input() src: string = 'assets/images/avatars/image-icon.jpg';
     @Input() delete: boolean;
     @Input() index: string = '';
-    @Input() title: string = 'ផ្ទុកឯកសារ​';
+    @Input() title: string = 'Upload file';
     @Input() mode: string = 'READONLY';
     @Input() responseType: string = 'base64';
     @Input() disabled: boolean;
@@ -54,7 +54,7 @@ export class PortraitComponent {
             });
         } else {
             console.log(check.substring(0, 5));
-            this.snackBar.openSnackBar('សូមជ្រើសរើស file ប្រភេទជារូបភាព', 'error');
+            this.snackBar.openSnackBar('Please select file Image category', 'error');
         }
     }
 

@@ -22,6 +22,7 @@ export interface Data {
     /** Legacy UI field; normalized in SaleService from channel */
     platform?: string;
     status?: string;
+    payment_status?: 'paid' | 'cancelled' | 'pending';
     cashier: { id: number; name: string; avatar?: string };
     details: Detail[];
     orderDetails?: Detail[];

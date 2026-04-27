@@ -10,7 +10,7 @@
                 <!-- Breadcrumb -->
                 <div class="flex items-center gap-2 font-medium">
                     <mat-icon svgIcon="mdi:home-outline" />
-                    <span class="text-slate-500"> ការលក់ </span>
+                    <span class="text-slate-500"> Sales </span>
                 </div>
 
                 <!-- Action -->
@@ -24,7 +24,7 @@
                             <mat-icon svgIcon="heroicons_outline:magnifying-glass" />
                         </button>
 
-                        <input placeholder="ស្វែងរក" class="w-full pr-3 h-10" [(ngModel)]="key"
+                        <input placeholder="Search" class="w-full pr-3 h-10" [(ngModel)]="key"
                             (keydown.enter)="getData()">
 
                         <button *ngIf=" badgeValue > 0 "
@@ -119,7 +119,7 @@
                         <table mat-table [dataSource]="dataSource">
 
                             <ng-container matColumnDef="no">
-                                <th mat-header-cell *matHeaderCellDef class="w-10">ល.រ</th>
+                                <th mat-header-cell *matHeaderCellDef class="w-10">No.</th>
                                 <td mat-cell *matCellDef="let i = index">
                                     <span>{{i+1}}.</span>
                                 </td>
@@ -127,7 +127,7 @@
 
                             <!-- Receipt Column -->
                             <ng-container matColumnDef="receipt">
-                                <th mat-header-cell *matHeaderCellDef class="w-[70%] min-w-32">វិក្ក័យប័ត្រ</th>
+                                <th mat-header-cell *matHeaderCellDef class="w-[70%] min-w-32">Invoices</th>
                                 <td mat-cell *matCellDef="let element">
                                     <span>{{ element.receipt_number }}</span>
                                 </td>
@@ -135,7 +135,7 @@
 
                             <!-- Price Column -->
                             <ng-container matColumnDef="price">
-                                <th mat-header-cell *matHeaderCellDef class="min-w-36 text-right">តម្លៃលក់​(រៀល)</th>
+                                <th mat-header-cell *matHeaderCellDef class="min-w-36 text-right">Selling price (Riel)</th>
                                 <td mat-cell *matCellDef="let element" class="text-right">
                                     <span class="text-gray-500">{{ element?.total_price | number }}</span>
                                 </td>
@@ -143,7 +143,7 @@
 
                             <!-- Ordered At Column -->
                             <ng-container matColumnDef="ordered_at">
-                                <th mat-header-cell *matHeaderCellDef class="min-w-36 text-center">កាលបរិច្ឆេទ</th>
+                                <th mat-header-cell *matHeaderCellDef class="min-w-36 text-center">Date</th>
                                 <td mat-cell *matCellDef="let element" class="text-right">
                                     <span class="text-gray-500">{{ element?.ordered_at | date: 'dd-LL-YYY' }}</span>
                                     <span class="text-gray-500"> {{ element?.ordered_at | date: 'hh:mm a' }}</span>
@@ -152,7 +152,7 @@
 
                             <!-- Ordered At time Column -->
                             <ng-container matColumnDef="device">
-                                <th mat-header-cell *matHeaderCellDef class="text-right">តាមរយះ</th>
+                                <th mat-header-cell *matHeaderCellDef class="text-right">Through</th>
                                 <td mat-cell *matCellDef="let element" class="text-center">
                                     <mat-icon *ngIf="element.platform === 'Web'" class="icon-size-6 text-gray-500"
                                         svgIcon="mdi:monitor"></mat-icon>
@@ -165,7 +165,7 @@
 
                             <!-- seller -->
                             <ng-container matColumnDef="seller">
-                                <th mat-header-cell *matHeaderCellDef class="min-w-[120px] text-right">អ្នកគិតប្រាក់
+                                <th mat-header-cell *matHeaderCellDef class="min-w-[120px] text-right">Cashier
                                 </th>
                                 <td mat-cell *matCellDef="let element" class="text-right">
                                     <div class="flex items-center justify-end space-x-2">
@@ -186,17 +186,17 @@
                                         <button mat-menu-item (click)="viewDetail(element)">
                                             <mat-icon class="mdi:eye-outline"
                                                 svgIcon="heroicons_outline:eye"></mat-icon>
-                                            <span class="text-lg">មើល</span>
+                                            <span class="text-lg">Look</span>
                                         </button>
 
                                         <!-- <button mat-menu-item (click)="print(element)">
                                             <mat-icon class="icon-size-6" svgIcon="mdi:download-outline"></mat-icon>
-                                            <span class="text-lg text-gray-900 dark:text-white">ទាញយក</span>
+                                            <span class="text-lg text-gray-900 dark:text-white">Download</span>
                                         </button> -->
                                         <button mat-menu-item (click)="onDelete(element)">
                                             <mat-icon class="icon-size-6 text-red-400"
                                                 svgIcon="mdi:trash-can-outline"></mat-icon>
-                                            <span class="text-lg text-red-400">លុបទិន្នន័យ</span>
+                                            <span class="text-lg text-red-400">Delete data</span>
                                         </button>
                                     </mat-menu>
                                 </td>

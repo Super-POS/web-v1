@@ -1,7 +1,7 @@
 <div class="out-create-section md-form-field-appearance-outline">
     <div mat-dialog-title class="min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pr-2.5">
         <div class="flex flex-1 items-center text-slate-500">
-            <h1 class="text-3xl">កែប្រែគ្រឿងផ្សំ</h1>
+            <h1 class="text-3xl">Modify ingredients</h1>
         </div>
         <div class="flex items-center cursor-pointer">
             <mat-icon class="-mb-0.5" [svgIcon]="'heroicons_outline:x-mark'" (click)="closeDialog()"></mat-icon>
@@ -11,17 +11,17 @@
     <div class="out-create-body px-4 pb-2">
         <form [formGroup]="form" class="out-create-content border-t pt-4 space-y-2">
             <mat-form-field appearance="outline" class="w-full">
-                <mat-label>ឈ្មោះគ្រឿងផ្សំ</mat-label>
+                <mat-label>Ingredient name</mat-label>
                 <input matInput formControlName="name" />
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="w-full">
-                <mat-label>ឯកតា</mat-label>
+                <mat-label>Unit</mat-label>
                 <input matInput formControlName="unit" />
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="w-full">
-                <mat-label>បរិមាណ</mat-label>
+                <mat-label>Quantity</mat-label>
                 <input matInput type="number" formControlName="quantity" />
             </mat-form-field>
         </form>
@@ -31,7 +31,7 @@
         <div class="w-full flex justify-end px-1">
             <button class="helpers-mat-button-md text-white bg-[#102d71]" mat-flat-button (click)="submit()"
                 [disabled]="isSaving || !form.valid">
-                <span *ngIf="!isSaving">កែប្រែ</span>
+                <span *ngIf="!isSaving">Edit</span>
                 <mat-progress-spinner *ngIf="isSaving" [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>
             </button>
         </div>

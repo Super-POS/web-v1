@@ -7,7 +7,7 @@ import { Observable, catchError, tap, throwError } from 'rxjs';
 
 // ================================================================>> Custom Library
 import { env } from 'envs/env';
-import { BarayPaymentIntentResponse, List, ResponseOrder } from './interface';
+import { BarayPaymentIntentResponse, IngredientStock, List, ResponseOrder } from './interface';
 @Injectable({
 
     providedIn: 'root',
@@ -28,6 +28,13 @@ export class OrderService {
             }),
             tap((response: List) => {
             })
+        );
+    }
+
+    getIngredientsStock(): Observable<{ data: IngredientStock[] }> {
+        return this.httpClient.get<{ data: IngredientStock[] }>(
+            `${env.API_BASE_URL}/cashier/ordering/ingredients-stock`,
+            { headers: new HttpHeaders().set('Content-Type', 'application/json') },
         );
     }
 

@@ -1,6 +1,6 @@
 <!-- Header -->
 <div mat-dialog-title class="w-full flex justify-between">
-    <span class="w-full text-2xl font-medium">ច្រោះទិន្ន័យ</span>
+    <span class="w-full text-2xl font-medium">Filter data</span>
     <button (click)="closeDialog()" mat-icon-button>
         <mat-icon svgIcon="mdi:close" />
     </button>
@@ -10,9 +10,9 @@
     <form [formGroup]="form" class="md-form-field-appearance-outline">
 
         <!-- <mat-form-field appearance="outline" class="w-full">
-            <mat-label>ក្រុមការងារ</mat-label>
+            <mat-label>The team</mat-label>
             <mat-icon class="icon-size-5" matPrefix [svgIcon]="'mat_outline:flag'"></mat-icon>
-            <mat-select formControlName="working_group" placeholder="ជ្រើសរើសក្រុម">
+            <mat-select formControlName="working_group" placeholder="Select a team">
                 <mat-option *ngFor=" let item of setup?.working_groups " [value]=" item.id ">
                     {{ item?.name }}
                 </mat-option>
@@ -20,9 +20,9 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="w-full">
-            <mat-label>គ្រឹះស្ថានសិក្សា</mat-label>
+            <mat-label>Educational Institutions</mat-label>
             <mat-icon class="icon-size-5" matPrefix [svgIcon]="'mdi:building-line'"></mat-icon>
-            <mat-select formControlName="school" placeholder="ជ្រើសរើសគ្រឹះស្ថានសិក្សា">
+            <mat-select formControlName="school" placeholder="Choosing an educational institution">
                 <mat-option *ngFor=" let item of setup?.schools" [value]=" item.id ">
                     {{ item.name_in_khmer }}
                 </mat-option>
@@ -30,9 +30,9 @@
         </mat-form-field> -->
 
         <mat-form-field appearance="outline" class="w-full">
-            <mat-label>ប្រភេទម៉ឺនុយ</mat-label>
+            <mat-label>Menu type</mat-label>
             <!-- <mat-icon class="icon-size-5" matPrefix [svgIcon]="'heroicons_solid:map-pin'"></mat-icon> -->
-            <mat-select formControlName="productTypes" placeholder="ជ្រើសរើសប្រភេទម៉ឺនុយ">
+            <mat-select formControlName="productTypes" placeholder="Select menu type">
                 <mat-option *ngFor=" let item of setup?.productTypes" [value]=" item.id ">
                     {{ item.name }}
                 </mat-option>
@@ -40,9 +40,9 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="w-full">
-            <mat-label>អ្នកបញ្ចូលទិន្នន័យ</mat-label>
+            <mat-label>Data Entry</mat-label>
             <!-- <mat-icon class="icon-size-5" matPrefix [svgIcon]="'feather:check-square'"></mat-icon> -->
-            <mat-select formControlName="users" placeholder="ជ្រើសរើសអ្នកបញ្ចូលទិន្នន័យ">
+            <mat-select formControlName="users" placeholder="Select data entry">
                 <mat-option *ngFor=" let item of setup?.users " [value]=" item.id ">
                     {{ item.name }}
                 </mat-option>
@@ -50,9 +50,9 @@
         </mat-form-field>
 
         <!-- <mat-form-field appearance="outline" class="w-full">
-            <mat-label>ស្ថានភាពសិក្សា</mat-label>
+            <mat-label>Study Status</mat-label>
             <mat-icon class="icon-size-5" matPrefix [svgIcon]="'feather:user-check'"></mat-icon>
-            <mat-select formControlName="scholarship_status" placeholder="ជ្រើសរើសស្ថានភាពសិក្សា">
+            <mat-select formControlName="scholarship_status" placeholder="Select study status">
                 <mat-option *ngFor=" let item of setup?.scholarship_statuses " [value]=" item.id ">
                     {{ item.name }}
                 </mat-option>
@@ -65,11 +65,11 @@
 <mat-dialog-actions class="flex items-center justify-end">
     <button class="text-slate-800 gap-1" mat-stroked-button (click)="reset()">
         <mat-icon mat-icon-button [svgIcon]="'mdi:refresh'"/>
-        <span>សម្អាត</span>
+        <span>Clean up</span>
     </button>
     <button class="bg-blue-900 text-white gap-1" mat-flat-button (click)="submit()">
         <mat-icon mat-icon-button class="" [svgIcon]="'heroicons_outline:magnifying-glass'"/>
-        <span>ស្វែងរក</span>
+        <span>Search</span>
     </button>
 </mat-dialog-actions>
 

@@ -1,7 +1,7 @@
 <div class="out-create-section md-form-field-appearance-outline">
     <div mat-dialog-title class="min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5">
         <div class="flex flex-1 items-center text-slate-500">
-            <h1 class="text-3xl">កែប្រែអ្នកប្រើប្រាស់</h1>
+            <h1 class="text-3xl">Modify users</h1>
         </div>
         <div class="flex items-center cursor-pointer"><mat-icon class="-mb-0.5" [svgIcon]="'heroicons_outline:x-mark'"
                 (click)="closeDialog()"></mat-icon>
@@ -25,34 +25,34 @@
             <div class="mt-4 flex flex-col">
                 <div class="grid grid-cols-1 lg:grid-cols-1 gap-0 lg:gap-5">
                     <mat-form-field>
-                        <mat-label>ឈ្មោះអ្នកប្រើប្រាស់</mat-label>
-                        <input matInput [formControlName]="'name'" placeholder="បញ្ចូលឈ្មោះអ្នកប្រើប្រាស់*">
-                        <mat-error>សូមបញ្ចូលឈ្មោះអ្នកប្រើប្រាស់</mat-error>
+                        <mat-label>Username</mat-label>
+                        <input matInput [formControlName]="'name'" placeholder="Enter username*">
+                        <mat-error>Please enter a username</mat-error>
                     </mat-form-field>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-1 gap-0 lg:gap-5">
                     <mat-form-field>
-                        <mat-label>លេខទូរស័ព្ទ</mat-label>
-                        <input matInput [formControlName]="'phone'" placeholder="លេខទូរស័ព្ទ*">
-                        <mat-error>សូមបញ្ចូលលេខទូរស័ព្ទ</mat-error>
+                        <mat-label>Phone number</mat-label>
+                        <input matInput [formControlName]="'phone'" placeholder="Phone number*">
+                        <mat-error>Please enter a phone number</mat-error>
                     </mat-form-field>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-1 gap-0 lg:gap-5">
                     <mat-form-field>
-                        <mat-label>អុីមែល</mat-label>
-                        <input matInput [formControlName]="'email'" placeholder="អុីមែល*">
-                        <mat-error>សូមបញ្ចូលអុីមែល</mat-error>
+                        <mat-label>Email</mat-label>
+                        <input matInput [formControlName]="'email'" placeholder="Email*">
+                        <mat-error>Please enter an email</mat-error>
                     </mat-form-field>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-1 gap-0 lg:gap-5">
                     <mat-form-field appearance="outline" class="w-full">
-                        <mat-label>តួនាទីក្នុងប្រព័ន្ធ</mat-label>
+                        <mat-label>Roles in the system</mat-label>
                         <mat-select formControlName="role_ids" multiple>
                             <mat-option *ngFor="let role of data.roles" [value]="role.id">{{ role.name }}</mat-option>
                         </mat-select>
                         <mat-error *ngIf="createUser.get('role_ids').errors?.required">
-                            សូមជ្រើសរើសតួនាទី
+                            Please select a Role
                         </mat-error>
                     </mat-form-field>
                 </div>
@@ -63,7 +63,7 @@
         <div class="w-full flex justify-end px-1">
             <button class="helpers-mat-button-md text-white bg-[#264497]" mat-flat-button (click)="submit()"
                 [disabled]="createUser.invalid || isLoading">
-                <span *ngIf="!createUser.disabled">រួចរាល់</span>
+                <span *ngIf="!createUser.disabled">Done</span>
                 <mat-progress-spinner *ngIf="createUser.disabled" [diameter]="24"
                     [mode]="'indeterminate'"></mat-progress-spinner>
             </button>

@@ -7,16 +7,16 @@
 <mat-menu [xPosition]="'before'" #userActions="matMenu" class="absolute top-3 -right-2 py-0">
     <button mat-menu-item routerLink="/profile">
         <mat-icon svgIcon="heroicons_outline:user-circle" />
-        <span class="text-slate-500">គណនី</span>
+        <span class="text-slate-500">Account</span>
     </button>
     <button mat-menu-item (click)="handleSwitchRole()">
         <mat-icon svgIcon="mat_solid:manage_accounts" />
-        <span class="text-slate-500 -mb-0.5">ប្តូរសិទ្ធ</span>
+        <span class="text-slate-500 -mb-0.5">Change rights</span>
     </button>
     <mat-divider class="my-0" />
     <button mat-menu-item (click)="signOut()">
         <mat-icon svgIcon="feather:log-out" />
-        <span class="text-slate-500">ចាកចេញ</span>
+        <span class="text-slate-500">Leave</span>
     </button>
 </mat-menu>
 

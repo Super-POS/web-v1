@@ -135,7 +135,7 @@ export class AuthSignInComponent implements OnInit {
                 } else {
                     this.isChangeToVerifyOtp    = false;
                     localStorage.removeItem('phone');
-                    this._snackbarService.openSnackBar('អ្នកប្រើប្រាស់មិនមាននៅក្នុងប្រព័ន្ធទេ', GlobalConstants.error);
+                    this._snackbarService.openSnackBar('User not logged in', GlobalConstants.error);
                 }
                 // Re-enable the form after processing
                 this.signInForm.enable();

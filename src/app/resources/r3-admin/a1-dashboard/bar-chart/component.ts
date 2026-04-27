@@ -25,13 +25,13 @@ export class BarChartComponent implements OnInit, OnChanges, AfterViewInit {
     public data: DashboardResponse | null = null;
 
     private dayMapping: { [key: string]: string } = {
-        'Monday': 'ចន្ទ',
-        'Tuesday': 'អង្គារ',
-        'Wednesday': 'ពុធ',
-        'Thursday': 'ព្រហស្បតិ៍',
-        'Friday': 'សុក្រ',
-        'Saturday': 'សៅរ៍',
-        'Sunday': 'អាទិត្យ'
+        'Monday': 'Monday',
+        'Tuesday': 'Tuesday',
+        'Wednesday': 'Wednesday',
+        'Thursday': 'Thursday',
+        'Friday': 'Friday',
+        'Saturday': 'Saturday',
+        'Sunday': 'Sunday'
     };
 
     constructor(
@@ -98,7 +98,7 @@ export class BarChartComponent implements OnInit, OnChanges, AfterViewInit {
                 toolbar: { show: false },
             },
             stroke: { curve: 'smooth', width: 0 },
-            series: [{ name: "ចំនួនលក់", data, color: '#3D5AFE' }],
+            series: [{ name: "Sales volume", data, color: '#3D5AFE' }],
             plotOptions: { bar: { columnWidth: "50%" } },
             dataLabels: { enabled: false },
             legend: {

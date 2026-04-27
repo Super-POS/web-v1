@@ -64,7 +64,7 @@ export class SaleCashierBarChartComponent implements OnInit, OnChanges {
                 width: 0
             },
             series: [
-                { name: "ចំនួនលក់", data: data, color: '#3D5AFE' }
+                { name: "Sales volume", data: data, color: '#3D5AFE' }
             ],
             plotOptions: {
                 bar: { columnWidth: "20%" }

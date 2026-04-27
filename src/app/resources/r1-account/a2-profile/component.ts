@@ -54,7 +54,7 @@ export class ProfileLayoutComponent implements OnInit {
         {
             id: 'my-profile',
             // title: translate('Navigation.My-Profile'),
-            title:'គណនី',
+            title:'Account',
             type: 'basic',
             icon: 'mdi:account-outline',
             link: 'my-profile',
@@ -62,7 +62,7 @@ export class ProfileLayoutComponent implements OnInit {
         {
             id: 'security',
             // title: translate('Navigation.Security'),
-            title:'សុវត្ថិភាព' ,
+            title:'Security' ,
             type: 'basic',
             icon: 'mdi:lock-outline',
             link: 'security',
@@ -70,7 +70,7 @@ export class ProfileLayoutComponent implements OnInit {
         {
             id: 'log',
             // title: translate('Navigation.Log'),
-            title:'ចូលប្រព័ន្ធ',
+            title:'Login',
             type: 'basic',
             icon: 'mdi:format-list-text',
             link: 'log',

@@ -27,6 +27,7 @@ import { SnackbarService }              from 'helper/services/snack-bar/snack-ba
 // ===>> Shared
 import { DialogConfigService }          from 'app/shared/dialog-config.service';
 import { ErrorHandleService }           from 'app/shared/error-handle.service';
+import { ViewDetailSaleComponent }      from 'app/shared/view/component';
 
 // ===>> Local
 import { Data }                         from './interface';
@@ -88,11 +89,11 @@ export class SaleComponent implements OnInit {
     public shortedItems: any[] = [
         { 
             value: 'total_price', 
-            name: 'តម្លៃលក់',
+            name: 'Sales price',
         },
         {
             value: 'ordered_at', 
-            name: 'ថ្ងៃបញ្ជាទិញ',
+            name: 'Order date',
         }
     ];
 
@@ -299,6 +300,31 @@ export class SaleComponent implements OnInit {
         this._router.navigateByUrl( `/admin/student/view/${id}`);
     }
 
+    viewDetail(row: Data): void {
+        this.isLoading = true;
+        this._service.view(row.id).subscribe({
+            next: (res) => {
+                this.isLoading = false;
+                const dialogConfig = this._dialogConfigService.getDialogConfig(res?.data || row);
+                dialogConfig.autoFocus = false;
+                dialogConfig.position = { right: '0px' };
+                dialogConfig.height = '100dvh';
+                dialogConfig.width = '100dvw';
+                dialogConfig.maxWidth = '550px';
+                dialogConfig.panelClass = 'custom-mat-dialog-as-mat-drawer';
+                dialogConfig.enterAnimationDuration = '0s';
+                this._matDialog.open(ViewDetailSaleComponent, dialogConfig);
+            },
+            error: (err: HttpErrorResponse) => {
+                this.isLoading = false;
+                this._snackbarService.openSnackBar(
+                    err?.error?.message || GlobalConstants.genericError,
+                    GlobalConstants.error,
+                );
+            },
+        });
+    }
+
     // ====================================================================>> Delete
     delete(data:Data): void {
 
@@ -377,9 +403,9 @@ export class SaleComponent implements OnInit {
     //     this._service.downloadReport().subscribe({
     //         next: (res:any) => {
 
-    //             savePDFFromBlob('របាយការណ៍លក់', res.result);
+    //             savePDFFromBlob('Sales report', res.result);
     //             // Display Message
-    //             this._snackbarService.openSnackBar('របាយការណ័ត្រូវបានទាញយកដោយជោគជ័យ', '');
+    //             this._snackbarService.openSnackBar('Report was successfully downloaded', '');
 
     //             // Stop the spinner
     //             this.isDownloadingReport       =   false;
@@ -407,14 +433,14 @@ export class SaleComponent implements OnInit {
                 const dateTime = new Date().toISOString().replace(/[:.]/g, '-');
                 if (type === 'PDF') {
                     blob = this.b64toBlob(response.data, 'application/pdf');
-                    fileName = `របាយការណ៍លក់តាមការលក់-${dateTime}.pdf`;
+                    fileName = `Sales Report -${dateTime}.pdf`;
                 } else if (type === 'EXCEL') {
                     blob = this.b64toBlob(response.data, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-                    fileName = `របាយការណ៍លក់តាមការលក់-${dateTime}.xlsx`;
+                    fileName = `Sales Report -${dateTime}.xlsx`;
                 }
                 FileSaver.saveAs(blob, fileName);
                 // Show a success message using the snackBarService
-                this.snackBarService.openSnackBar('របាយការណ៍ទាញយកបានជោគជ័យ', GlobalConstants.success);
+                this.snackBarService.openSnackBar('Report Download Success', GlobalConstants.success);
             },
             error: (err: HttpErrorResponse) => {
                 // Set isaving to false to indicate the operation is completed (even if it failed)

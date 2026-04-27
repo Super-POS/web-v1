@@ -13,6 +13,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { env } from 'envs/env';
@@ -21,6 +22,8 @@ import GlobalConstants from 'helper/shared/constants';
 import { MenuService } from '../service';
 import { MenuIngredientService } from '../../p3-ingredient/service';
 import { IngredientItem } from '../../p3-ingredient/interface';
+import { ModifierAdminService } from '../../p6-modifier/service';
+import { ModifierGroupRow } from '../../p6-modifier/interface';
 
 @Component({
     selector: 'app-menu-create-page',
@@ -44,7 +47,8 @@ import { IngredientItem } from '../../p3-ingredient/interface';
         MatDatepickerModule,
         MatButtonModule,
         MatMenuModule,
-        MatRadioModule
+        MatRadioModule,
+        MatCheckboxModule,
     ]
 })
 export class MenuCreatePageComponent implements OnInit {
@@ -52,6 +56,7 @@ export class MenuCreatePageComponent implements OnInit {
     private snackBarService = inject(SnackbarService);
     private menuService = inject(MenuService);
     private _ingredientService = inject(MenuIngredientService);
+    private _modifierService = inject(ModifierAdminService);
     private router = inject(Router);
 
     menuForm: UntypedFormGroup;
@@ -59,6 +64,8 @@ export class MenuCreatePageComponent implements OnInit {
     src = 'icons/image.jpg';
     setup: any[] = [];
     ingredients: IngredientItem[] = [];
+    modifierGroups: ModifierGroupRow[] = [];
+    isLoadingModifiers = false;
     fileUrl: string = env.FILE_BASE_URL;
 
     ngOnInit(): void {
@@ -69,12 +76,14 @@ export class MenuCreatePageComponent implements OnInit {
             image: [null, [Validators.required]],
             unit_price: [null, [Validators.required]],
             recipes: this.formBuilder.array([]) as FormArray,
+            modifier_items: [[]],
         });
 
         this.loadSetup();
         this._ingredientService.getData().subscribe({
             next: (res) => (this.ingredients = res.data ?? []),
         });
+        this._loadModifierData();
     }
 
     get recipeRows(): FormArray {
@@ -122,7 +131,71 @@ export class MenuCreatePageComponent implements OnInit {
             seen.add(line.ingredient_id);
             recipes.push(line);
         }
-        return { ...raw, recipes };
+        return {
+            code: String(raw.code ?? '').trim(),
+            name: String(raw.name ?? '').trim(),
+            type_id: Number(raw.type_id),
+            image: raw.image,
+            unit_price: Number(raw.unit_price),
+            recipes,
+        };
+    }
+
+    private _loadModifierData(): void {
+        this.isLoadingModifiers = true;
+        this._modifierService.listGroups().subscribe({
+            next: (res) => {
+                this.modifierGroups = (res?.data ?? []).filter((g) => g.is_active !== false);
+                this.isLoadingModifiers = false;
+            },
+            error: () => {
+                this.modifierGroups = [];
+                this.isLoadingModifiers = false;
+            },
+        });
+    }
+
+    get selectedModifierItems(): { modifier_group_id: number; sort_order: number; is_required: boolean }[] {
+        return (this.menuForm?.get('modifier_items')?.value || []) as {
+            modifier_group_id: number;
+            sort_order: number;
+            is_required: boolean;
+        }[];
+    }
+
+    isModifierSelected(groupId: number): boolean {
+        return this.selectedModifierItems.some((x) => x.modifier_group_id === groupId);
+    }
+
+    toggleModifierGroup(groupId: number, checked: boolean): void {
+        const current = [...this.selectedModifierItems];
+        const idx = current.findIndex((x) => x.modifier_group_id === groupId);
+        if (checked && idx === -1) {
+            current.push({
+                modifier_group_id: groupId,
+                sort_order: current.length,
+                is_required: false,
+            });
+        }
+        if (!checked && idx >= 0) {
+            current.splice(idx, 1);
+            current.forEach((item, i) => (item.sort_order = i));
+        }
+        this.menuForm.get('modifier_items')?.setValue(current);
+    }
+
+    onModifierRequiredChange(groupId: number, required: boolean): void {
+        const current = [...this.selectedModifierItems];
+        const idx = current.findIndex((x) => x.modifier_group_id === groupId);
+        if (idx < 0) {
+            return;
+        }
+        current[idx] = { ...current[idx], is_required: required };
+        this.menuForm.get('modifier_items')?.setValue(current);
+    }
+
+    modifierRequired(groupId: number): boolean {
+        return !!this.selectedModifierItems.find((x) => x.modifier_group_id === groupId)?.is_required;
     }
 
     loadSetup(): void {
@@ -162,9 +235,20 @@ export class MenuCreatePageComponent implements OnInit {
         this.saving = true;
         this.menuService.create(body).subscribe({
             next: (response) => {
-                this.saving = false;
-                this.snackBarService.openSnackBar(response.message, GlobalConstants.success);
-                this.router.navigate(['/admin/menu/all']);
+                this._modifierService.setMenuAssignments(response.data.id, this.selectedModifierItems).subscribe({
+                    next: () => {
+                        this.saving = false;
+                        this.snackBarService.openSnackBar(response.message, GlobalConstants.success);
+                        this.router.navigate(['/admin/menu/all']);
+                    },
+                    error: (err: HttpErrorResponse) => {
+                        this.saving = false;
+                        this.snackBarService.openSnackBar(
+                            err?.error?.message ?? 'Menu created but failed to save modifier assignments.',
+                            GlobalConstants.error,
+                        );
+                    },
+                });
             },
             error: (err: HttpErrorResponse) => {
                 this.saving = false;

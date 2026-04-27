@@ -3,7 +3,6 @@ import { DatePipe, DecimalPipe, NgClass, NgIf } from '@angular/common';
 import { HttpErrorResponse }    from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule }          from '@angular/forms';
-import { RouterLink }           from '@angular/router';
 
 
 // ===>> Third-Party Library
@@ -52,8 +51,7 @@ import { Data, List } from './interface';
         MatButtonModule,
         MatPaginatorModule,
         MatMenuModule,
-        MatTooltipModule,
-        RouterLink
+        MatTooltipModule
     ]
 })
 export class SaleComponent implements OnInit {
@@ -67,7 +65,7 @@ export class SaleComponent implements OnInit {
     ) { }
 
     // Component properties
-    displayedColumns: string[] = ['no', 'receipt', 'price', 'ordered_at', 'ordered_at_time', 'device', 'seller', 'action'];
+    displayedColumns: string[] = ['no', 'receipt', 'price', 'status', 'ordered_at', 'ordered_at_time', 'device', 'seller', 'action'];
     dataSource: MatTableDataSource<Data> = new MatTableDataSource<Data>([]);
 
     fileUrl: string = env.FILE_BASE_URL;

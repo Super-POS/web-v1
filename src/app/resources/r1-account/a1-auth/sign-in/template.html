@@ -30,7 +30,7 @@
                                     <mat-icon class="icon-size-10 text-black"
                                         [svgIcon]="'mat_outline:phone_android'"></mat-icon>
                                 </div>
-                                <p class="text-xl md:text-3xl w-fit font-bold">ចូលគណនីរបស់អ្នក</p>
+                                <p class="text-xl md:text-3xl w-fit font-bold">Login to your account</p>
                             </div>
 
 
@@ -40,10 +40,10 @@
                                     #signInNgForm="ngForm">
                                     <!-- phone field -->
                                     <mat-form-field class="w-full thick-border">
-                                        <mat-label>លេខទូរស័ព្ទ</mat-label>
+                                        <mat-label>Phone number</mat-label>
                                         <input id="username" matInput [formControlName]="'username'" />
                                         @if (signInForm.get('username').hasError('required')) {
-                                        <mat-error> សូមបញ្ចូលលេខទូរស័ព្ទ </mat-error>
+                                        <mat-error> Please enter a phone number </mat-error>
                                         }
                                         @if (signInForm.get('username').hasError('username')) {
                                         <mat-error>
@@ -57,7 +57,7 @@
 
                                     </mat-form-field>
                                     <mat-form-field class="w-full thick-border">
-                                        <mat-label>ពាក្យសម្ងាត់</mat-label>
+                                        <mat-label>Password</mat-label>
                                         <input id="password" matInput type="password" [formControlName]="'password'"
                                             #passwordField [type]="passwordField.type" />
                                         <button mat-icon-button (click)="passwordField.type === 'password'
@@ -73,7 +73,7 @@
                                         </button>
 
                                         @if (signInForm.get('password').hasError('required')) {
-                                        <mat-error> សូមបញ្ចូលពាក្យសម្ងាត់ </mat-error>
+                                        <mat-error> Please enter a password </mat-error>
                                         }
                                         @if (signInForm.get('password').hasError('password')) {
                                         <mat-error>
@@ -93,7 +93,7 @@
                                 <button class="helper-mat-button-large w-full bg-[#09235f] rounded-[10px] text-center"
                                     mat-flat-button [color]="'primary'" [disabled]="signInForm.disabled"
                                     (click)="signIn()">
-                                    <span *ngIf="!signInForm.disabled" class="text-white text-center">បន្ទាប់</span>
+                                    <span *ngIf="!signInForm.disabled" class="text-white text-center">Next</span>
                                     <mat-progress-spinner *ngIf="signInForm.disabled" [diameter]="24"
                                         [mode]="'indeterminate'"></mat-progress-spinner>
                                 </button>
@@ -107,19 +107,19 @@
 
                 <div class="flex items-center w-full">
                     <hr class="flex-grow">
-                    <span class="px-2 text-center">ឬចុចចូលដោយស្វ័យប្រវត្តិ</span>
+                    <span class="px-2 text-center">Or click login automatically</span>
                     <hr class="flex-grow">
                 </div>
                 <div class="flex gap-2">
                     <button
                         class="helper-mat-button-large h-[40px] w-full border-[1.5px] cursor-not-allowed  rounded-[10px] text-center items-center flex justify-center gap-2">
                         <mat-icon svgIcon="mdi:account-star-outline" />
-                        <span>អ្នកគ្រប់គ្រង</span>
+                        <span>Administrator</span>
                     </button>
                     <button
                         class="helper-mat-button-large h-[40px] w-full border-[1.5px]  cursor-not-allowed rounded-[10px] text-center items-center flex justify-center gap-2">
                         <mat-icon svgIcon="mdi:account-cash-outline" />
-                        <span>អ្នកគិតប្រាក់</span>
+                        <span>Cashier</span>
                     </button>
                 </div>
             </div>

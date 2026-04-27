@@ -1,0 +1,18 @@
+<h2 mat-dialog-title class="!mb-1">{{ isEdit ? 'Edit modifier group' : 'New modifier group' }}</h2>
+<mat-dialog-content class="flex flex-col gap-4 min-w-[320px] md:min-w-[380px] !px-5 md:!px-6 !pb-4" [formGroup]="form">
+    <div class="rounded-lg border border-slate-200 bg-slate-50 px-5 py-2 text-xs text-slate-600">
+        Create a group first, then add options inside it.
+        <div class="mt-1">Examples: <b>Sugar level</b>, <b>Milk type</b>, <b>Ice level</b>.</div>
+    </div>
+
+    <mat-form-field appearance="outline" class="w-full px-3 md:px-4">
+        <mat-label>Group name</mat-label>
+        <input matInput formControlName="name" placeholder="e.g. Sugar level" />
+        <mat-error *ngIf="form.get('name')?.hasError('required')">Group name is required.</mat-error>
+    </mat-form-field>
+
+</mat-dialog-content>
+<mat-dialog-actions align="end" class="!pt-2">
+    <button mat-button type="button" (click)="cancel()">Cancel</button>
+    <button mat-flat-button color="primary" type="button" [disabled]="isSaving || form.invalid" (click)="submit()">Save group</button>
+</mat-dialog-actions>

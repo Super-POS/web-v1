@@ -103,9 +103,9 @@ export class MenuListComponent implements OnInit {
 
 
     public shortedItems: any[] = [
-        { name: 'ឈ្មោះម៉ឺនុយ' , value: 'name' },
-        { name: 'តម្លៃ(រៀល)'   , value: 'unit_price' },
-        { name: 'តម្លៃលក់(រៀល)' , value: 'total_sale' },
+        { name: 'Menu name' , value: 'name' },
+        { name: 'Price (KHR)'   , value: 'unit_price' },
+        { name: 'Selling price (Riel)' , value: 'total_sale' },
     ];
 
     public selectedShortedItem     :  any             = this.shortedItems[0];
@@ -302,7 +302,7 @@ export class MenuListComponent implements OnInit {
         const dialogConfig = new MatDialogConfig();
         dialogConfig.data = {
 
-            title: 'កែប្រែម៉ឺនុយ',
+            title: 'Edit menu',
             menu: row,
             setup: this.setupData.productTypes
         };
@@ -344,10 +344,10 @@ export class MenuListComponent implements OnInit {
 
     //             if (type === 'PDF') {
     //                 blob = this.b64toBlob(response.data, 'application/pdf');
-    //                 fileName = 'របាយការណ៍លក់តាមការផលិតផល.pdf';
+    //                 fileName = 'Product Sales Report.pdf';
     //             } else if (type === 'EXCEL') {
     //                 blob = this.b64toBlob(response.data, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    //                 fileName = 'របាយការណ៍លក់តាមផលិតផល.xlsx';
+    //                 fileName = 'Product Sales Report.xlsx';
     //             } else {
     //                 console.error('Invalid report type:', type);
     //                 return;
@@ -355,7 +355,7 @@ export class MenuListComponent implements OnInit {
 
     //             if (blob) {
     //                 FileSaver.saveAs(blob, fileName);
-    //                 this.snackBarService.openSnackBar('របាយការណ៍ទាញយកបានជោគជ័យ', GlobalConstants.success);
+    //                 this.snackBarService.openSnackBar('Report Download Success', GlobalConstants.success);
     //             } else {
     //                 this.snackBarService.openSnackBar('Failed to process the report file', GlobalConstants.error);
     //             }
@@ -391,14 +391,14 @@ export class MenuListComponent implements OnInit {
                 const dateTime = new Date().toISOString().replace(/[:.]/g, '-');
                 if (type === 'PDF') {
                     blob = this.b64toBlob(response.data, 'application/pdf');
-                    fileName = `របាយការណ៍លក់តាមម៉ឺនុយ-${dateTime}.pdf`;
+                    fileName = `Menu Sales Report -${dateTime}.pdf`;
                 } else if (type === 'EXCEL') {
                     blob = this.b64toBlob(response.data, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-                    fileName = `របាយការណ៍លក់តាមម៉ឺនុយ-${dateTime}.xlsx`;
+                    fileName = `Menu Sales Report -${dateTime}.xlsx`;
                 }
                 FileSaver.saveAs(blob, fileName);
                 // Show a success message using the snackBarService
-                this.snackBarService.openSnackBar('របាយការណ៍ទាញយកបានជោគជ័យ', GlobalConstants.success);
+                this.snackBarService.openSnackBar('Report Download Success', GlobalConstants.success);
             },
             error: (err: HttpErrorResponse) => {
                 // Set isaving to false to indicate the operation is completed (even if it failed)
@@ -439,7 +439,7 @@ export class MenuListComponent implements OnInit {
     //                 saveFile('student-report-', res.base64, type);
 
     //                 // Display Message
-    //                 this._snackbarService.openSnackBar('របាយការណ័ត្រូវបានទាញយកដោយជោគជ័យ', '');
+    //                 this._snackbarService.openSnackBar('Report was successfully downloaded', '');
     //             } else {
     //                 this._snackbarService.openSnackBar(res.message, 'error');
     //             }

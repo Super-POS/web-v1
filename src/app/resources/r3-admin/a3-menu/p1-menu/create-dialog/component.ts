@@ -20,6 +20,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { env } from 'envs/env';
@@ -32,6 +33,8 @@ import { Data } from '../interface';
 import { MenuService } from '../service';
 import { MenuIngredientService } from '../../p3-ingredient/service';
 import { IngredientItem } from '../../p3-ingredient/interface';
+import { ModifierAdminService } from '../../p6-modifier/service';
+import { ModifierGroupRow } from '../../p6-modifier/interface';
 @Component({
     selector: 'app-menu-form-dialog',
     templateUrl: './template.html',
@@ -57,6 +60,7 @@ import { IngredientItem } from '../../p3-ingredient/interface';
         MatDividerModule,
         MatRadioModule,
         MatDialogModule,
+        MatCheckboxModule,
         PortraitComponent
     ]
 })
@@ -76,6 +80,8 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
     src: string = 'icons/image.jpg';
     /** Stock ingredients for recipe lines */
     ingredients: IngredientItem[] = [];
+    modifierGroups: ModifierGroupRow[] = [];
+    isLoadingModifiers = false;
 
     // Constructor with dependency injection
     constructor(
@@ -85,6 +91,7 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
         private snackBarService: SnackbarService,
         private menuService: MenuService,
         private _ingredientService: MenuIngredientService,
+        private _modifierService: ModifierAdminService,
     ) { }
 
     // ngOnInit method
@@ -94,6 +101,7 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
             next: (res) => (this.ingredients = res.data ?? []),
         });
         this.ngBuilderForm();
+        this._loadModifierData();
     }
 
     get recipeRows(): FormArray {
@@ -124,7 +132,7 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
         code: string;
         name: string;
         type_id: number;
-        image: string;
+        image?: string;
         unit_price: number;
         recipes: { ingredient_id: number; quantity: number }[];
     } | null {
@@ -148,7 +156,120 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
             seen.add(line.ingredient_id);
             recipes.push(line);
         }
-        return { ...raw, recipes };
+        const payload: {
+            code: string;
+            name: string;
+            type_id: number;
+            image?: string;
+            unit_price: number;
+            recipes: { ingredient_id: number; quantity: number }[];
+        } = {
+            code: String(raw.code ?? '').trim(),
+            name: String(raw.name ?? '').trim(),
+            type_id: Number(raw.type_id),
+            unit_price: Number(raw.unit_price),
+            recipes,
+        };
+
+        if (raw.image) {
+            payload.image = raw.image;
+        }
+
+        return payload;
+    }
+
+    private _loadModifierData(): void {
+        this.isLoadingModifiers = true;
+        this._modifierService.listGroups().subscribe({
+            next: (res) => {
+                this.modifierGroups = (res?.data ?? []).filter((g) => g.is_active !== false);
+                this._initModifierAssignments();
+            },
+            error: () => {
+                this.modifierGroups = [];
+                this._initModifierAssignments();
+            },
+        });
+    }
+
+    private _initModifierAssignments(): void {
+        if (this.data?.menu?.id) {
+            this._modifierService.getMenuAssignments(this.data.menu.id).subscribe({
+                next: (res) => {
+                    this.applyModifierAssignments(
+                        (res?.data ?? []).map((a) => ({
+                            modifier_group_id: a.modifier_group_id,
+                            sort_order: a.sort_order,
+                            is_required: a.is_required,
+                        })),
+                    );
+                    this.isLoadingModifiers = false;
+                },
+                error: () => {
+                    this.menuForm.get('modifier_items')?.setValue([]);
+                    this.isLoadingModifiers = false;
+                },
+            });
+            return;
+        }
+        this.menuForm.get('modifier_items')?.setValue([]);
+        this.isLoadingModifiers = false;
+    }
+
+    private applyModifierAssignments(
+        rows: { modifier_group_id: number; sort_order: number; is_required: boolean }[],
+    ): void {
+        const sorted = [...rows].sort((a, b) => a.sort_order - b.sort_order);
+        this.menuForm.get('modifier_items')?.setValue(
+            sorted.map((r) => ({
+                modifier_group_id: Number(r.modifier_group_id),
+                sort_order: Number(r.sort_order),
+                is_required: !!r.is_required,
+            })),
+        );
+    }
+
+    get selectedModifierItems(): { modifier_group_id: number; sort_order: number; is_required: boolean }[] {
+        return (this.menuForm?.get('modifier_items')?.value || []) as {
+            modifier_group_id: number;
+            sort_order: number;
+            is_required: boolean;
+        }[];
+    }
+
+    isModifierSelected(groupId: number): boolean {
+        return this.selectedModifierItems.some((x) => x.modifier_group_id === groupId);
+    }
+
+    toggleModifierGroup(groupId: number, checked: boolean): void {
+        const current = [...this.selectedModifierItems];
+        const idx = current.findIndex((x) => x.modifier_group_id === groupId);
+        if (checked && idx === -1) {
+            current.push({
+                modifier_group_id: groupId,
+                sort_order: current.length,
+                is_required: false,
+            });
+        }
+        if (!checked && idx >= 0) {
+            current.splice(idx, 1);
+            current.forEach((item, i) => (item.sort_order = i));
+        }
+        this.menuForm.get('modifier_items')?.setValue(current);
+    }
+
+    onModifierRequiredChange(groupId: number, required: boolean): void {
+        const current = [...this.selectedModifierItems];
+        const idx = current.findIndex((x) => x.modifier_group_id === groupId);
+        if (idx < 0) {
+            return;
+        }
+        current[idx] = { ...current[idx], is_required: required };
+        this.menuForm.get('modifier_items')?.setValue(current);
+    }
+
+    modifierRequired(groupId: number): boolean {
+        return !!this.selectedModifierItems.find((x) => x.modifier_group_id === groupId)?.is_required;
     }
 
     // srcChange method
@@ -186,6 +307,7 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
             image: [null, this.data.menu == null ? Validators.required : []],
             unit_price: [this.data?.menu?.unit_price || null, [Validators.required]],
             recipes: recipeArray,
+            modifier_items: [[]],
         });
     }
 
@@ -201,40 +323,51 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
         if (!body) {
             return;
         }
+        if (!body.image) {
+            this.snackBarService.openSnackBar('Please select an image file.', GlobalConstants.error);
+            return;
+        }
         this.dialogRef.disableClose = true;
         this.saving = true;
-        this.menuService.create(body).subscribe({
+        this.menuService.create({ ...body, image: body.image }).subscribe({
 
             next: response => {
-                const result: Data = {
-                    id: response.data.id,
-                    code: response.data.code,
-                    name: response.data.name,
-                    image: response.data.image,
-                    unit_price: response.data.unit_price,
-                    total_sale: response.data.total_sale,
-                    created_at: response.data.created_at,
-                    type: {
-                        id: response.data.type_id,
-                        name: this.data.setup.find(v => v.id === response.data.type_id)?.name || ''
+                const modifierItems = this.selectedModifierItems;
+                this._modifierService.setMenuAssignments(response.data.id, modifierItems).subscribe({
+                    next: () => {
+                        const result: Data = {
+                            id: response.data.id,
+                            code: response.data.code,
+                            name: response.data.name,
+                            image: response.data.image,
+                            unit_price: response.data.unit_price,
+                            total_sale: response.data.total_sale,
+                            created_at: response.data.created_at,
+                            type: {
+                                id: response.data.type_id,
+                                name: this.data.setup.find(v => v.id === response.data.type_id)?.name || ''
+                            },
+                            creator: {
+                                id: response.data.creator.id,
+                                name: response.data.creator.name,
+                                avatar: response.data.creator.avatar || '',
+                            },
+                            recipes: (response.data as { recipes?: Data['recipes'] }).recipes,
+                        };
+                        this.ResponseData.emit(result);
+                        this.dialogRef.close();
+                        this.saving = false;
+                        this.snackBarService.openSnackBar(response.message, GlobalConstants.success);
                     },
-                    creator: {
-                        id: response.data.creator.id,
-                        name: response.data.creator.name,
-                        avatar: response.data.creator.avatar || '',
+                    error: (err: HttpErrorResponse) => {
+                        this.dialogRef.disableClose = false;
+                        this.saving = false;
+                        this.snackBarService.openSnackBar(
+                            err?.error?.message ?? 'Menu created but failed to save modifier assignments.',
+                            GlobalConstants.error,
+                        );
                     },
-                    recipes: (response.data as { recipes?: Data['recipes'] }).recipes,
-                };
-                this.ResponseData.emit(result);
-
-                // Close the dialog
-                this.dialogRef.close();
-
-                // Set saving to false to indicate that the create operation is completed
-                this.saving = false;
-
-                // Show a success message using the snackBarService
-                this.snackBarService.openSnackBar(response.message, GlobalConstants.success);
+                });
             },
 
             error: (err: HttpErrorResponse) => {
@@ -271,35 +404,41 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
         this.menuService.update(this.data.menu.id, body).subscribe({
 
             next: response => {
-                const result: Data = {
-                    id: response.data.id,
-                    code: response.data.code,
-                    name: response.data.name,
-                    image: response.data.image,
-                    unit_price: response.data.unit_price,
-                    total_sale: response.data.total_sale,
-                    created_at: response.data.created_at,
-                    type: {
-                        id: response.data.type_id,
-                        name: this.data.setup.find(v => v.id === response.data.type_id)?.name || ''
+                this._modifierService.setMenuAssignments(this.data.menu.id, this.selectedModifierItems).subscribe({
+                    next: () => {
+                        const result: Data = {
+                            id: response.data.id,
+                            code: response.data.code,
+                            name: response.data.name,
+                            image: response.data.image,
+                            unit_price: response.data.unit_price,
+                            total_sale: response.data.total_sale,
+                            created_at: response.data.created_at,
+                            type: {
+                                id: response.data.type_id,
+                                name: this.data.setup.find(v => v.id === response.data.type_id)?.name || ''
+                            },
+                            creator: {
+                                id: response.data.creator.id,
+                                name: response.data.creator.name,
+                                avatar: response.data.creator.avatar || '',
+                            },
+                            recipes: (response.data as { recipes?: Data['recipes'] }).recipes,
+                        };
+                        this.ResponseData.emit(result);
+                        this.dialogRef.close();
+                        this.saving = false;
+                        this.snackBarService.openSnackBar(response.message, GlobalConstants.success);
                     },
-                    creator: {
-                        id: response.data.creator.id,
-                        name: response.data.creator.name,
-                        avatar: response.data.creator.avatar || '',
+                    error: (err: HttpErrorResponse) => {
+                        this.dialogRef.disableClose = false;
+                        this.saving = false;
+                        this.snackBarService.openSnackBar(
+                            err?.error?.message ?? 'Menu updated but failed to save modifier assignments.',
+                            GlobalConstants.error,
+                        );
                     },
-                    recipes: (response.data as { recipes?: Data['recipes'] }).recipes,
-                };
-                this.ResponseData.emit(result);
-
-                // Close the dialog
-                this.dialogRef.close();
-
-                // Set saving to false to indicate that the update operation is completed
-                this.saving = false;
-
-                // Show a success message using the snackBarService
-                this.snackBarService.openSnackBar(response.message, GlobalConstants.success);
+                });
             },
 
             error: (err: HttpErrorResponse) => {

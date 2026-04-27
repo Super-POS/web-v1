@@ -1,0 +1,95 @@
+<h2 mat-dialog-title class="!m-0 !text-xl !font-semibold text-slate-800">
+    {{ data.name }}
+</h2>
+<mat-dialog-content class="!max-h-[min(80vh,520px)]">
+    <p class="text-sm text-slate-500 mb-2">{{ data.code }} · {{ data.type?.name }}</p>
+    <div class="mb-4 rounded-lg bg-slate-50 border border-slate-200 p-3 text-sm">
+        <div class="flex justify-between">
+            <span class="text-slate-600">Quantity</span>
+            <strong>{{ data._qty }}</strong>
+        </div>
+        <div class="flex justify-between mt-1">
+            <span class="text-slate-600">Base price</span>
+            <strong>{{ data.unit_price | number }} ៛</strong>
+        </div>
+    </div>
+
+    <div *ngIf="requiredMissingNames().length > 0" class="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        Please choose: {{ requiredMissingNames().join(', ') }}
+    </div>
+
+    <div *ngFor="let g of groups" class="mb-4 rounded-lg border border-slate-200 p-3">
+        <div class="flex items-center justify-between mb-2">
+            <div class="text-sm font-semibold text-slate-700">
+                {{ g.name }}
+            </div>
+            <span
+                class="text-[11px] px-2 py-0.5 rounded-full"
+                [class.bg-red-50]="g.is_required"
+                [class.text-red-600]="g.is_required"
+                [class.bg-slate-100]="!g.is_required"
+                [class.text-slate-600]="!g.is_required">
+                {{ g.is_required ? 'Required' : 'Optional' }}
+            </span>
+        </div>
+        <div class="text-xs text-slate-500 mb-2">
+            Selected: {{ selectedOptionLabel(g) }}
+        </div>
+        <mat-radio-group
+            class="flex flex-col gap-1"
+            [(ngModel)]="selected[g.id]"
+            (ngModelChange)="onOptionChange()">
+            <mat-radio-button
+                *ngIf="!g.is_required"
+                class="!text-sm"
+                [value]="undefined">
+                No selection
+            </mat-radio-button>
+            <mat-radio-button
+                *ngFor="let o of g.options"
+                class="!text-sm"
+                [value]="o.id">
+                {{ o.label }}
+                <span *ngIf="o.price_delta !== 0" class="text-slate-500">
+                    ({{ o.price_delta > 0 ? '+' : '' }}{{ o.price_delta | number }} ៛)
+                </span>
+            </mat-radio-button>
+        </mat-radio-group>
+        <div class="flex justify-end mt-2" *ngIf="!g.is_required && selected[g.id] != null">
+            <button type="button" mat-button class="!text-xs" (click)="clearSelection(g.id)">Clear</button>
+        </div>
+    </div>
+
+    <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Line note (optional)</mat-label>
+        <textarea
+            matInput
+            rows="2"
+            [(ngModel)]="line_note"
+            maxlength="500"
+            placeholder="e.g. extra hot, less foam"></textarea>
+    </mat-form-field>
+
+    <div class="mt-2 rounded-md bg-slate-100 dark:bg-slate-800 p-3 text-sm space-y-1">
+        <div class="flex justify-between">
+            <span>Unit price</span>
+            <strong>{{ unitTotal | number }} ៛</strong>
+        </div>
+        <div class="flex justify-between">
+            <span>Line total</span>
+            <strong>{{ lineTotal | number }} ៛</strong>
+        </div>
+    </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end" class="!gap-2">
+    <button mat-stroked-button type="button" (click)="resetDefaults()" [disabled]="!hasAnySelection()">Reset</button>
+    <button mat-stroked-button type="button" (click)="cancel()">Cancel</button>
+    <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        [disabled]="!isValid()"
+        (click)="confirm()">
+        Add to cart
+    </button>
+</mat-dialog-actions>

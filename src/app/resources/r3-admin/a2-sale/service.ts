@@ -1,15 +1,15 @@
 // ================================================================>> Core Library (Angular)
 import { HttpClient, HttpHeaders, HttpParams }           from '@angular/common/http';
-import { inject, Injectable }   from '@angular/core';
+import { Injectable }   from '@angular/core';
 
 // ================================================================>> Third-Party Library (RxJS)
-import { catchError, Observable, of, switchMap, tap } from 'rxjs';
+import { catchError, Observable } from 'rxjs';
 
 // ================================================================>> Custom Library
 import { env }                          from 'envs/env';
-import { LoadingSpinnerService }        from 'helper/shared/loading/service';
 import { List }                         from './interface';
 import { DataSaleResponse } from '../a1-dashboard/interface';
+import { Data } from './interface';
 
 
 @Injectable({
@@ -18,7 +18,6 @@ import { DataSaleResponse } from '../a1-dashboard/interface';
 export class SaleService {
 
     constructor(private httpClient: HttpClient) { }
-    private loadingSpinner = inject(LoadingSpinnerService);
     private _httpOptions = {
         headers: new HttpHeaders({
             'Content-type': 'application/json',
@@ -78,6 +77,15 @@ export class SaleService {
     //Method to delete data
     delete(id: number = 0): Observable<{ status_code: number, message: string }> {
         return this.httpClient.delete<{ status_code: number, message: string }>(`${env.API_BASE_URL}/admin/sales/${id}`);
+    }
+
+    // Fetch one invoice detail for drawer view (admin first, then cashier fallback)
+    view(id: number): Observable<{ data: Data }> {
+        return this.httpClient.get<{ data: Data }>(`${env.API_BASE_URL}/admin/sales/${id}/view`).pipe(
+            catchError(() =>
+                this.httpClient.get<{ data: Data }>(`${env.API_BASE_URL}/cashier/sales/${id}/view`),
+            ),
+        );
     }
 
     // Method to fetch product report

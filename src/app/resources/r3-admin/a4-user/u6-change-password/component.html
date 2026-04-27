@@ -1,11 +1,11 @@
 <div
     class="user-profile-section p-4 bg-white dark:bg-opacity-5 border-t-8 border-l-8 border-white dark:border-slate-800">
-    <p class="text-2xl mb-4">ផ្លាស់ប្តូរលេខសម្ងាត់របស់អ្នក</p>
+    <p class="text-2xl mb-4">Change your password</p>
     <form [formGroup]="passwordForm" class="md-form-field-appearance-outline">
         
         <!-- New Password -->
         <mat-form-field appearance="outline" class="w-full">
-            <mat-label>ពាក្យសម្ងាត់ថ្មី</mat-label>
+            <mat-label>New password</mat-label>
             <input matInput type="password" [formControlName]="'new_password'" #newPasswordField>
             <button mat-icon-button type="button"
                 (click)="newPasswordField.type === 'password' ? newPasswordField.type = 'text' : newPasswordField.type = 'password'"
@@ -16,13 +16,13 @@
                     [svgIcon]="'heroicons_solid:eye-slash'"></mat-icon>
             </button>
             <mat-error *ngIf="passwordForm.get('new_password')?.hasError('required')">
-                សូមបញ្ចូលពាក្យសម្ងាត់ថ្មី
+                Please enter a new password
             </mat-error>
         </mat-form-field>
 
         <!-- Confirm Password -->
         <mat-form-field appearance="outline" class="w-full">
-            <mat-label>បញ្ជាក់ពាក្យសម្ងាត់ថ្មី</mat-label>
+            <mat-label>Confirm new password</mat-label>
             <input matInput type="password" [formControlName]="'confirm_password'" #confirmPasswordField>
             <button mat-icon-button type="button"
                 (click)="confirmPasswordField.type === 'password' ? confirmPasswordField.type = 'text' : confirmPasswordField.type = 'password'"
@@ -33,7 +33,7 @@
                     [svgIcon]="'heroicons_solid:eye-slash'"></mat-icon>
             </button>
             <mat-error *ngIf="passwordForm.getError('passwordMismatch')">
-                ពាក្យសម្ងាត់ថ្មី និងការបញ្ជាក់មិនត្រូវគ្នា
+                New password and confirmation match
             </mat-error>
         </mat-form-field>
 
@@ -45,7 +45,7 @@
                     <mat-progress-spinner [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>
                 </ng-container>
                 <ng-container *ngIf="!passwordForm.disabled">
-                    <span class="dark:text-white">កែប្រែ</span>
+                    <span class="dark:text-white">Edit</span>
                 </ng-container>
             </button>
         </div>

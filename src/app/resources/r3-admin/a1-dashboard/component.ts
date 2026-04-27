@@ -70,10 +70,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     organizationData$ = this._organizationDataSubject.asObservable();
 
     user: User;
-    public selectedDateName = 'ថ្ងៃនេះ';
-    public selectedDateNameChasier = 'ថ្ងៃនេះ';
-    public selectedDateNameSale = 'សប្តាហ៍នេះ';
-    public selectedDateNameProduct = 'សប្តាហ៍នេះ';
+    public selectedDateName = 'Today';
+    public selectedDateNameChasier = 'This week';
+    public selectedDateNameSale = 'This week';
+    public selectedDateNameProduct = 'This week';
     public dashboardData : DashboardResponse;
     public cashierData: CashierData;
     public productType: ProductTypeData;
@@ -101,12 +101,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     intervalId: any;
 
     public dateType = [
-        { id: 'today', name: 'ថ្ងៃនេះ' },
-        { id: 'yesterday', name: 'ម្សិលមិញ' },
-        { id: 'thisWeek', name: 'សប្តាហ៍នេះ' },
-        { id: 'thisMonth', name: 'ខែនេះ' },
-        { id: 'threeMonthAgo', name: '3 ខែមុន' },
-        { id: 'sixMonthAgo', name: '6 ខែមុន' },
+        { id: 'today', name: 'Today' },
+        { id: 'yesterday', name: 'Yesterday' },
+        { id: 'thisWeek', name: 'This week' },
+        { id: 'thisMonth', name: 'This month' },
+        { id: 'threeMonthAgo', name: '3 Last month' },
+        { id: 'sixMonthAgo', name: '6 Last month' },
     ];
 
     constructor(
@@ -124,10 +124,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.fetchUserData();
         this.startCarousel();
         this.setupDateTypeListeners();
-        this.getDashboardData(this.selectedDateName? { today: this.today } : undefined);
-        this.getCashierData(this.selectedDateNameChasier? { today: this.today } : undefined);
-        this.getProductType(this.selectedDateNameProduct? { today: this.today } : undefined);
-        this.getProductType(this.selectedDateNameSale? { thisWeek: this.thisWeek } : undefined);
+        const firstDayOfWeek = new Date();
+        firstDayOfWeek.setDate(firstDayOfWeek.getDate() - firstDayOfWeek.getDay());
+        const thisWeek = firstDayOfWeek.toISOString().slice(0, 10);
+        this.getDashboardData(this.selectedDateName ? { today: this.today } : undefined);
+        this.getCashierData({ thisWeek });
+        this.getProductType({ thisWeek });
+        this.getSale({ thisWeek });
     }
 
 
@@ -197,7 +200,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         const formattedToday = today.toISOString().slice(0, 10); // YYYY-MM-DD
         const yesterday = new Date(today.setDate(today.getDate() - 1)).toISOString().slice(0, 10);
         const thisMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
-        const thisWeek = '2025-W08'; // Adjust if backend expects another format
+        const firstDayOfWeek = new Date();
+        firstDayOfWeek.setDate(firstDayOfWeek.getDate() - firstDayOfWeek.getDay());
+        const thisWeek = firstDayOfWeek.toISOString().slice(0, 10);
     
         if (type.id === 'today') params.today = formattedToday;
         if (type.id === 'yesterday') params.yesterday = yesterday;
@@ -248,7 +253,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         // console.log("cashierData:", this.cashierData);
                     } else {
                         // console.warn("Invalid API response format:", response);
-                        this._snackBarService.openSnackBar('គ្មានទិន្នន័យ',GlobalConstants.error)
+                        this._snackBarService.openSnackBar('No data',GlobalConstants.error)
                     }
                 },
                 error: (error) => {
@@ -273,15 +278,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
                 next: (response: DashboardResponse) => {
                     if (response?.dashboard?.cashierData) {
                         this.cashierData = response.dashboard.cashierData;
-                        // console.log("cashierData:", this.cashierData);
+                        if ((this.cashierData?.data?.length || 0) === 0 && params && Object.keys(params).length) {
+                            this.getCashierData();
+                        }
                     } else {
-                        this._snackBarService.openSnackBar('គ្មានទិន្នន័យ',GlobalConstants.error)
-                        this.cashierData = null;
+                        this.productType = null as unknown as ProductTypeData;
                     }
                 },
                 error: (error) => {
                     this._snackBarService.openSnackBar(error,GlobalConstants.error)
-                    this.cashierData = null;
+                    this.productType = null as unknown as ProductTypeData;
                 }
             });
     }
@@ -299,10 +305,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
             .subscribe({
                 next: (response: DashboardResponse) => {
                     if (response?.dashboard?.productTypeData) {
-                        this.productType = response.dashboard.productTypeData
-                        // console.log("productType:", this.productType);
+                        this.productType = response.dashboard.productTypeData;
+                        const hasData = (this.productType?.labels?.length || 0) > 0 && (this.productType?.data?.length || 0) > 0;
+                        if (!hasData && params && Object.keys(params).length) {
+                            this.getProductType();
+                        }
                     } else {
-                        this._snackBarService.openSnackBar('គ្មានទិន្នន័យ',GlobalConstants.error)
                         this.cashierData = null;
                     }
                 },
@@ -332,9 +340,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
                 next: (response: DashboardResponse) => {
                     if (response?.dashboard?.salesData) {
                         this.saleData = response.dashboard.salesData;
-                        console.log("Sale Data:", this.saleData);
+                        const hasData = (this.saleData?.labels?.length || 0) > 0 && (this.saleData?.data?.length || 0) > 0;
+                        if (!hasData && params && Object.keys(params).length) {
+                            this.getSale();
+                        }
                     } else {
-                        this._snackBarService.openSnackBar('គ្មានទិន្នន័យ',GlobalConstants.error)
                         this.saleData = null; // Fix incorrect assignment
                     }
                 },

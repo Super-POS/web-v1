@@ -11,11 +11,20 @@ export class NavigationService {
     private _navigation: ReplaySubject<HelperNavigationItem[]> = new ReplaySubject<HelperNavigationItem[]>(1);
 
     set navigations(role: Role) {
-        switch (role.name) {
-            case RoleEnum.ADMIN: this._navigation.next(navigationData.admin); break;
-            case RoleEnum.CASHIER: this._navigation.next(navigationData.user); break;
-            default: this._navigation.next([]); break;
+        const roleName = String(role?.name || '').trim();
+        const roleSlug = String(role?.slug || '').trim().toLowerCase();
+        const isAdmin = roleName === RoleEnum.ADMIN || roleName === 'Administrator' || roleSlug === 'admin';
+        const isCashier = roleName === RoleEnum.CASHIER || roleName === 'Cashier' || roleSlug === 'cashier';
+
+        if (isAdmin) {
+            this._navigation.next(navigationData.admin);
+            return;
         }
+        if (isCashier) {
+            this._navigation.next(navigationData.user);
+            return;
+        }
+        this._navigation.next([]);
     }
 
     get navigations$(): Observable<HelperNavigationItem[]> {

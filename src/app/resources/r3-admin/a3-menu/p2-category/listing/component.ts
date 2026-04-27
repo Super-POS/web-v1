@@ -153,8 +153,8 @@ export class MenuCategoryComponent implements OnInit {
         // Build the configuration for the confirmation dialog
         const configAction: HelperConfirmationConfig = {
 
-            title                                               : `លុប <strong> ${type.name} </strong>`,
-            message                                             : 'តើអ្នកប្រាកដថាចង់លុបលេខបង្កាន់ដៃនេះចេញជាអចិន្ត្រៃយ៍ទេ? សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ!</span>', // Confirmation message
+            title                                               : `Delete <strong> ${type.name} </strong>`,
+            message                                             : 'Are you sure you want to delete this receipt number permanently? This action is irreversible!</span>', // Confirmation message
 
             icon: {
 
@@ -168,14 +168,14 @@ export class MenuCategoryComponent implements OnInit {
                 confirm: {
 
                     show                                        : true,
-                    label                                       : 'លុប',
+                    label                                       : 'Delete',
                     color                                       : 'warn',
                 },
 
                 cancel: {
 
                     show                                        : true,
-                    label                                       : 'បោះបង',
+                    label                                       : 'Throw away',
                 },
             },
             dismissible                                         : true,

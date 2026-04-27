@@ -64,12 +64,12 @@ export class ReportGenerateComponent implements OnInit, OnDestroy {
     filterForm: UntypedFormGroup;
 
     public dateType = [
-        { id: 'today', name: 'ថ្ងៃនេះ', showDate: '' },
-        { id: 'thisWeek', name: 'សប្តាហ៍នេះ', showDate: '' },
-        { id: 'thisMonth', name: 'ខែនេះ', showDate: '' },
-        { id: '3MonthAgo', name: '3 ខែមុន', showDate: '' },
-        { id: '6MonthAgo', name: '6 ខែមុន', showDate: '' },
-        { id: 'startandend', name: 'ជ្រើសរើសអំឡុងពេល', showDate: '' }
+        { id: 'today', name: 'Today', showDate: '' },
+        { id: 'thisWeek', name: 'This week', showDate: '' },
+        { id: 'thisMonth', name: 'This month', showDate: '' },
+        { id: '3MonthAgo', name: '3 Last month', showDate: '' },
+        { id: '6MonthAgo', name: '6 Last month', showDate: '' },
+        { id: 'startandend', name: 'Select Period', showDate: '' }
     ];
 
     constructor(
@@ -221,8 +221,8 @@ export class ReportGenerateComponent implements OnInit, OnDestroy {
                         this.dialogRef.close();
                         this.saving = false;
                         const blob = this.b64toBlob(response.data, 'application/pdf');
-                        FileSaver.saveAs(blob, `របាយការណ៍លក់រាយ(${this.getFormattedDateTime()}).pdf`);
-                        this.snackBarService.openSnackBar('របាយការណ៍ទាញយកបានជោគជ័យ', GlobalConstants.success);
+                        FileSaver.saveAs(blob, `Retail Report (${this.getFormattedDateTime()}).pdf`);
+                        this.snackBarService.openSnackBar('Report Download Success', GlobalConstants.success);
                     },
                     error: (err: HttpErrorResponse) => {
                         this.dialogRef.disableClose = false;
@@ -244,9 +244,9 @@ export class ReportGenerateComponent implements OnInit, OnDestroy {
 
                         this.saving = false;
                         let blob = this.b64toBlob(response.data, 'application/pdf');
-                        FileSaver.saveAs(blob, `របាយការណ៍លក់តាមអ្នក គិតប្រាក់(${this.getFormattedDateTime()}).pdf`);
+                        FileSaver.saveAs(blob, `Cashier Sales Report (${this.getFormattedDateTime()}).pdf`);
                         // Show a success message using the snackBarService
-                        this.snackBarService.openSnackBar('របាយការណ៍ទាញយកបានជោគជ័យ', GlobalConstants.success);
+                        this.snackBarService.openSnackBar('Report Download Success', GlobalConstants.success);
                     },
                     error: (err: HttpErrorResponse) => {
                         // Re-enable closing the dialog in case of an error
@@ -273,9 +273,9 @@ export class ReportGenerateComponent implements OnInit, OnDestroy {
 
                         this.saving = false;
                         let blob = this.b64toBlob(response.data, 'application/pdf');
-                        FileSaver.saveAs(blob, `របាយការណ៍លក់តាមម៉ឺនុយ(${this.getFormattedDateTime()}).pdf`);
+                        FileSaver.saveAs(blob, `Menu Sales Report (${this.getFormattedDateTime()}).pdf`);
                         // Show a success message using the snackBarService
-                        this.snackBarService.openSnackBar('របាយការណ៍ទាញយកបានជោគជ័យ', GlobalConstants.success);
+                        this.snackBarService.openSnackBar('Report Download Success', GlobalConstants.success);
                     },
                     error: (err: HttpErrorResponse) => {
                         // Re-enable closing the dialog in case of an error
