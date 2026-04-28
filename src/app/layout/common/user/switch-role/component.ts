@@ -1,6 +1,6 @@
 import { animate, AnimationBuilder, AnimationPlayer, style } from '@angular/animations';
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, HostBinding, inject, Input, OnChanges, OnDestroy, Renderer2, SimpleChanges, ViewEncapsulation } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -46,6 +46,11 @@ export class SwitchRoleComponent implements OnChanges, OnDestroy {
     private _handleOverlayClick: any;
     private _overlay: HTMLElement;
     private _player: AnimationPlayer;
+    /** Stops fixed from being contained by header `backdrop-filter` (would clip the drawer to the header row). */
+    private _pushedToBody = false;
+    private _bodyAnchor: Comment;
+    private _originalParent: Node | null = null;
+    private readonly _doc = inject(DOCUMENT);
 
     constructor(
         private _animationBuilder: AnimationBuilder,
@@ -79,9 +84,10 @@ export class SwitchRoleComponent implements OnChanges, OnDestroy {
                 }
                 this.navigationService.navigations = role;
                 // this.notificationsService.getAll();
-                if (role.name === RoleEnum.ADMIN) {
+                const slug = role.slug?.toLowerCase();
+                if (slug === 'admin' || role.name === RoleEnum.ADMIN) {
                     this._router.navigateByUrl('/admin/dashboard')
-                } else if (role.name === RoleEnum.CASHIER) {
+                } else if (slug === 'cashier' || role.name === RoleEnum.CASHIER) {
                     this._router.navigateByUrl('/cashier/order')
                 }
                 else {
@@ -165,6 +171,12 @@ export class SwitchRoleComponent implements OnChanges, OnDestroy {
     }
 
     ngOnDestroy(): void {
+        if (this._overlay) {
+            this._overlay.removeEventListener('click', this._handleOverlayClick);
+            this._overlay.parentNode?.removeChild(this._overlay);
+            this._overlay = null;
+        }
+        this._removeFromBody();
         // Finish the animation
         if (this._player) {
             this._player.finish();
@@ -202,8 +214,8 @@ export class SwitchRoleComponent implements OnChanges, OnDestroy {
         // Add a class depending on the fixed option
         this._overlay.classList.add('user-switch-role-overlay-fixed');
 
-        // Append the backdrop to the parent of the drawer
-        this._renderer2.appendChild(this._elementRef.nativeElement.parentElement, this._overlay);
+        this._renderer2.setStyle(this._overlay, 'z-index', '10000');
+        this._renderer2.appendChild(this._doc.body, this._overlay);
 
         // Create enter animation and attach it to the player
         this._player = this._animationBuilder.build([
@@ -220,6 +232,7 @@ export class SwitchRoleComponent implements OnChanges, OnDestroy {
 
     private _hideOverlay(): void {
         if (!this._overlay) {
+            this._removeFromBody();
             return;
         }
 
@@ -233,28 +246,61 @@ export class SwitchRoleComponent implements OnChanges, OnDestroy {
 
         // Once the animation is done...
         this._player.onDone(() => {
-            // If the overlay still exists...
             if (this._overlay) {
-                // Remove the event listener
                 this._overlay.removeEventListener('click', this._handleOverlayClick);
-                // Remove the overlay
                 this._overlay.parentNode.removeChild(this._overlay);
                 this._overlay = null;
             }
+            this._removeFromBody();
         });
     }
 
     private _toggleOpened(open: boolean): void {
-        // Set the opened
         this._opened = open;
 
-        // If the drawer opens, show the overlay
         if (open) {
+            this._appendToBody();
             this._showOverlay();
-        }
-        // Otherwise, close the overlay
-        else {
+        } else {
             this._hideOverlay();
         }
+    }
+
+    private _appendToBody(): void {
+        if (this._pushedToBody) {
+            return;
+        }
+        const el = this._elementRef.nativeElement as HTMLElement;
+        const parent = el.parentNode;
+        if (!parent) {
+            return;
+        }
+        this._originalParent = parent;
+        this._bodyAnchor = this._renderer2.createComment('user-switch-role-anchor') as unknown as Comment;
+        this._renderer2.insertBefore(parent, this._bodyAnchor, el);
+        this._renderer2.removeChild(parent, el);
+        this._renderer2.appendChild(this._doc.body, el);
+        this._renderer2.setStyle(el, 'z-index', '10001');
+        this._pushedToBody = true;
+    }
+
+    private _removeFromBody(): void {
+        if (!this._pushedToBody) {
+            return;
+        }
+        const el = this._elementRef.nativeElement as HTMLElement;
+        this._renderer2.removeStyle(el, 'z-index');
+        this._pushedToBody = false;
+        if (el.parentNode === this._doc.body) {
+            this._doc.body.removeChild(el);
+        }
+        if (this._bodyAnchor && this._bodyAnchor.parentNode) {
+            this._bodyAnchor.parentNode.insertBefore(el, this._bodyAnchor);
+            this._bodyAnchor.parentNode.removeChild(this._bodyAnchor);
+        } else if (this._originalParent) {
+            this._originalParent.appendChild(el);
+        }
+        this._bodyAnchor = null as any;
+        this._originalParent = null;
     }
 }

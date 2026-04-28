@@ -12,17 +12,31 @@ export const roleResolver = (allowedRoles: string[]) => {
         const token = inject(AuthService).accessToken;
         const tokenPayload: UserPayload = jwt_decode(token);
         const role = tokenPayload.user.roles.find(role => role.is_default);
-        const isValidRole = allowedRoles.includes(role.name);
-        // If the user's role is not valid
-        if (!isValidRole) {
-            switch (role.name) {
-                case RoleEnum.ADMIN:    router.navigateByUrl('/admin/dashboard'); break;
-                case RoleEnum.CASHIER:     router.navigateByUrl('/cashier/order'); break;
-            }
-            // Show unauthorized access message
+        if (!role) {
+            router.navigateByUrl('');
             return of(false);
         }
-        // Allow access
+        const slug = role.slug?.toLowerCase();
+        const wantsAdmin = allowedRoles.includes(RoleEnum.ADMIN);
+        const wantsCashier = allowedRoles.includes(RoleEnum.CASHIER);
+        const isValidRole =
+            allowedRoles.includes(role.name) ||
+            (wantsAdmin && slug === 'admin') ||
+            (wantsCashier && slug === 'cashier');
+        if (!isValidRole) {
+            switch (slug) {
+                case 'admin':
+                    router.navigateByUrl('/admin/dashboard');
+                    break;
+                case 'cashier':
+                    router.navigateByUrl('/cashier/order');
+                    break;
+                default:
+                    router.navigateByUrl('');
+                    break;
+            }
+            return of(false);
+        }
         return of(allowedRoles);
     };
 };

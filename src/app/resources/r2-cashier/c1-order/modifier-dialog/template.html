@@ -10,7 +10,7 @@
         </div>
         <div class="flex justify-between mt-1">
             <span class="text-slate-600">Base price</span>
-            <strong>{{ data.unit_price | number }} ៛</strong>
+            <strong>{{ data.unit_price | number }} KHR</strong>
         </div>
     </div>
 
@@ -40,18 +40,12 @@
             [(ngModel)]="selected[g.id]"
             (ngModelChange)="onOptionChange()">
             <mat-radio-button
-                *ngIf="!g.is_required"
-                class="!text-sm"
-                [value]="undefined">
-                No selection
-            </mat-radio-button>
-            <mat-radio-button
                 *ngFor="let o of g.options"
                 class="!text-sm"
                 [value]="o.id">
                 {{ o.label }}
                 <span *ngIf="o.price_delta !== 0" class="text-slate-500">
-                    ({{ o.price_delta > 0 ? '+' : '' }}{{ o.price_delta | number }} ៛)
+                    ({{ o.price_delta > 0 ? '+' : '' }}{{ o.price_delta | number }} KHR)
                 </span>
             </mat-radio-button>
         </mat-radio-group>
@@ -73,11 +67,11 @@
     <div class="mt-2 rounded-md bg-slate-100 dark:bg-slate-800 p-3 text-sm space-y-1">
         <div class="flex justify-between">
             <span>Unit price</span>
-            <strong>{{ unitTotal | number }} ៛</strong>
+            <strong>{{ unitTotal | number }} KHR</strong>
         </div>
         <div class="flex justify-between">
             <span>Line total</span>
-            <strong>{{ lineTotal | number }} ៛</strong>
+            <strong>{{ lineTotal | number }} KHR</strong>
         </div>
     </div>
 </mat-dialog-content>

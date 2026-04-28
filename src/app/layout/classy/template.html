@@ -2,14 +2,14 @@
 <helper-loading-bar></helper-loading-bar>
 
 <!-- Navigation -->
-<helper-navigation class="dark bg-gray-900 print:hidden" [mode]="isScreenSmall ? 'over' : 'side'"
+<helper-navigation class="dark border-r border-slate-800/80 bg-slate-950 print:hidden" [mode]="isScreenSmall ? 'over' : 'side'"
     [name]="'mainNavigation'" [navigations]="navigations" [opened]="!isScreenSmall">
     <!-- Navigation header hook -->
     <ng-container helperNavigationContentHeader>
-        <div class="flex justify-center p-4">
+        <div class="flex justify-center border-b border-white/5 px-4 py-5">
             <!-- Logo -->
             <div class="flex items-center gap-0.5">
-                <img class="h-15 w-full -mt-2" src="images/logo/Logo.png" alt="CoffeeShop POS logo">
+                <img class="h-12 w-auto max-w-full object-contain" src="images/logo/Logo.png" alt="CoffeeShop POS logo">
             </div>
         </div>
     </ng-container>
@@ -21,17 +21,17 @@
     </ng-container>
 </helper-navigation>
 
-<!-- Wrapper -->
-<div class="flex w-full min-w-0 flex-auto flex-col">
+<!-- Wrapper: z-10 + relative so in-app fixed panels (e.g. switch-role) stack above the left nav (z-0 in side mode) -->
+<div class="relative z-10 flex w-full min-w-0 flex-auto flex-col">
     <!-- Header -->
     <div
-        class="bg-card sticky top-0 z-49 flex h-14 w-full flex-0 items-center pl-2 md:pl-4 pr-3 shadow dark:border-b dark:shadow-none print:hidden">
+        class="bg-card/95 supports-[backdrop-filter]:bg-card/80 sticky top-0 z-49 flex h-15 w-full flex-0 items-center border-b border-gray-200/80 pl-2 backdrop-blur-md dark:border-white/5 md:pl-4 pr-3 print:hidden">
         <!-- Navigation toggle button -->
         <button class="block md:hidden mt-1" mat-icon-button (click)="toggleNavigation('mainNavigation')">
             <mat-icon [svgIcon]="'heroicons_outline:bars-3'"></mat-icon>
         </button>
-        <div class="mb-0.5 ml-1 md:ml-0">
-            <p class="md:text-2xl font-semibold text-black dark:text-white sm:text-xl text-[14px]">{{role?.name}}</p>
+        <div class="mb-0.5 ml-1 md:ml-0 min-w-0">
+            <p class="text-[0.95rem] font-semibold tracking-tight text-zinc-900 sm:text-lg md:text-2xl dark:text-zinc-50">{{role?.name}}</p>
         </div>
         <!-- Components -->
         <div class="ml-auto flex items-center space-x-0.5 pl-2 sm:space-x-2">
@@ -44,7 +44,7 @@
     </div>
 
     <!-- Content -->
-    <div class="flex flex-auto flex-col">
+    <div class="flex min-h-0 flex-auto flex-col">
         @if (true) {
         <router-outlet></router-outlet>
         }

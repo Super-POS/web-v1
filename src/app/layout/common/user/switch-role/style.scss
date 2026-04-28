@@ -1,6 +1,7 @@
 user-switch-role {
     position: relative;
-    z-index: 999 !important;
+    /* Must stay above .user-switch-role-overlay (10000). Do not use !important or it overrules TS inline z-index. */
+    z-index: 10001;
 
     /* Animations */
     &.user-switch-role-animations-enabled {
@@ -50,6 +51,7 @@ user-switch-role {
         height: 100%;
         overflow: hidden;
         background-color: #fff;
+        isolation: isolate;
 
         .user-switch-role-body {
             height: calc(100dvh - 4rem);
@@ -63,14 +65,14 @@ user-switch-role {
     }
 }
 
-/* Overlay */
+/* Overlay — below user-switch-role host (10001) */
 .user-switch-role-overlay {
     position: absolute;
     top: 0;
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 299;
+    z-index: 10000;
     opacity: 1;
     background-color: rgba(0, 0, 0, 0.6);
 

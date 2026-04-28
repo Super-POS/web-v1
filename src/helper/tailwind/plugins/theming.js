@@ -331,32 +331,32 @@ const theming = plugin.withOptions(
                             light: {
                                 'bg-app-bar': '#FFFFFF',
                                 'bg-card': '#FFFFFF',
-                                'bg-default': colors.slate[100],
+                                'bg-default': colors.zinc[100],
                                 'bg-dialog': '#FFFFFF',
-                                'bg-hover': chroma(colors.slate[400])
-                                    .alpha(0.12)
+                                'bg-hover': chroma(colors.zinc[500])
+                                    .alpha(0.08)
                                     .css(),
-                                'bg-status-bar': colors.slate[300],
+                                'bg-status-bar': colors.zinc[200],
                             },
                             dark: {
-                                'bg-app-bar': colors.slate[900],
-                                'bg-card': colors.slate[800],
-                                'bg-default': colors.slate[900],
-                                'bg-dialog': colors.slate[800],
+                                'bg-app-bar': colors.zinc[950],
+                                'bg-card': colors.zinc[900],
+                                'bg-default': colors.zinc[950],
+                                'bg-dialog': colors.zinc[900],
                                 'bg-hover': 'rgba(255, 255, 255, 0.05)',
-                                'bg-status-bar': colors.slate[900],
+                                'bg-status-bar': colors.zinc[950],
                             },
                         },
                         foreground: {
                             light: {
-                                'text-default': colors.slate[800],
-                                'text-secondary': colors.slate[500],
-                                'text-hint': colors.slate[400],
-                                'text-disabled': colors.slate[400],
-                                border: colors.slate[200],
-                                divider: colors.slate[200],
-                                icon: colors.slate[500],
-                                'mat-icon': colors.slate[500],
+                                'text-default': colors.zinc[900],
+                                'text-secondary': colors.zinc[500],
+                                'text-hint': colors.zinc[400],
+                                'text-disabled': colors.zinc[400],
+                                border: colors.zinc[200],
+                                divider: colors.zinc[200],
+                                icon: colors.zinc[500],
+                                'mat-icon': colors.zinc[500],
                             },
                             dark: {
                                 'text-default': '#FFFFFF',

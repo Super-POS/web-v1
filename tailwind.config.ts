@@ -12,7 +12,7 @@ const generatePalette = require(
  * Tailwind-like color palettes automatically
  */
 const customPalettes = {
-    brand: generatePalette('#2196F3'),
+    brand: generatePalette('#0284c7'),
 };
 
 /**
@@ -22,12 +22,12 @@ const themes = {
     // Default theme is required for theming system to work correctly!
     default: {
         primary: {
-            ...colors.indigo,
-            DEFAULT: colors.indigo[600],
+            ...colors.sky,
+            DEFAULT: colors.sky[600],
         },
         accent: {
-            ...colors.slate,
-            DEFAULT: colors.slate[800],
+            ...colors.zinc,
+            DEFAULT: colors.zinc[800],
         },
         warn: {
             ...colors.red,

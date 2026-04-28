@@ -77,6 +77,19 @@ export interface DashboardResponse {
     labels: string[];
     data: string[];
   }
+
+export interface TopSaleMenuItem {
+  id: number;
+  name: string;
+  code: string;
+  image: string;
+  soldQty: number;
+  revenue: number;
+}
+
+export interface TopSaleMenuData {
+  data: TopSaleMenuItem[];
+}
   
   export interface CashierData {
     data: Cashier[];

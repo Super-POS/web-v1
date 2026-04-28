@@ -105,7 +105,7 @@ export class MenuListComponent implements OnInit {
     public shortedItems: any[] = [
         { name: 'Menu name' , value: 'name' },
         { name: 'Price (KHR)'   , value: 'unit_price' },
-        { name: 'Selling price (Riel)' , value: 'total_sale' },
+        { name: 'Total' , value: 'total_sale' },
     ];
 
     public selectedShortedItem     :  any             = this.shortedItems[0];

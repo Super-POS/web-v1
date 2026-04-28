@@ -88,7 +88,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     sixMonthAgo?: string;
 
     dateTypeControl = new FormControl('today', { updateOn: 'blur' });
-    dateTypeControlChasier = new FormControl('today', { updateOn: 'blur' });
+    dateTypeControlChasier = new FormControl('thisWeek', { updateOn: 'blur' });
     dateTypeControlProduct = new FormControl('thisWeek', { updateOn: 'blur' });
     dateTypeControlSale = new FormControl('thisWeek', { updateOn: 'blur' });
 
@@ -129,7 +129,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.setupDateTypeListeners();
         const firstDayOfWeek = new Date();
         firstDayOfWeek.setDate(firstDayOfWeek.getDate() - firstDayOfWeek.getDay());
-        const thisWeek = firstDayOfWeek.toISOString().slice(0, 10);
+        const thisWeek = format(firstDayOfWeek, 'yyyy-MM-dd');
+        // Seed chart inputs so child components do not fetch with empty filters on first load.
+        this.selectedDate3 = { thisWeek };
+        this.selectedDate4 = { thisWeek };
         this.getDashboardData(this.selectedDateName ? { today: this.today } : undefined);
         this.getCashierData({ thisWeek });
         this.getProductType({ thisWeek });
@@ -284,22 +287,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
         threeMonthAgo?: string; 
         sixMonthAgo?: string; 
     }): void {
-        this._service.getDashboardData(params)
+        this._service.getCashierData(params)
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe({
-                next: (response: DashboardResponse) => {
-                    if (response?.dashboard?.cashierData) {
-                        this.cashierData = response.dashboard.cashierData;
-                        if ((this.cashierData?.data?.length || 0) === 0 && params && Object.keys(params).length) {
-                            this.getCashierData();
-                        }
-                    } else {
-                        this.productType = null as unknown as ProductTypeData;
-                    }
+                next: (response: CashierData) => {
+                    this.cashierData = response ?? ({ data: [] } as CashierData);
                 },
                 error: (error) => {
                     this._snackBarService.openSnackBar(error,GlobalConstants.error)
-                    this.productType = null as unknown as ProductTypeData;
+                    this.cashierData = { data: [] } as CashierData;
                 }
             });
     }
@@ -323,12 +319,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
                             this.getProductType();
                         }
                     } else {
-                        this.cashierData = null;
+                        this.productType = { labels: [], data: [] } as ProductTypeData;
                     }
                 },
                 error: (error) => {
                     this._snackBarService.openSnackBar(error,GlobalConstants.error)
-                    this.cashierData = null;
+                    this.productType = { labels: [], data: [] } as ProductTypeData;
                 }
             });
     }
@@ -512,8 +508,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     // Fetch data
-    selectedDate3: { thisWeek: string; thisMonth: string, threeMonthAgo: string, sixMonthAgo: string } | null = null;
-    selectedDate4: { thisWeek: string; thisMonth: string, threeMonthAgo: string, sixMonthAgo: string } | null = null;
+    selectedDate3: { thisWeek?: string; thisMonth?: string; threeMonthAgo?: string; sixMonthAgo?: string } | null = null;
+    selectedDate4: { thisWeek?: string; thisMonth?: string; threeMonthAgo?: string; sixMonthAgo?: string } | null = null;
 
 
     // Show cart

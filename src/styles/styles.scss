@@ -3,15 +3,22 @@
 /*  @ Styles from this file will override 'vendors.scss' and Helper's base styles.
 /* ----------------------------------------------------------------------------------------------------- */
 
-* {
-    margin: 0;
-    padding: 0;
+*,
+*::before,
+*::after {
     box-sizing: border-box;
-    font-family: 'Inder', 'Kantumruy Pro', sans-serif, cursive !important;
-    font-size: 1rem;
+}
+
+html {
+    font-family: 'Inter var', 'Kantumruy Pro', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 body {
+    margin: 0;
+    padding: 0;
     touch-action: manipulation !important;
 }
 

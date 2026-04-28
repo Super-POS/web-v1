@@ -8,8 +8,8 @@ body helper-splash-screen {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #111827;
-    color: #F9FAFB;
+    background: radial-gradient(ellipse 120% 80% at 50% 0%, #1e293b 0%, #0f172a 45%, #020617 100%);
+    color: #f4f4f5;
     z-index: 999999;
     pointer-events: none;
     opacity: 1;
@@ -33,8 +33,9 @@ body helper-splash-screen .spinner {
 body helper-splash-screen .spinner > div {
     width: 12px;
     height: 12px;
-    background-color: #1E96F7;
+    background-color: #0284c7;
     border-radius: 100%;
+    box-shadow: 0 0 12px rgba(14, 165, 233, 0.45);
     display: inline-block;
     -webkit-animation: helper-bouncedelay 1s infinite ease-in-out both;
     animation: helper-bouncedelay 1s infinite ease-in-out both;

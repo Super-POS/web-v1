@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DailySalesSummary, DashboardResponse, DataSaleResponse } from './interface';
+import { CashierData, DailySalesSummary, DashboardResponse, DataSaleResponse, TopSaleMenuData } from './interface';
 // Helper
 // ================================================================================>> Thrid Party Library
 // RxJS
@@ -39,6 +39,28 @@ export class DashbordService {
         }
         // console.log('httpParams',params);
         return this._httpClient.get<DashboardResponse>(`${env.API_BASE_URL}/admin/dashboard`, { params: httpParams });
+    }
+
+    getCashierData(params?: { today?: string; yesterday?: string; thisWeek?: string; thisMonth?: string }): Observable<CashierData> {
+        let httpParams = new HttpParams();
+        if (params) {
+            if (params.today) httpParams = httpParams.set('today', params.today);
+            if (params.yesterday) httpParams = httpParams.set('yesterday', params.yesterday);
+            if (params.thisWeek) httpParams = httpParams.set('thisWeek', params.thisWeek);
+            if (params.thisMonth) httpParams = httpParams.set('thisMonth', params.thisMonth);
+        }
+        return this._httpClient.get<CashierData>(`${env.API_BASE_URL}/admin/dashboard/cashier`, { params: httpParams });
+    }
+
+    getTopSaleMenu(params?: { thisWeek?: string; thisMonth?: string; threeMonthAgo?: string; sixMonthAgo?: string }): Observable<TopSaleMenuData> {
+        let httpParams = new HttpParams();
+        if (params) {
+            if (params.thisWeek) httpParams = httpParams.set('thisWeek', params.thisWeek);
+            if (params.thisMonth) httpParams = httpParams.set('thisMonth', params.thisMonth);
+            if (params.threeMonthAgo) httpParams = httpParams.set('threeMonthAgo', params.threeMonthAgo);
+            if (params.sixMonthAgo) httpParams = httpParams.set('sixMonthAgo', params.sixMonthAgo);
+        }
+        return this._httpClient.get<TopSaleMenuData>(`${env.API_BASE_URL}/admin/dashboard/top-sale-menu`, { params: httpParams });
     }
 
     // Method to fetch a list of products from the POS system

@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
 import { ProfileComponent } from './my-profile/component';
 import { ProfileLayoutComponent } from './component';
-import { ProfileSecurityComponent } from './security/component';
 import { ProfileLogComponent } from './log/component';
 
 export default [
@@ -13,10 +12,6 @@ export default [
             {
                 path: 'my-profile',
                 component: ProfileComponent
-            },
-            {
-                path: 'security',
-                component: ProfileSecurityComponent
             },
             {
                 path: 'log',

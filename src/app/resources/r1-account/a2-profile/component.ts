@@ -60,14 +60,6 @@ export class ProfileLayoutComponent implements OnInit {
             link: 'my-profile',
         },
         {
-            id: 'security',
-            // title: translate('Navigation.Security'),
-            title:'Security' ,
-            type: 'basic',
-            icon: 'mdi:lock-outline',
-            link: 'security',
-        },
-        {
             id: 'log',
             // title: translate('Navigation.Log'),
             title:'Login',

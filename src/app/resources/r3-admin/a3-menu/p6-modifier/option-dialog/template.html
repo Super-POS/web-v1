@@ -11,7 +11,7 @@
         <mat-error *ngIf="form.get('label')?.hasError('required')">Label is required.</mat-error>
     </mat-form-field>
     <mat-form-field appearance="outline" class="w-full px-3 md:px-4">
-        <mat-label>Price delta (៛)</mat-label>
+        <mat-label>Price delta (KHR)</mat-label>
         <input matInput type="number" formControlName="price_delta" />
     </mat-form-field>
     <mat-form-field appearance="outline" class="w-full px-3 md:px-4">
@@ -20,7 +20,6 @@
     </mat-form-field>
     <div class="rounded-lg border border-slate-200 p-3 space-y-2 mx-3 md:mx-4">
         <mat-slide-toggle formControlName="is_default">Default for group</mat-slide-toggle>
-        <mat-slide-toggle formControlName="is_active">Active</mat-slide-toggle>
     </div>
 
     <div class="rounded-lg border border-slate-200 p-3 mx-3 md:mx-4">

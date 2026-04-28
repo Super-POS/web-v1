@@ -50,7 +50,6 @@ export class ModifierOptionDialogComponent implements OnInit {
         price_delta: [this.data?.option?.price_delta ?? 0],
         sort_order: [this.data?.option?.sort_order ?? 0, [Validators.required, Validators.min(0)]],
         is_default: [this.data?.option?.is_default ?? false],
-        is_active: [this.data?.option?.is_active ?? true],
         lines: this._fb.array(
             (this.data?.option?.ingredient_recipe ?? []).map((l) => this._lineGroup(l)) as never[],
         ),
@@ -106,7 +105,6 @@ export class ModifierOptionDialogComponent implements OnInit {
             price_delta: number;
             sort_order: number;
             is_default: boolean;
-            is_active: boolean;
             lines: { ingredient_id: number; quantity: number }[];
         };
         const recipeLines: IngredientRecipeLine[] = (v.lines || [])
@@ -122,7 +120,7 @@ export class ModifierOptionDialogComponent implements OnInit {
             price_delta: Number(v.price_delta) || 0,
             sort_order: Number(v.sort_order),
             is_default: v.is_default,
-            is_active: v.is_active,
+            is_active: true,
             ingredient_recipe: recipeLines,
         };
         const req$ = this.isEdit

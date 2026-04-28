@@ -70,7 +70,7 @@ export class ModifierPickDialogComponent {
     selectedOptionLabel(group: NormalizedModifierGroup): string {
         const id = this.selected[group.id];
         if (id == null) {
-            return group.is_required ? 'Please choose one' : 'No selection';
+            return group.is_required ? 'Please choose one' : '—';
         }
         return (group.options || []).find((o) => o.id === id)?.label || 'Selected';
     }

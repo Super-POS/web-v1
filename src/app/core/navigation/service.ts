@@ -13,8 +13,14 @@ export class NavigationService {
     set navigations(role: Role) {
         const roleName = String(role?.name || '').trim();
         const roleSlug = String(role?.slug || '').trim().toLowerCase();
-        const isAdmin = roleName === RoleEnum.ADMIN || roleName === 'Administrator' || roleSlug === 'admin';
-        const isCashier = roleName === RoleEnum.CASHIER || roleName === 'Cashier' || roleSlug === 'cashier';
+        const isAdmin =
+            roleName === RoleEnum.ADMIN ||
+            roleName === 'Administrator' ||
+            roleSlug === 'admin';
+        const isCashier =
+            roleName === RoleEnum.CASHIER ||
+            roleName === 'Cashier' ||
+            roleSlug === 'cashier';
 
         if (isAdmin) {
             this._navigation.next(navigationData.admin);

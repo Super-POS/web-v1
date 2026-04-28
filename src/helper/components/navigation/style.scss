@@ -15,7 +15,9 @@ helper-navigation {
     height: 100vh;
     min-height: 100vh;
     max-height: 100vh;
-    z-index: 200;
+    /* Side-by-side: stay under main column so fixed overlays (e.g. switch-role) can cover the app.
+       Over mode: must sit above content when the drawer slides in. */
+    z-index: 0;
 
     /* ----------------------------------------------------------------------------------------------------- */
     /* @ Navigation Drawer
@@ -41,6 +43,7 @@ helper-navigation {
         position: fixed;
         top: 0;
         bottom: 0;
+        z-index: 200;
     }
 
     /* Left position */
@@ -202,12 +205,12 @@ helper-navigation {
                 display: flex;
                 align-items: center;
                 justify-content: flex-start;
-                padding: 10px 16px;
+                padding: 10px 14px;
                 font-size: 13px;
                 font-weight: 500;
                 line-height: 20px;
                 text-decoration: none;
-                border-radius: 6px;
+                border-radius: 8px;
 
                 /* Disabled state */
                 &.helper-navigation-item-disabled {
@@ -442,14 +445,14 @@ helper-navigation-collapsable-item {
 
                 &.helper-navigation-item-active,
                 &.helper-navigation-item-active-forced {
-                    @apply bg-gray-800 bg-opacity-5 dark:bg-white dark:bg-opacity-12;
+                    @apply bg-primary-500/15 ring-1 ring-primary-500/20 dark:bg-primary-500/25 dark:ring-primary-400/30;
 
                     .helper-navigation-item-icon {
-                        @apply opacity-100 text-[#ffff]/85;
+                        @apply text-on-primary opacity-100;
                     }
 
                     .helper-navigation-item-title {
-                        @apply opacity-100 text-[#ffff]/85;
+                        @apply text-on-primary opacity-100;
                     }
                 }
             }
@@ -457,15 +460,15 @@ helper-navigation-collapsable-item {
             /* Hover state */
             &:not(.helper-navigation-item-active-forced):not(.helper-navigation-item-active):not(.helper-navigation-item-disabled) {
                 &:hover {
-                    @apply bg-gray-800 bg-opacity-5 dark:bg-white dark:bg-opacity-12;
+                    @apply bg-gray-800/5 dark:bg-white/10;
 
                     .helper-navigation-item-icon {
-                        @apply opacity-100 text-[#ffff]/85;
+                        @apply text-white opacity-100;
                     }
 
                     .helper-navigation-item-title,
                     .helper-navigation-item-arrow {
-                        @apply opacity-100 text-[#ffff]/85;
+                        @apply text-white opacity-100;
                     }
                 }
             }
