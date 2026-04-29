@@ -1,0 +1,268 @@
+<div class="bg-white dark:bg-gray-800 h-full">
+
+    <!-- Header -->
+    <div class="min-h-14 flex items-center gap-2 py-2 pl-5 pr-4 border-b dark:border-gray-700">
+        <mat-icon class="icon-size-5 text-gray-500" svgIcon="mdi:cash-register"></mat-icon>
+        <span class="text-lg font-medium text-gray-600 dark:text-gray-200">Cash Drawer</span>
+    </div>
+
+    <mat-tab-group animationDuration="200ms" class="cash-drawer-tabs">
+
+        <!-- ── Tab 1: Current Balance ─────────────────────────────────────────── -->
+        <mat-tab class="w-full">
+            <ng-template mat-tab-label>
+                <mat-icon class="icon-size-4 mr-1" svgIcon="mdi:safe"></mat-icon>
+                Current Balance
+            </ng-template>
+
+            <div class="p-4">
+                <!-- Loading -->
+                <div *ngIf="loadingCurrent" class="flex justify-center py-16">
+                    <mat-spinner diameter="40"></mat-spinner>
+                </div>
+
+                <ng-container *ngIf="!loadingCurrent && currentDrawer">
+                    <!-- Summary cards -->
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="rounded-xl border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800 p-4">
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Total USD</p>
+                            <p class="text-2xl font-bold text-green-700 dark:text-green-400">
+                                ${{ drawerTotalUsd | number:'1.2-2' }}
+                            </p>
+                        </div>
+                        <div class="rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 p-4">
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Total KHR</p>
+                            <p class="text-2xl font-bold text-blue-700 dark:text-blue-400">
+                                {{ drawerTotalKhr | number }} ៛
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- USD denomination grid -->
+                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                        USD Denominations
+                    </h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6">
+                        <div *ngFor="let row of usdRows"
+                            class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 p-3 text-center">
+                            <p class="text-base font-semibold text-gray-700 dark:text-gray-200">{{ row.label }}</p>
+                            <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">× {{ row.count }}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">= ${{ row.total | number:'1.0-0' }}</p>
+                        </div>
+                    </div>
+
+                    <!-- KHR denomination grid -->
+                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                        KHR Denominations
+                    </h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        <div *ngFor="let row of khrRows"
+                            class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 p-3 text-center">
+                            <p class="text-base font-semibold text-gray-700 dark:text-gray-200">{{ row.label }}</p>
+                            <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">× {{ row.count }}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">= {{ row.total | number }} ៛</p>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-4 text-right">
+                        Last updated: {{ currentDrawer.updated_at | date:'dd MMM yyyy, hh:mm a' }}
+                    </p>
+                </ng-container>
+
+                <ng-container *ngIf="!loadingCurrent && !currentDrawer">
+                    <div class="flex flex-col items-center justify-center py-16 text-gray-400">
+                        <mat-icon class="icon-size-16" svgIcon="mdi:safe-square-outline"></mat-icon>
+                        <p class="mt-2">No cash drawer data found.</p>
+                    </div>
+                </ng-container>
+            </div>
+        </mat-tab>
+
+        <!-- ── Tab 2: Deposit ─────────────────────────────────────────────────── -->
+        <mat-tab>
+            <ng-template mat-tab-label>
+                <mat-icon class="icon-size-4 mr-1" svgIcon="mdi:cash-plus"></mat-icon>
+                Deposit
+            </ng-template>
+
+            <div class="p-4 max-w-4xl">
+                <!-- USD section -->
+                <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                    USD Denominations
+                </h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6">
+                    <div *ngFor="let d of usdDenoms"
+                        class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 p-3">
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2 text-center">{{ d.label }}</p>
+                        <div class="flex items-center justify-between gap-1">
+                            <button mat-icon-button class="w-7 h-7 min-w-0 leading-none"
+                                (click)="decrement(depositDenoms, d.key)">
+                                <mat-icon class="icon-size-4" svgIcon="mdi:minus"></mat-icon>
+                            </button>
+                            <input type="number" min="0"
+                                class="w-full text-center text-base font-bold bg-transparent border-0 outline-none text-gray-900 dark:text-white"
+                                [(ngModel)]="depositDenoms[d.key]">
+                            <button mat-icon-button class="w-7 h-7 min-w-0 leading-none"
+                                (click)="increment(depositDenoms, d.key)">
+                                <mat-icon class="icon-size-4" svgIcon="mdi:plus"></mat-icon>
+                            </button>
+                        </div>
+                        <p class="text-xs text-center text-gray-400 mt-1">= ${{ (depositDenoms[d.key] || 0) * d.value | number:'1.0-0' }}</p>
+                    </div>
+                </div>
+
+                <!-- KHR section -->
+                <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                    KHR Denominations
+                </h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-6">
+                    <div *ngFor="let d of khrDenoms"
+                        class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 p-3">
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2 text-center">{{ d.label }}</p>
+                        <div class="flex items-center justify-between gap-1">
+                            <button mat-icon-button class="w-7 h-7 min-w-0 leading-none"
+                                (click)="decrement(depositDenoms, d.key)">
+                                <mat-icon class="icon-size-4" svgIcon="mdi:minus"></mat-icon>
+                            </button>
+                            <input type="number" min="0"
+                                class="w-full text-center text-base font-bold bg-transparent border-0 outline-none text-gray-900 dark:text-white"
+                                [(ngModel)]="depositDenoms[d.key]">
+                            <button mat-icon-button class="w-7 h-7 min-w-0 leading-none"
+                                (click)="increment(depositDenoms, d.key)">
+                                <mat-icon class="icon-size-4" svgIcon="mdi:plus"></mat-icon>
+                            </button>
+                        </div>
+                        <p class="text-xs text-center text-gray-400 mt-1">= {{ (depositDenoms[d.key] || 0) * d.value | number }} ៛</p>
+                    </div>
+                </div>
+
+                <!-- Totals summary -->
+                <div class="grid grid-cols-2 gap-4 mb-5">
+                    <div class="rounded-xl border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800 p-3 text-center">
+                        <p class="text-xs text-gray-500 mb-1">Total USD to deposit</p>
+                        <p class="text-xl font-bold text-green-700 dark:text-green-400">${{ depositUsdTotal | number:'1.2-2' }}</p>
+                    </div>
+                    <div class="rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 p-3 text-center">
+                        <p class="text-xs text-gray-500 mb-1">Total KHR to deposit</p>
+                        <p class="text-xl font-bold text-blue-700 dark:text-blue-400">{{ depositKhrTotal | number }} ៛</p>
+                    </div>
+                </div>
+
+                <!-- Note -->
+                <div class="mb-5">
+                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Note (optional)</label>
+                    <textarea rows="2" [(ngModel)]="depositNote" placeholder="e.g. Opening float for today"
+                        class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm outline-none focus:border-blue-400 resize-none">
+                    </textarea>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-3">
+                    <button mat-flat-button color="primary" (click)="submitDeposit()" [disabled]="submittingDeposit">
+                        <mat-icon *ngIf="!submittingDeposit" class="icon-size-5 mr-1" svgIcon="mdi:cash-plus"></mat-icon>
+                        <mat-spinner *ngIf="submittingDeposit" diameter="18" class="mr-2"></mat-spinner>
+                        {{ submittingDeposit ? 'Processing...' : 'Deposit' }}
+                    </button>
+                    <button mat-stroked-button (click)="resetDeposit()" [disabled]="submittingDeposit">
+                        <mat-icon class="icon-size-5 mr-1" svgIcon="mdi:refresh"></mat-icon>
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </mat-tab>
+
+        <!-- ── Tab 3: Transaction Logs ─────────────────────────────────────────── -->
+        <mat-tab>
+            <ng-template mat-tab-label>
+                <mat-icon class="icon-size-4 mr-1" svgIcon="mdi:clipboard-text-clock-outline"></mat-icon>
+                Transaction Logs
+            </ng-template>
+
+            <div class="p-4">
+                <div *ngIf="loadingLogs" class="flex justify-center py-16">
+                    <mat-spinner diameter="40"></mat-spinner>
+                </div>
+
+                <div *ngIf="!loadingLogs && logsDataSource.data.length === 0"
+                    class="flex flex-col items-center justify-center py-16 text-gray-400">
+                    <mat-icon class="icon-size-16" svgIcon="mdi:clipboard-text-outline"></mat-icon>
+                    <p class="mt-2">No transaction logs yet.</p>
+                </div>
+
+                <div *ngIf="!loadingLogs && logsDataSource.data.length > 0">
+                    <table mat-table [dataSource]="logsDataSource" class="w-full">
+
+                        <ng-container matColumnDef="no">
+                            <th mat-header-cell *matHeaderCellDef class="w-10">No.</th>
+                            <td mat-cell *matCellDef="let i = index">{{ i + 1 }}.</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="type">
+                            <th mat-header-cell *matHeaderCellDef>Type</th>
+                            <td mat-cell *matCellDef="let row">
+                                <span class="font-semibold" [class]="typeClass(row.type)">
+                                    {{ typeLabel(row.type) }}
+                                </span>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="usd_total">
+                            <th mat-header-cell *matHeaderCellDef class="text-right">USD</th>
+                            <td mat-cell *matCellDef="let row" class="text-right">
+                                <span *ngIf="logUsdTotal(row) > 0" class="text-green-700 dark:text-green-400 font-medium">
+                                    ${{ logUsdTotal(row) | number:'1.2-2' }}
+                                </span>
+                                <span *ngIf="logUsdTotal(row) === 0" class="text-gray-400">—</span>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="khr_total">
+                            <th mat-header-cell *matHeaderCellDef class="text-right">KHR</th>
+                            <td mat-cell *matCellDef="let row" class="text-right">
+                                <span *ngIf="logKhrTotal(row) > 0" class="text-blue-700 dark:text-blue-400 font-medium">
+                                    {{ logKhrTotal(row) | number }} ៛
+                                </span>
+                                <span *ngIf="logKhrTotal(row) === 0" class="text-gray-400">—</span>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="note">
+                            <th mat-header-cell *matHeaderCellDef>Note</th>
+                            <td mat-cell *matCellDef="let row">
+                                <span class="text-gray-500 dark:text-gray-400 text-sm">{{ row.note || '—' }}</span>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="cashier">
+                            <th mat-header-cell *matHeaderCellDef class="text-center">By</th>
+                            <td mat-cell *matCellDef="let row" class="text-center">
+                                <span class="text-sm">{{ row.cashier?.name || '—' }}</span>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="created_at">
+                            <th mat-header-cell *matHeaderCellDef class="text-right">Date</th>
+                            <td mat-cell *matCellDef="let row" class="text-right text-gray-500 text-sm">
+                                {{ row.created_at | date:'dd MMM yyyy, hh:mm a' }}
+                            </td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="logsColumns; sticky: true"></tr>
+                        <tr mat-row *matRowDef="let row; columns: logsColumns;"></tr>
+                    </table>
+
+                    <mat-paginator
+                        class="w-full bg-white dark:bg-gray-800"
+                        [pageSizeOptions]="[10, 20, 50]"
+                        [showFirstLastButtons]="true"
+                        [pageIndex]="logsPage - 1"
+                        [length]="logsTotal"
+                        [pageSize]="logsLimit"
+                        (page)="onLogsPageChanged($event)">
+                    </mat-paginator>
+                </div>
+            </div>
+        </mat-tab>
+
+    </mat-tab-group>
+</div>

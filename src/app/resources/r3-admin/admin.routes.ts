@@ -8,6 +8,7 @@ import { MenuCategoryComponent } from "./a3-menu/p2-category/listing/component";
 import { MenuIngredientComponent } from "./a3-menu/p3-ingredient/component";
 import { AdminModifierComponent } from "./a3-menu/p6-modifier/component";
 import { UserComponent }        from "./a4-user/u1-listing/component";
+import { AdminCashDrawerComponent } from "./a5-cash-drawer/component";
 
 export default [
     {
@@ -46,6 +47,10 @@ export default [
     {
         path                    : 'users',
         component               : UserComponent
+    },
+    {
+        path                    : 'cash-drawer',
+        component               : AdminCashDrawerComponent
     },
 
 ] as Routes;

@@ -3,6 +3,7 @@ import { OrderComponent } from "./c1-order/component";
 import { SaleComponent } from "./c2-sale/component";
 import { IngredientStockComponent } from "./c3-ingredient-stock/component";
 import { IncomingWebOrdersComponent } from "./incoming-web-orders/component";
+import { CashierCashDrawerComponent } from "./c3-cash-drawer/component";
 
 export default [
     {
@@ -20,5 +21,9 @@ export default [
     {
         path: 'ingredient-stock',
         component: IngredientStockComponent
+    },
+    {
+        path: 'cash-drawer',
+        component: CashierCashDrawerComponent
     },
 ] as Routes;

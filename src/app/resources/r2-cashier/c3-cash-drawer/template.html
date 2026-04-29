@@ -1,0 +1,227 @@
+<div class="bg-white dark:bg-gray-800 mt-4 mx-4 rounded-tl-lg rounded-tr-lg">
+
+    <!-- Header -->
+    <div class="min-h-14 flex items-center gap-2 py-2 pl-5 pr-4 border-b dark:border-gray-700">
+        <mat-icon class="icon-size-5 text-gray-500" svgIcon="mdi:cash-register"></mat-icon>
+        <span class="text-lg font-medium text-gray-600 dark:text-gray-200">Cash Drawer</span>
+    </div>
+
+    <mat-tab-group animationDuration="200ms" class="cash-drawer-tabs">
+
+        <!-- ── Tab 1: Current Balance ─────────────────────────────────────────── -->
+        <mat-tab>
+            <ng-template mat-tab-label>
+                <mat-icon class="icon-size-4 mr-1" svgIcon="mdi:safe"></mat-icon>
+                Current Balance
+            </ng-template>
+
+            <div class="p-4">
+                <div *ngIf="loadingCurrent" class="flex justify-center py-16">
+                    <mat-spinner diameter="40"></mat-spinner>
+                </div>
+
+                <ng-container *ngIf="!loadingCurrent && currentDrawer">
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="rounded-xl border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800 p-4">
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Total USD</p>
+                            <p class="text-2xl font-bold text-green-700 dark:text-green-400">
+                                ${{ drawerTotalUsd | number:'1.2-2' }}
+                            </p>
+                        </div>
+                        <div class="rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 p-4">
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Total KHR</p>
+                            <p class="text-2xl font-bold text-blue-700 dark:text-blue-400">
+                                {{ drawerTotalKhr | number }} ៛
+                            </p>
+                        </div>
+                    </div>
+
+                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                        USD Denominations
+                    </h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6">
+                        <div *ngFor="let row of usdRows"
+                            class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 p-3 text-center">
+                            <p class="text-base font-semibold text-gray-700 dark:text-gray-200">{{ row.label }}</p>
+                            <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">× {{ row.count }}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">= ${{ row.total | number:'1.0-0' }}</p>
+                        </div>
+                    </div>
+
+                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                        KHR Denominations
+                    </h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        <div *ngFor="let row of khrRows"
+                            class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 p-3 text-center">
+                            <p class="text-base font-semibold text-gray-700 dark:text-gray-200">{{ row.label }}</p>
+                            <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">× {{ row.count }}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">= {{ row.total | number }} ៛</p>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-4 text-right">
+                        Last updated: {{ currentDrawer.updated_at | date:'dd MMM yyyy, hh:mm a' }}
+                    </p>
+                </ng-container>
+
+                <ng-container *ngIf="!loadingCurrent && !currentDrawer">
+                    <div class="flex flex-col items-center justify-center py-16 text-gray-400">
+                        <mat-icon class="icon-size-16" svgIcon="mdi:safe-square-outline"></mat-icon>
+                        <p class="mt-2">No cash drawer data found.</p>
+                    </div>
+                </ng-container>
+            </div>
+        </mat-tab>
+
+        <!-- ── Tab 2: Make Change ─────────────────────────────────────────────── -->
+        <mat-tab>
+            <ng-template mat-tab-label>
+                <mat-icon class="icon-size-4 mr-1" svgIcon="mdi:cash-refund"></mat-icon>
+                Make Change
+            </ng-template>
+
+            <div class="p-4 max-w-4xl">
+
+                <!-- Order info row -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Order ID <span class="text-red-500">*</span></label>
+                        <input type="number" min="1" [(ngModel)]="orderId" placeholder="e.g. 42"
+                            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm outline-none focus:border-blue-400">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                            Exchange Rate (KHR per $1)
+                        </label>
+                        <input type="number" min="1" [(ngModel)]="exchangeRate" placeholder="e.g. 4100"
+                            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm outline-none focus:border-blue-400">
+                    </div>
+                </div>
+
+                <!-- Received from customer -->
+                <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                    Received from Customer — USD
+                </h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6">
+                    <div *ngFor="let d of usdDenoms"
+                        class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 p-3">
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2 text-center">{{ d.label }}</p>
+                        <div class="flex items-center justify-between gap-1">
+                            <button mat-icon-button class="w-7 h-7 min-w-0 leading-none"
+                                (click)="decrement(receivedDenoms, d.key)">
+                                <mat-icon class="icon-size-4" svgIcon="mdi:minus"></mat-icon>
+                            </button>
+                            <input type="number" min="0"
+                                class="w-full text-center text-base font-bold bg-transparent border-0 outline-none text-gray-900 dark:text-white"
+                                [(ngModel)]="receivedDenoms[d.key]">
+                            <button mat-icon-button class="w-7 h-7 min-w-0 leading-none"
+                                (click)="increment(receivedDenoms, d.key)">
+                                <mat-icon class="icon-size-4" svgIcon="mdi:plus"></mat-icon>
+                            </button>
+                        </div>
+                        <p class="text-xs text-center text-gray-400 mt-1">= ${{ (receivedDenoms[d.key] || 0) * d.value | number:'1.0-0' }}</p>
+                    </div>
+                </div>
+
+                <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                    Received from Customer — KHR
+                </h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-6">
+                    <div *ngFor="let d of khrDenoms"
+                        class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 p-3">
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2 text-center">{{ d.label }}</p>
+                        <div class="flex items-center justify-between gap-1">
+                            <button mat-icon-button class="w-7 h-7 min-w-0 leading-none"
+                                (click)="decrement(receivedDenoms, d.key)">
+                                <mat-icon class="icon-size-4" svgIcon="mdi:minus"></mat-icon>
+                            </button>
+                            <input type="number" min="0"
+                                class="w-full text-center text-base font-bold bg-transparent border-0 outline-none text-gray-900 dark:text-white"
+                                [(ngModel)]="receivedDenoms[d.key]">
+                            <button mat-icon-button class="w-7 h-7 min-w-0 leading-none"
+                                (click)="increment(receivedDenoms, d.key)">
+                                <mat-icon class="icon-size-4" svgIcon="mdi:plus"></mat-icon>
+                            </button>
+                        </div>
+                        <p class="text-xs text-center text-gray-400 mt-1">= {{ (receivedDenoms[d.key] || 0) * d.value | number }} ៛</p>
+                    </div>
+                </div>
+
+                <!-- Received totals -->
+                <div class="grid grid-cols-2 gap-4 mb-5">
+                    <div class="rounded-xl border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800 p-3 text-center">
+                        <p class="text-xs text-gray-500 mb-1">Total USD received</p>
+                        <p class="text-xl font-bold text-green-700 dark:text-green-400">${{ receivedUsdTotal | number:'1.2-2' }}</p>
+                    </div>
+                    <div class="rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 p-3 text-center">
+                        <p class="text-xs text-gray-500 mb-1">Total KHR received</p>
+                        <p class="text-xl font-bold text-blue-700 dark:text-blue-400">{{ receivedKhrTotal | number }} ៛</p>
+                    </div>
+                </div>
+
+                <!-- Note -->
+                <div class="mb-5">
+                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Note (optional)</label>
+                    <textarea rows="2" [(ngModel)]="changeNote" placeholder='e.g. Customer paid with $5 + 5000 Riel'
+                        class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm outline-none focus:border-blue-400 resize-none">
+                    </textarea>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-3 mb-6">
+                    <button mat-flat-button color="primary" (click)="submitMakeChange()" [disabled]="submittingChange">
+                        <mat-icon *ngIf="!submittingChange" class="icon-size-5 mr-1" svgIcon="mdi:cash-refund"></mat-icon>
+                        <mat-spinner *ngIf="submittingChange" diameter="18" class="mr-2"></mat-spinner>
+                        {{ submittingChange ? 'Processing...' : 'Calculate Change' }}
+                    </button>
+                    <button mat-stroked-button (click)="resetChange()" [disabled]="submittingChange">
+                        <mat-icon class="icon-size-5 mr-1" svgIcon="mdi:refresh"></mat-icon>
+                        Reset
+                    </button>
+                </div>
+
+                <!-- Change result -->
+                <div *ngIf="changeResult" class="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 p-5 mt-2">
+                    <h3 class="text-base font-semibold text-amber-800 dark:text-amber-300 mb-4 flex items-center gap-2">
+                        <mat-icon class="icon-size-5" svgIcon="mdi:cash-check"></mat-icon>
+                        Change to Give Back
+                    </h3>
+
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div class="rounded-lg bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700 p-3 text-center">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Change (KHR)</p>
+                            <p class="text-2xl font-bold text-amber-700 dark:text-amber-400">
+                                {{ changeResult.change_khr | number }} ៛
+                            </p>
+                        </div>
+                        <div *ngIf="changeResult.change_usd" class="rounded-lg bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700 p-3 text-center">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Change (USD)</p>
+                            <p class="text-2xl font-bold text-amber-700 dark:text-amber-400">
+                                ${{ changeResult.change_usd | number:'1.2-2' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Breakdown -->
+                    <div *ngIf="changeBreakdownItems.length > 0">
+                        <p class="text-sm font-medium text-amber-700 dark:text-amber-400 mb-2">Denomination Breakdown</p>
+                        <div class="flex flex-wrap gap-2">
+                            <div *ngFor="let item of changeBreakdownItems"
+                                class="flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium"
+                                [class.bg-green-100]="item.currency === 'USD'"
+                                [class.text-green-800]="item.currency === 'USD'"
+                                [class.bg-blue-100]="item.currency === 'KHR'"
+                                [class.text-blue-800]="item.currency === 'KHR'">
+                                <span>{{ item.label }}</span>
+                                <span class="font-bold">× {{ item.count }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </mat-tab>
+
+    </mat-tab-group>
+</div>

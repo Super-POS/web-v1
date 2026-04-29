@@ -61,6 +61,13 @@ const adminNavigation: HelperNavigationItem[] = [
         link: '/admin/users',
     },
     {
+        id: 'cash-drawer',
+        title: 'Cash Drawer',
+        type: 'basic',
+        icon: 'mdi:cash-register',
+        link: '/admin/cash-drawer',
+    },
+    {
         id: 'account',
         title: 'Account',
         type: 'basic',
@@ -97,6 +104,13 @@ const userNavigation: HelperNavigationItem[] = [
         type: 'basic',
         icon: 'mdi:flask-empty-outline',
         link: '/cashier/ingredient-stock',
+    },
+    {
+        id: 'cash-drawer',
+        title: 'Cash Drawer',
+        type: 'basic',
+        icon: 'mdi:cash-register',
+        link: '/cashier/cash-drawer',
     },
     {
         id: 'account',

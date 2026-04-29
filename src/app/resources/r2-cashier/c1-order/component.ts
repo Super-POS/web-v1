@@ -27,6 +27,35 @@ import { OrderService }     from './service';
 import { Data, MenuItem, MenuItemType, NormalizedModifierGroup, OrderCartLine } from './interface';
 import { ModifierPickDialogComponent, ModifierPickResult } from './modifier-dialog/component';
 import { ViewDetailSaleComponent } from 'app/shared/view/component';
+import { CashierCashDrawerService } from '../c3-cash-drawer/service';
+import { MakeChangeResponse } from '../c3-cash-drawer/interface';
+
+// ── Cash-drawer denomination tables (local to avoid cross-feature import) ──
+const CD_USD: { label: string; key: string; value: number }[] = [
+    { label: '$1',   key: 'usd_1',   value: 1   },
+    { label: '$5',   key: 'usd_5',   value: 5   },
+    { label: '$20',  key: 'usd_20',  value: 20  },
+    { label: '$50',  key: 'usd_50',  value: 50  },
+    { label: '$100', key: 'usd_100', value: 100 },
+];
+const CD_KHR: { label: string; key: string; value: number }[] = [
+    { label: '100 ៛',     key: 'khr_100',    value: 100    },
+    { label: '200 ៛',     key: 'khr_200',    value: 200    },
+    { label: '500 ៛',     key: 'khr_500',    value: 500    },
+    { label: '1,000 ៛',   key: 'khr_1000',   value: 1000   },
+    { label: '2,000 ៛',   key: 'khr_2000',   value: 2000   },
+    { label: '5,000 ៛',   key: 'khr_5000',   value: 5000   },
+    { label: '10,000 ៛',  key: 'khr_10000',  value: 10000  },
+    { label: '15,000 ៛',  key: 'khr_15000',  value: 15000  },
+    { label: '20,000 ៛',  key: 'khr_20000',  value: 20000  },
+    { label: '30,000 ៛',  key: 'khr_30000',  value: 30000  },
+    { label: '50,000 ៛',  key: 'khr_50000',  value: 50000  },
+    { label: '100,000 ៛', key: 'khr_100000', value: 100000 },
+    { label: '200,000 ៛', key: 'khr_200000', value: 200000 },
+];
+const CD_ALL_MAP: Record<string, { label: string; currency: 'USD' | 'KHR' }> = {};
+CD_USD.forEach(d => (CD_ALL_MAP[d.key] = { label: d.label, currency: 'USD' }));
+CD_KHR.forEach(d => (CD_ALL_MAP[d.key] = { label: d.label, currency: 'KHR' }));
 
 
 @Component({
@@ -74,12 +103,84 @@ export class OrderComponent implements OnInit, OnDestroy {
     menuSearchTerm: string = '';
     isCartSidebarOpen: boolean = false;
 
+    /** Cash payment mode */
+    cashPaymentMode: boolean = false;
+    cashExchangeRate: number = 4100;
+    cashReceivedDenoms: Record<string, number> = {};
+    cashNote: string = '';
+
+    readonly cashUsdDenoms = CD_USD;
+    readonly cashKhrDenoms = CD_KHR;
+
+    get cashReceivedUsdTotal(): number {
+        return CD_USD.reduce((s, d) => s + (this.cashReceivedDenoms[d.key] || 0) * d.value, 0);
+    }
+
+    get cashReceivedKhrTotal(): number {
+        return CD_KHR.reduce((s, d) => s + (this.cashReceivedDenoms[d.key] || 0) * d.value, 0);
+    }
+
+    get cashReceivedTotalInKhr(): number {
+        return (this.cashReceivedUsdTotal * this.cashExchangeRate) + this.cashReceivedKhrTotal;
+    }
+
+    get cashChange(): number {
+        return this.cashReceivedTotalInKhr - this.totalPrice;
+    }
+
+    get cashHasAnyDenom(): boolean {
+        return Object.values(this.cashReceivedDenoms).some(v => v > 0);
+    }
+
+    /** Set after makeChange API responds — drives the "change to give" panel */
+    cashChangeResult: MakeChangeResponse['data'] | null = null;
+    cashChangeBreakdownItems: { label: string; count: number; currency: 'USD' | 'KHR' }[] = [];
+    cashPendingOrder: OrderReceiptData | null = null;
+    isCalculatingChange: boolean = false;
+
+    private _initCashDenoms(): Record<string, number> {
+        const obj: Record<string, number> = {};
+        [...CD_USD, ...CD_KHR].forEach(d => { obj[d.key] = 0; });
+        return obj;
+    }
+
+    cashIncrementDenom(key: string): void {
+        this.cashReceivedDenoms[key] = (this.cashReceivedDenoms[key] || 0) + 1;
+    }
+
+    cashDecrementDenom(key: string): void {
+        this.cashReceivedDenoms[key] = Math.max(0, (this.cashReceivedDenoms[key] || 0) - 1);
+    }
+
+    private _buildCashChangeBreakdown(breakdown: Record<string, number>): { label: string; count: number; currency: 'USD' | 'KHR' }[] {
+        if (!breakdown) return [];
+        return Object.entries(breakdown)
+            .filter(([, count]) => count > 0)
+            .map(([key, count]) => ({
+                label: CD_ALL_MAP[key]?.label ?? key,
+                count,
+                currency: (CD_ALL_MAP[key]?.currency ?? 'KHR') as 'USD' | 'KHR',
+            }));
+    }
+
+    dismissChangeResult(): void {
+        const order = this.cashPendingOrder;
+        this.cashChangeResult = null;
+        this.cashChangeBreakdownItems = [];
+        this.cashPendingOrder = null;
+        this.isCartSidebarOpen = false;
+        if (order) {
+            this.openOrderDetailDrawer(order);
+        }
+    }
+
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
         private _userService: UserService,
         private _service: OrderService,
         private _snackBarService: SnackbarService,
         private _barayPaid: BarayPaidWatcherService,
+        private _cashDrawer: CashierCashDrawerService,
     ) {
 
         // Subscribe to changes in the user's data
@@ -299,6 +400,12 @@ export class OrderComponent implements OnInit, OnDestroy {
         this.carts = [];
         this.totalPrice = 0;
         this.canSubmit = false;
+        this.cashPaymentMode = false;
+        this.cashReceivedDenoms = {};
+        this.cashNote = '';
+        this.cashChangeResult = null;
+        this.cashChangeBreakdownItems = [];
+        this.cashPendingOrder = null;
         this._snackBarService.openSnackBar('Cancel order successfully', GlobalConstants.success);
     }
     // Function to increment the quantity of an item
@@ -495,6 +602,95 @@ export class OrderComponent implements OnInit, OnDestroy {
                     err?.error?.message || "Unable to cancel this order.",
                     GlobalConstants.error,
                 );
+            },
+        });
+    }
+
+    openCashPayment(): void {
+        this.cashPaymentMode = true;
+        this.cashReceivedDenoms = this._initCashDenoms();
+        this.cashNote = '';
+    }
+
+    cancelCashPayment(): void {
+        this.cashPaymentMode = false;
+        this.cashReceivedDenoms = {};
+        this.cashNote = '';
+    }
+
+    checkOutWithCash(): void {
+        if (this.cashChange < 0 || !this.cashHasAnyDenom || !this.canSubmit) return;
+
+        const cartArray = this.carts.map((line) => {
+            const entry: {
+                menu_id: number;
+                qty: number;
+                modifier_option_ids: number[];
+                line_note?: string;
+            } = {
+                menu_id: line.id,
+                qty: line.qty,
+                modifier_option_ids: line.modifier_option_ids || [],
+            };
+            if (line.line_note?.trim()) {
+                entry.line_note = line.line_note.trim().slice(0, 500);
+            }
+            return entry;
+        });
+
+        const nonZero = Object.fromEntries(
+            Object.entries(this.cashReceivedDenoms).filter(([, v]) => Number(v) > 0),
+        );
+        const savedExchangeRate = this.cashExchangeRate;
+        const savedNote = this.cashNote?.trim() || undefined;
+
+        this.isOrderBeingMade = true;
+
+        this._service.create({ cart: JSON.stringify(cartArray), deferred_telegram: false }).subscribe({
+            next: (response) => {
+                this.isOrderBeingMade = false;
+                const order = response.data;
+
+                // Reset cart immediately
+                this.carts = [];
+                this.totalPrice = 0;
+                this.canSubmit = false;
+                this.cashPaymentMode = false;
+
+                // Now call makeChange and wait for the result to show change to cashier
+                this.isCalculatingChange = true;
+                this._cashDrawer.makeChange({
+                    order_id: order.id,
+                    exchange_rate: savedExchangeRate,
+                    received: nonZero,
+                    note: savedNote,
+                }).subscribe({
+                    next: (res) => {
+                        this.isCalculatingChange = false;
+                        this.cashReceivedDenoms = {};
+                        this.cashNote = '';
+                        this.cashChangeResult = res.data;
+                        this.cashChangeBreakdownItems = this._buildCashChangeBreakdown(res.data.change_breakdown);
+                        this.cashPendingOrder = order;
+                        this.isCartSidebarOpen = true;
+                        this._snackBarService.openSnackBar(response.message || 'Order placed.', GlobalConstants.success);
+                    },
+                    error: (err: HttpErrorResponse) => {
+                        this.isCalculatingChange = false;
+                        this.cashReceivedDenoms = {};
+                        this.cashNote = '';
+                        this.isCartSidebarOpen = false;
+                        this._snackBarService.openSnackBar(
+                            err?.error?.message || 'Order placed but change calculation failed.',
+                            GlobalConstants.error,
+                        );
+                        this.openOrderDetailDrawer(order);
+                    },
+                });
+            },
+            error: (err: HttpErrorResponse) => {
+                this.isOrderBeingMade = false;
+                this._snackBarService.openSnackBar(err?.error?.message || GlobalConstants.genericError, GlobalConstants.error);
             },
         });
     }
