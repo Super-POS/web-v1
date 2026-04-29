@@ -1,18 +1,34 @@
 <div class="pos-section relative bg-slate-50 dark:bg-gray-900 overflow-hidden h-screen mt-4 mx-4 rounded-xl border border-slate-200/80 dark:border-gray-800 shadow-sm">
     <div *ngIf="isAwaitingBarayPayment"
-        class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-        <div
-            class="max-w-sm w-full rounded-xl bg-white dark:bg-gray-900 p-6 shadow-xl flex flex-col items-center gap-4 border border-gray-200 dark:border-gray-700">
-            <mat-progress-spinner [diameter]="40" [mode]="'indeterminate'"></mat-progress-spinner>
-            <p class="text-center text-gray-800 dark:text-gray-100 text-sm leading-relaxed">
-                <span class="block font-semibold text-base">Payment status: Waiting</span>
-                <span class="block font-medium mt-2">Customer is paying with Baray (QR in the other tab).</span>
-                <span class="block text-gray-600 dark:text-gray-400 mt-1">Keep this page open until you see Success or cancel if they did not pay. Slow webhooks can delay the “paid” signal.</span>
-            </p>
-            <button type="button" mat-flat-button (click)="cancelBarayWait()"
-                class="!bg-red-600 !text-white w-full !py-2">
-                Cancel (customer did not pay)
-            </button>
+        class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+        <div class="w-full rounded-2xl bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden" style="max-width: 480px;">
+
+            <!-- Header -->
+            <div class="flex items-center gap-2 px-5 py-3.5 border-b border-gray-100 dark:border-gray-700">
+                <mat-progress-spinner [diameter]="18" [mode]="'indeterminate'" class="shrink-0"></mat-progress-spinner>
+                <span class="font-semibold text-sm text-gray-800 dark:text-gray-100">Waiting for payment</span>
+            </div>
+
+            <!-- Baray payment iframe -->
+            <div class="px-4 pt-3 pb-2">
+                <iframe
+                    *ngIf="barayPayUrl"
+                    [src]="barayPayUrl"
+                    class="w-full rounded-lg border border-slate-200 dark:border-gray-700 block"
+                    style="height: calc(96vh - 130px);"
+                    frameborder="0"
+                    scrolling="auto"
+                    allow="payment">
+                </iframe>
+            </div>
+
+            <!-- Cancel -->
+            <div class="px-5 pb-5 pt-1">
+                <button type="button" mat-flat-button (click)="cancelBarayWait()"
+                    class="!bg-red-600 !text-white w-full">
+                    Cancel — customer did not pay
+                </button>
+            </div>
         </div>
     </div>
     <div class="min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5 border-b border-slate-200 dark:border-gray-700 bg-white/90 dark:bg-gray-900/90 backdrop-blur">

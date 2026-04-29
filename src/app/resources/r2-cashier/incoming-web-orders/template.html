@@ -39,13 +39,13 @@
                 <ng-container matColumnDef="customer">
                     <th mat-header-cell *matHeaderCellDef>Customer</th>
                     <td mat-cell *matCellDef="let row">
-                        {{ row.customer?.name ?? '—' }}
+                        <span class="text-sm text-slate-700 dark:text-slate-300">{{ row.customer?.name ?? '—' }}</span>
                     </td>
                 </ng-container>
 
                 <ng-container matColumnDef="total">
                     <th mat-header-cell *matHeaderCellDef class="text-right">Total</th>
-                    <td mat-cell *matCellDef="let row" class="text-right tabular-nums">
+                    <td mat-cell *matCellDef="let row" class="text-right tabular-nums text-sm text-slate-700 dark:text-slate-300">
                         {{ row.total_price != null ? (row.total_price | number:'1.0-2') : '—' }}
                     </td>
                 </ng-container>
@@ -55,8 +55,8 @@
                     <td mat-cell *matCellDef="let row">
                         <span
                             class="text-sm font-semibold"
-                            [class.text-amber-700]="(row.status || '').toLowerCase() === 'awaiting_payment'"
-                            [class.text-indigo-700]="(row.status || '').toLowerCase() === 'pending'">
+                            [class.text-amber-600]="(row.status || '').toLowerCase() === 'awaiting_payment'"
+                            [class.text-indigo-600]="(row.status || '').toLowerCase() === 'pending'">
                             {{ statusLabel(row) }}
                         </span>
                     </td>
@@ -65,7 +65,7 @@
                 <ng-container matColumnDef="ordered_at">
                     <th mat-header-cell *matHeaderCellDef>Time</th>
                     <td mat-cell *matCellDef="let row">
-                        <span class="text-slate-600 text-sm">
+                        <span class="text-sm text-slate-600 dark:text-slate-400">
                             {{ row.ordered_at ? (row.ordered_at | date:'medium') : '—' }}
                         </span>
                     </td>
@@ -74,31 +74,34 @@
                 <ng-container matColumnDef="items">
                     <th mat-header-cell *matHeaderCellDef>Items</th>
                     <td mat-cell *matCellDef="let row" class="max-w-[280px]">
-                        <span class="text-sm text-slate-600 line-clamp-2">{{ itemsPreview(row) }}</span>
+                        <span class="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">{{ itemsPreview(row) }}</span>
                     </td>
                 </ng-container>
 
                 <ng-container matColumnDef="action">
-                    <th mat-header-cell *matHeaderCellDef class="text-right min-w-[200px]">Action</th>
-                    <td mat-cell *matCellDef="let row" class="text-right">
-                        <button
-                            mat-flat-button
-                            color="primary"
-                            type="button"
-                            class="mr-2"
-                            [disabled]="busyOrderId !== null || !canAccept(row)"
-                            (click)="accept(row)">
-                            <span *ngIf="busyOrderId !== row.id">Accept</span>
-                            <span *ngIf="busyOrderId === row.id">…</span>
-                        </button>
-                        <button
-                            mat-stroked-button
-                            color="warn"
-                            type="button"
-                            [disabled]="busyOrderId !== null"
-                            (click)="deny(row)">
-                            Decline
-                        </button>
+                    <th mat-header-cell *matHeaderCellDef class="text-right min-w-[140px]">Action</th>
+                    <td mat-cell *matCellDef="let row">
+                        <div class="flex flex-col items-end gap-1">
+                            <button
+                                mat-flat-button
+                                color="primary"
+                                type="button"
+                                class="w-24"
+                                [disabled]="busyOrderId !== null || !canAccept(row)"
+                                (click)="accept(row)">
+                                <span *ngIf="busyOrderId !== row.id">Accept</span>
+                                <span *ngIf="busyOrderId === row.id">…</span>
+                            </button>
+                            <button
+                                mat-stroked-button
+                                color="warn"
+                                type="button"
+                                class="w-24"
+                                [disabled]="busyOrderId !== null"
+                                (click)="deny(row)">
+                                Decline
+                            </button>
+                        </div>
                     </td>
                 </ng-container>
 
@@ -109,7 +112,7 @@
 
         <p class="mt-4 text-xs text-slate-500 max-w-3xl">
             <strong>Accept</strong> sends the order to the kitchen (pending → preparing).
-            <strong>Decline</strong> cancels the order (e.g. out of stock). Orders waiting on Baray payment show as “Awaiting payment” until paid — then “Needs acceptance”.
+            <strong>Decline</strong> cancels the order (e.g. out of stock). Orders waiting on Baray payment show as "Awaiting payment" until paid — then "Needs acceptance".
         </p>
     </div>
 </div>

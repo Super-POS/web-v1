@@ -27,6 +27,7 @@
     "@angular/service-worker": "18.0.1",
     "@ngneat/transloco": "6.0.4",
     "@types/file-saver": "^2.0.7",
+    "angularx-qrcode": "^21.0.5",
     "apexcharts": "^3.49.1",
     "crypto-js": "4.2.0",
     "date-fns": "^3.6.0",

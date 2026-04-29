@@ -3,6 +3,7 @@ import { DecimalPipe, NgForOf, NgIf }   from '@angular/common';
 import { HttpErrorResponse }            from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule }                  from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 // ================================================================>> Third party Library
 import { MatButtonModule }              from '@angular/material/button';
@@ -61,8 +62,10 @@ export class OrderComponent implements OnInit, OnDestroy {
     carts: OrderCartLine[] = [];
     user: User;
     isOrderBeingMade: boolean = false;
-    /** Full-screen wait after Baray pay link opens until paid, timeout, or cashier cancels. */
+    /** Full-screen wait showing inline Baray iframe until paid, timeout, or cashier cancels. */
     isAwaitingBarayPayment: boolean = false;
+    barayPayUrl: SafeResourceUrl | null = null;
+    private _sanitizer = inject(DomSanitizer);
     private _barayPendingOrderId: number | null = null;
     private _barayWaitSub: Subscription | null = null;
     canSubmit: boolean = false;
@@ -467,6 +470,7 @@ export class OrderComponent implements OnInit, OnDestroy {
     /** Stop waiting for Baray without calling the API (natural completion). */
     private _endBarayWaitUi(): void {
         this.isAwaitingBarayPayment = false;
+        this.barayPayUrl = null;
         this._barayPendingOrderId = null;
         this._clearBarayWaitSub();
     }
@@ -537,17 +541,17 @@ export class OrderComponent implements OnInit, OnDestroy {
                         next: (baray) => {
                             const payUrl = baray.data?.url?.trim();
                             if (payUrl) {
-                                // Real Baray page — do not show “paid” here; only after webhook / status change
                                 this._clearBarayWaitSub();
                                 this._barayPendingOrderId = order.id;
+                                this.barayPayUrl = this._sanitizer.bypassSecurityTrustResourceUrl(payUrl);
                                 this.isAwaitingBarayPayment = true;
-                                window.open(payUrl, "_blank", "noopener,noreferrer");
                                 const cashierId = this.user?.id ?? order.cashier?.id ?? 0;
                                 this._barayWaitSub = this._barayPaid
                                     .waitUntilSettled(order.id, cashierId)
                                     .pipe(take(1), takeUntil(this._unsubscribeAll))
                                     .subscribe((outcome) => {
                                         this.isAwaitingBarayPayment = false;
+                                        this.barayPayUrl = null;
                                         this._barayPendingOrderId = null;
                                         this._barayWaitSub = null;
                                         if (outcome === 'paid') {
