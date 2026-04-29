@@ -1,5 +1,5 @@
 # Stage 1
-FROM node:18-alpine AS node
+FROM node:20-alpine AS node
 
 # Build-time URLs (browser must reach host-mapped ports; see docker-compose build args)
 ARG API_BASE_URL
@@ -16,20 +16,19 @@ RUN apk add --no-cache python3 make g++ \
     && ln -sf python3 /usr/bin/python
 
 WORKDIR /usr/app
-RUN npm uninstall ws
 COPY ./package.json /usr/app/package.json
 COPY ./package-lock.json /usr/app/package-lock.json
+
+# Increase Node heap memory limit for install and build
+ENV NODE_OPTIONS=--max_old_space_size=4096
 
 # Install Dependencies
 RUN npm install --legacy-peer-deps
 
 COPY ./ /usr/app
 
-# Increase Node heap memory limit before build
-ENV NODE_OPTIONS=--max_old_space_size=2048
-
 # Build
-RUN npm run build --prod
+RUN npm run build -- --configuration=production
 
 # Stage 2
 FROM nginx:1.15.8-alpine

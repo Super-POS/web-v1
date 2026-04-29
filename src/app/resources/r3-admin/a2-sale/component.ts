@@ -64,12 +64,13 @@ export class SaleComponent implements OnInit {
     public isLoading        : boolean = false;
     public dataSource       : MatTableDataSource<Data> = new MatTableDataSource<Data>([]);
     public displayedColumns : string[] = [
-        'no', 
-        'receipt', 
-        'price', 
-        'ordered_at', 
-        'device', 
-        'seller', 
+        'no',
+        'receipt',
+        'price',
+        'status',
+        'ordered_at',
+        'device',
+        'seller',
         'action'
     ];
 

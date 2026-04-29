@@ -15,6 +15,7 @@ export interface Data {
     receipt_number: number,
     total_price: number,
     platform: string,
+    status: string,
     ordered_at?: Date,
     cashier: { id: number, name: string },
     details: Detail[]
