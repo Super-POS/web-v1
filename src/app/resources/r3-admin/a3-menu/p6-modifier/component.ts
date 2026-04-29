@@ -41,7 +41,7 @@ export class AdminModifierComponent implements OnInit {
     groups: ModifierGroupRow[] = [];
     ingredients: IngredientItem[] = [];
     isLoading = false;
-    optionColumns = ['label', 'price_delta', 'amount', 'sort_order', 'flags', 'action'];
+    optionColumns = ['label', 'price_delta', 'amount', 'flags', 'action'];
     search = '';
 
     ngOnInit(): void {

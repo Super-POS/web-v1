@@ -48,7 +48,6 @@ export class ModifierOptionDialogComponent implements OnInit {
     form = this._fb.group({
         label: [this.data?.option?.label ?? '', Validators.required],
         price_delta: [this.data?.option?.price_delta ?? 0],
-        sort_order: [this.data?.option?.sort_order ?? 0, [Validators.required, Validators.min(0)]],
         is_default: [this.data?.option?.is_default ?? false],
         lines: this._fb.array(
             (this.data?.option?.ingredient_recipe ?? []).map((l) => this._lineGroup(l)) as never[],
@@ -103,7 +102,6 @@ export class ModifierOptionDialogComponent implements OnInit {
         const v = this.form.getRawValue() as {
             label: string;
             price_delta: number;
-            sort_order: number;
             is_default: boolean;
             lines: { ingredient_id: number; quantity: number }[];
         };
@@ -118,7 +116,6 @@ export class ModifierOptionDialogComponent implements OnInit {
         const body = {
             label: v.label,
             price_delta: Number(v.price_delta) || 0,
-            sort_order: Number(v.sort_order),
             is_default: v.is_default,
             is_active: true,
             ingredient_recipe: recipeLines,

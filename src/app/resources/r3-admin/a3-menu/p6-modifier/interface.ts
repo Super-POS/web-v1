@@ -9,7 +9,6 @@ export interface ModifierOptionRow {
     label: string;
     code?: string | null;
     price_delta: number;
-    sort_order: number;
     is_active: boolean;
     is_default: boolean;
     /** Extra stock per 1 line unit (same as menu recipe lines) */

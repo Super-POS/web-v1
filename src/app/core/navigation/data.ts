@@ -78,6 +78,13 @@ const userNavigation: HelperNavigationItem[] = [
         link: '/cashier/order',
     },
     {
+        id: 'incoming-web',
+        title: 'Web orders',
+        type: 'basic',
+        icon: 'mdi:web',
+        link: '/cashier/incoming-web',
+    },
+    {
         id: 'pos',
         title: 'Sales',
         type: 'basic',
