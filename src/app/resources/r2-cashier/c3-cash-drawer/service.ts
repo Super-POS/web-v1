@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { env } from 'envs/env';
-import { CashDrawerResponse, MakeChangeBody, MakeChangeResponse } from './interface';
+import { CashDrawerResponse, MakeChangeBody, MakeChangeResponse, PreviewChangeBody } from './interface';
 
 @Injectable({ providedIn: 'root' })
 export class CashierCashDrawerService {
@@ -15,5 +15,9 @@ export class CashierCashDrawerService {
 
     makeChange(body: MakeChangeBody): Observable<MakeChangeResponse> {
         return this.http.post<MakeChangeResponse>(`${env.API_BASE_URL}/cashier/cash-drawer/change`, body);
+    }
+
+    previewChange(body: PreviewChangeBody): Observable<MakeChangeResponse> {
+        return this.http.post<MakeChangeResponse>(`${env.API_BASE_URL}/cashier/cash-drawer/change-preview`, body);
     }
 }

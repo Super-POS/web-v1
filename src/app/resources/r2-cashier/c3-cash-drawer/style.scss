@@ -1,7 +1,27 @@
+.cash-drawer-page {
+    width: calc(100% - 2rem);
+    min-height: calc(100vh - 5rem);
+}
+
 .cash-drawer-tabs {
     .mat-mdc-tab-header {
         border-bottom: 1px solid #e5e7eb;
+        background: #fff;
     }
+
+    .mat-mdc-tab-body-content {
+        overflow: visible;
+    }
+}
+
+.denom-card {
+    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.denom-card:hover {
+    transform: translateY(-1px);
+    border-color: #cbd5e1;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
 }
 
 input[type='number']::-webkit-inner-spin-button,

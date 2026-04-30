@@ -4,6 +4,7 @@ import { HttpErrorResponse }            from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule }                  from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { Router } from '@angular/router';
 
 // ================================================================>> Third party Library
 import { MatButtonModule }              from '@angular/material/button';
@@ -183,6 +184,7 @@ export class OrderComponent implements OnInit, OnDestroy {
         private _barayPaid: BarayPaidWatcherService,
         private _cashDrawer: CashierCashDrawerService,
         private _printReceipt: PrintReceiptService,
+        private _router: Router,
     ) {
 
         // Subscribe to changes in the user's data
@@ -196,6 +198,13 @@ export class OrderComponent implements OnInit, OnDestroy {
 
     // ===> onInit method to initialize the component
     ngOnInit(): void {
+
+        const checkoutDraft = this._service.getCheckoutDraft();
+        if (checkoutDraft) {
+            this.carts = checkoutDraft.carts;
+            this.totalPrice = checkoutDraft.totalPrice;
+            this.canSubmit = this.carts.length > 0;
+        }
 
         // Set isLoading to true to indicate that data is being loaded
         this.isLoading = true;
@@ -408,6 +417,7 @@ export class OrderComponent implements OnInit, OnDestroy {
         this.cashChangeResult = null;
         this.cashChangeBreakdownItems = [];
         this.cashPendingOrder = null;
+        this._service.clearCheckoutDraft();
         this._snackBarService.openSnackBar('Cancel order successfully', GlobalConstants.success);
     }
     // Function to increment the quantity of an item
@@ -618,6 +628,18 @@ export class OrderComponent implements OnInit, OnDestroy {
         this.cashPaymentMode = false;
         this.cashReceivedDenoms = {};
         this.cashNote = '';
+    }
+
+    goToCheckout(): void {
+        if (!this.canSubmit || this.carts.length === 0) {
+            return;
+        }
+
+        this._service.setCheckoutDraft({
+            carts: this.carts,
+            totalPrice: this.totalPrice,
+        });
+        this._router.navigate(['/cashier/order/checkout']);
     }
 
     checkOutWithCash(): void {

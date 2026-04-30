@@ -80,6 +80,11 @@ export interface OrderCartLine {
     /** Human-readable, e.g. "Sugar: 50% · Ice: Regular" */
     modifierSummary: string;
 }
+
+export interface CheckoutDraft {
+    carts: OrderCartLine[];
+    totalPrice: number;
+}
 // Interface for the response of creating or updating a sales order
 export interface ResponseOrder {
 

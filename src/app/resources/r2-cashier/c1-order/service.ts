@@ -7,14 +7,48 @@ import { Observable, catchError, tap, throwError } from 'rxjs';
 
 // ================================================================>> Custom Library
 import { env } from 'envs/env';
-import { BarayPaymentIntentResponse, IngredientStock, List, ResponseOrder } from './interface';
+import { BarayPaymentIntentResponse, CheckoutDraft, IngredientStock, List, ResponseOrder } from './interface';
 @Injectable({
 
     providedIn: 'root',
 })
 export class OrderService {
 
+    private readonly checkoutDraftStorageKey = 'cashier_checkout_draft';
+
     constructor(private httpClient: HttpClient) { }
+
+    setCheckoutDraft(draft: CheckoutDraft): void {
+        const cleanDraft: CheckoutDraft = {
+            carts: (draft.carts || []).map((line) => ({ ...line })),
+            totalPrice: Number(draft.totalPrice || 0),
+        };
+        sessionStorage.setItem(this.checkoutDraftStorageKey, JSON.stringify(cleanDraft));
+    }
+
+    getCheckoutDraft(): CheckoutDraft | null {
+        const raw = sessionStorage.getItem(this.checkoutDraftStorageKey);
+        if (!raw) {
+            return null;
+        }
+
+        try {
+            const parsed = JSON.parse(raw) as CheckoutDraft;
+            if (!Array.isArray(parsed?.carts) || parsed.carts.length === 0) {
+                return null;
+            }
+            return {
+                carts: parsed.carts.map((line) => ({ ...line })),
+                totalPrice: Number(parsed.totalPrice || 0),
+            };
+        } catch {
+            return null;
+        }
+    }
+
+    clearCheckoutDraft(): void {
+        sessionStorage.removeItem(this.checkoutDraftStorageKey);
+    }
 
 
     // Menus for ordering (grouped by category)

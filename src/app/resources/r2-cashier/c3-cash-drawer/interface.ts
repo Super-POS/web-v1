@@ -35,8 +35,18 @@ export interface CashDrawerResponse {
 export interface MakeChangeBody {
     order_id: number;
     exchange_rate: number;
-    received: Denominations;
+    received?: Denominations;
+    received_amount_khr?: number;
+    received_amount_usd?: number;
     note?: string;
+}
+
+export interface PreviewChangeBody {
+    order_total_khr: number;
+    exchange_rate: number;
+    received?: Denominations;
+    received_amount_khr?: number;
+    received_amount_usd?: number;
 }
 
 export interface ChangeBreakdown {
@@ -50,7 +60,9 @@ export interface MakeChangeResponse {
         change_khr: number;
         change_usd?: number;
         change_breakdown: ChangeBreakdown;
-        order_total: number;
-        received_total_khr: number;
+        order_total?: number;
+        order_total_khr?: number;
+        received_khr?: number;
+        received_total_khr?: number;
     };
 }
