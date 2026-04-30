@@ -29,6 +29,7 @@ import { ModifierPickDialogComponent, ModifierPickResult } from './modifier-dial
 import { ViewDetailSaleComponent } from 'app/shared/view/component';
 import { CashierCashDrawerService } from '../c3-cash-drawer/service';
 import { MakeChangeResponse } from '../c3-cash-drawer/interface';
+import { PrintReceiptService } from 'helper/services/print-receipt/print-receipt.service';
 
 // ── Cash-drawer denomination tables (local to avoid cross-feature import) ──
 const CD_USD: { label: string; key: string; value: number }[] = [
@@ -181,6 +182,7 @@ export class OrderComponent implements OnInit, OnDestroy {
         private _snackBarService: SnackbarService,
         private _barayPaid: BarayPaidWatcherService,
         private _cashDrawer: CashierCashDrawerService,
+        private _printReceipt: PrintReceiptService,
     ) {
 
         // Subscribe to changes in the user's data
@@ -674,6 +676,8 @@ export class OrderComponent implements OnInit, OnDestroy {
                         this.cashPendingOrder = order;
                         this.isCartSidebarOpen = true;
                         this._snackBarService.openSnackBar(response.message || 'Order placed.', GlobalConstants.success);
+                        // Auto-print receipt to connected thermal printer
+                        this._printReceipt.print(order);
                     },
                     error: (err: HttpErrorResponse) => {
                         this.isCalculatingChange = false;
