@@ -1,4 +1,4 @@
-<div class="checkout-section relative bg-slate-50 dark:bg-gray-900 h-screen mt-4 mx-4 rounded-xl border border-slate-200/80 dark:border-gray-800 shadow-sm overflow-hidden">
+<div class="checkout-section relative bg-slate-50 dark:bg-gray-900 mt-4 mx-4 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm overflow-hidden">
     <div *ngIf="isAwaitingBarayPayment"
         class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm px-4">
         <div class="w-full rounded-2xl bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden" style="max-width: 480px;">
@@ -28,112 +28,202 @@
         </div>
     </div>
 
-    <div class="min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-4 border-b border-slate-200 dark:border-gray-700 bg-white/90 dark:bg-gray-900/90 backdrop-blur">
-        <div class="flex items-center gap-2 font-medium">
-            <mat-icon class="text-gray-600 dark:text-white icon-size-5" [svgIcon]="'mdi:cash-register'"></mat-icon>
-            <span class="text-lg text-slate-700 dark:text-slate-100">Checkout</span>
-        </div>
-        <button type="button"
-            class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:bg-gray-800 dark:border-gray-700 dark:text-slate-100"
-            (click)="backToCart()">
-            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
-            Back to cart
-        </button>
-    </div>
-
-    <div class="checkout-body grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-4 p-4 overflow-y-auto">
-        <section class="rounded-xl border border-slate-200 bg-white dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
-            <div class="px-4 py-3 border-b border-slate-200 dark:border-gray-700 flex items-center justify-between">
+    <header class="checkout-header bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-gray-800">
+        <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between px-5 py-4">
+            <div class="flex items-center gap-3">
+                <div class="h-12 w-12 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                    <mat-icon class="icon-size-7 text-blue-600 dark:text-blue-300" [svgIcon]="'mdi:cash-register'"></mat-icon>
+                </div>
                 <div>
-                    <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-100">Order Review</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-300">{{ carts.length }} item lines</p>
-                </div>
-                <div class="text-right">
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Total</p>
-                    <p class="text-xl font-bold text-slate-900 dark:text-white">{{ totalPrice | number }} KHR</p>
+                    <h1 class="text-2xl font-semibold leading-tight text-slate-900 dark:text-white">Checkout</h1>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Review items, choose payment, then place the order.</p>
                 </div>
             </div>
 
-            <div class="divide-y divide-slate-100 dark:divide-gray-700">
-                <div *ngFor="let item of carts; trackBy: trackByLineKey" class="p-4 flex gap-3 justify-between">
-                    <div class="flex min-w-0 gap-3">
-                        <div class="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-gray-700 dark:bg-gray-900">
-                            <img
-                                class="h-full w-full object-cover"
-                                [src]="item.image ? fileUrl + item.image : '/icons/photo.svg'"
-                                alt="Menu item" />
-                        </div>
-                        <div class="min-w-0">
-                            <p class="font-semibold text-slate-800 dark:text-slate-100 truncate">{{ item.name }}</p>
-                            <p class="text-xs text-slate-500 dark:text-slate-300">{{ item.type.name }} | {{ item.code }}</p>
-                            <p *ngIf="item.modifierSummary" class="text-xs text-slate-500 dark:text-slate-300 mt-1">{{ item.modifierSummary }}</p>
-                            <p *ngIf="item.line_note" class="text-xs text-slate-600 dark:text-slate-300 italic mt-1">{{ item.line_note }}</p>
-                        </div>
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div class="grid grid-cols-2 gap-2 sm:min-w-[320px]">
+                    <div class="rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 px-4 py-2">
+                        <p class="text-xs text-blue-600 dark:text-blue-300">Order total</p>
+                        <p class="text-lg font-bold text-blue-800 dark:text-blue-200">{{ totalPrice | number }} KHR</p>
                     </div>
-                    <div class="text-right shrink-0">
-                        <p class="text-sm text-slate-500 dark:text-slate-300">{{ item.qty }} x {{ item.unit_price | number }}</p>
-                        <p class="font-semibold text-slate-800 dark:text-slate-100">{{ item.qty * item.unit_price | number }} KHR</p>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 dark:bg-gray-800 dark:border-gray-700 px-4 py-2">
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Item lines</p>
+                        <p class="text-lg font-bold text-slate-900 dark:text-white">{{ carts.length }}</p>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <aside class="space-y-4">
-            <section class="rounded-xl border border-slate-200 bg-white dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
-                <div class="px-4 py-3 border-b border-slate-200 dark:border-gray-700">
-                    <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-100">Payment Method</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-300">Choose how the customer will pay.</p>
+                <button type="button"
+                    class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:bg-gray-800 dark:border-gray-700 dark:text-slate-100 dark:hover:bg-gray-700"
+                    (click)="backToCart()">
+                    <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+                    Back to cart
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="checkout-body grid grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_460px] gap-5 p-5 overflow-y-auto">
+        <main class="space-y-5">
+            <section class="rounded-2xl border border-slate-200 bg-white dark:bg-gray-800 dark:border-gray-700 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-100 dark:border-gray-700 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Order Review</h2>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Confirm items before taking payment.</p>
+                    </div>
+                    <div class="rounded-full bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 text-sm font-semibold dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800">
+                        {{ totalPrice | number }} KHR
+                    </div>
+                </div>
+
+                <div class="divide-y divide-slate-100 dark:divide-gray-700">
+                    <div *ngFor="let item of carts; trackBy: trackByLineKey" class="p-4 lg:p-5 flex gap-4 justify-between hover:bg-slate-50 dark:hover:bg-gray-900/40 transition-colors">
+                        <div class="flex min-w-0 gap-4">
+                            <div class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-gray-700 dark:bg-gray-900">
+                                <img
+                                    class="h-full w-full object-cover"
+                                    [src]="item.image ? fileUrl + item.image : '/icons/photo.svg'"
+                                    alt="Menu item" />
+                            </div>
+                            <div class="min-w-0 py-0.5">
+                                <p class="text-base font-semibold text-slate-900 dark:text-white truncate">{{ item.name }}</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-300 mt-0.5">{{ item.type.name }} | {{ item.code }}</p>
+                                <p *ngIf="item.modifierSummary" class="text-xs text-slate-500 dark:text-slate-300 mt-2">{{ item.modifierSummary }}</p>
+                                <p *ngIf="item.line_note" class="text-xs text-slate-600 dark:text-slate-300 italic mt-1">{{ item.line_note }}</p>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0 pt-1">
+                            <p class="inline-flex rounded-full bg-slate-100 dark:bg-gray-700 px-2 py-1 text-xs font-semibold text-slate-600 dark:text-slate-200">
+                                Qty {{ item.qty }}
+                            </p>
+                            <p class="mt-2 text-xs text-slate-500 dark:text-slate-300">{{ item.unit_price | number }} KHR each</p>
+                            <p class="mt-1 text-base font-bold text-slate-900 dark:text-white">{{ item.qty * item.unit_price | number }} KHR</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <aside class="space-y-5 2xl:sticky 2xl:top-5 self-start">
+            <section class="rounded-2xl border border-slate-200 bg-white dark:bg-gray-800 dark:border-gray-700 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-100 dark:border-gray-700">
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Payment Method</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Select how the customer wants to pay.</p>
                 </div>
 
                 <div class="p-4 grid grid-cols-2 gap-3">
                     <button type="button"
-                        class="rounded-xl border p-4 text-left transition-colors"
-                        [class.border-emerald-500]="paymentMethod === 'qr'"
-                        [class.bg-emerald-50]="paymentMethod === 'qr'"
+                        class="payment-method-card rounded-2xl border p-4 text-left transition-colors"
+                        [class.selected-qr]="paymentMethod === 'qr'"
                         [class.border-slate-200]="paymentMethod !== 'qr'"
                         (click)="selectPaymentMethod('qr')">
-                        <mat-icon class="icon-size-6 text-emerald-600" [svgIcon]="'mdi:qrcode-scan'"></mat-icon>
-                        <p class="mt-2 font-semibold text-slate-800">Pay by QR</p>
-                        <p class="text-xs text-slate-500">Baray payment link</p>
+                        <div class="flex items-center justify-between">
+                            <div class="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                                <mat-icon class="icon-size-6 text-blue-600 dark:text-blue-300" [svgIcon]="'mdi:qrcode-scan'"></mat-icon>
+                            </div>
+                            <mat-icon *ngIf="paymentMethod === 'qr'" class="icon-size-5 text-blue-600" svgIcon="mdi:check-circle"></mat-icon>
+                        </div>
+                        <p class="mt-3 font-semibold text-slate-900 dark:text-white">Pay by QR</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Baray payment link</p>
                     </button>
 
                     <button type="button"
-                        class="rounded-xl border p-4 text-left transition-colors"
-                        [class.border-green-500]="paymentMethod === 'cash'"
-                        [class.bg-green-50]="paymentMethod === 'cash'"
+                        class="payment-method-card rounded-2xl border p-4 text-left transition-colors"
+                        [class.selected-cash]="paymentMethod === 'cash'"
                         [class.border-slate-200]="paymentMethod !== 'cash'"
                         (click)="selectPaymentMethod('cash')">
-                        <mat-icon class="icon-size-6 text-green-600" [svgIcon]="'mdi:cash'"></mat-icon>
-                        <p class="mt-2 font-semibold text-slate-800">Cash</p>
-                        <p class="text-xs text-slate-500">Calculate change</p>
+                        <div class="flex items-center justify-between">
+                            <div class="h-10 w-10 rounded-xl bg-green-50 dark:bg-green-900/30 flex items-center justify-center">
+                                <mat-icon class="icon-size-6 text-green-600 dark:text-green-300" [svgIcon]="'mdi:cash'"></mat-icon>
+                            </div>
+                            <mat-icon *ngIf="paymentMethod === 'cash'" class="icon-size-5 text-green-600" svgIcon="mdi:check-circle"></mat-icon>
+                        </div>
+                        <p class="mt-3 font-semibold text-slate-900 dark:text-white">Cash</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Auto change check</p>
                     </button>
                 </div>
             </section>
 
-            <section *ngIf="paymentMethod === 'cash'"
-                class="rounded-xl border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-700 overflow-hidden">
-                <div class="flex items-center gap-1.5 px-4 py-3 bg-green-100 dark:bg-green-900/40 border-b border-green-200 dark:border-green-700">
-                    <mat-icon class="icon-size-5 text-green-700 dark:text-green-300" svgIcon="mdi:cash"></mat-icon>
-                    <span class="font-semibold text-green-800 dark:text-green-200">Cash Payment</span>
+            <section *ngIf="paymentMethod === 'qr'"
+                class="rounded-2xl border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 shadow-sm overflow-hidden">
+                <div class="px-5 py-4">
+                    <div class="flex items-start gap-3">
+                        <div class="h-10 w-10 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center border border-blue-100 dark:border-blue-800">
+                            <mat-icon class="icon-size-6 text-blue-600 dark:text-blue-300" svgIcon="mdi:qrcode-scan"></mat-icon>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-blue-900 dark:text-blue-200">QR payment selected</h3>
+                            <p class="text-sm text-blue-700/80 dark:text-blue-300/80 mt-1">Click Place Order to create the receipt and open the Baray payment screen.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section *ngIf="paymentMethod === 'cash' && !cashChangeResult"
+                class="rounded-2xl border border-green-200 bg-white dark:bg-gray-800 dark:border-green-800 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-green-100 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
+                    <div class="flex items-center gap-2">
+                        <mat-icon class="icon-size-5 text-green-700 dark:text-green-300" svgIcon="mdi:cash"></mat-icon>
+                        <h2 class="font-semibold text-green-900 dark:text-green-200">Cash Payment</h2>
+                    </div>
+                    <p class="text-sm text-green-700/80 dark:text-green-300/80 mt-1">Enter received cash. Change is checked automatically from drawer balance.</p>
                 </div>
 
-                <div class="p-4 space-y-4">
+                <div class="p-5 space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Customer gave KHR</label>
+                            <input type="number" min="0" step="100"
+                                class="mt-1 w-full rounded-xl border border-slate-300 bg-white py-3 px-3 text-lg font-semibold text-slate-900 focus:border-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                                placeholder="10000"
+                                [(ngModel)]="cashReceivedKhrAmount"
+                                (ngModelChange)="onCashPaymentInputChange()" />
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Customer gave USD</label>
+                            <input type="number" min="0" step="1"
+                                class="mt-1 w-full rounded-xl border border-slate-300 bg-white py-3 px-3 text-lg font-semibold text-slate-900 focus:border-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                                placeholder="1"
+                                [(ngModel)]="cashReceivedUsdAmount"
+                                (ngModelChange)="onCashPaymentInputChange()" />
+                        </div>
+                    </div>
+
                     <div class="flex items-center gap-2">
                         <label class="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">Rate (KHR / $1)</label>
                         <input type="number" min="1"
-                            class="flex-1 rounded-lg border border-gray-300 bg-white py-1.5 px-2 text-xs text-gray-800 focus:border-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                            class="flex-1 rounded-xl border border-slate-300 bg-white py-2 px-3 text-sm text-slate-800 focus:border-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                             [(ngModel)]="cashExchangeRate"
                             (ngModelChange)="onCashPaymentInputChange()" />
                     </div>
 
-                    <div class="rounded-xl border border-slate-200 bg-white dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
-                        <div class="px-3 py-2 border-b border-slate-100 dark:border-gray-700 flex items-center justify-between">
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="rounded-xl border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800 p-3">
+                            <p class="text-xs text-green-700 dark:text-green-300">Received</p>
+                            <p class="text-sm font-bold text-green-900 dark:text-green-100">{{ cashReceivedTotalInKhr | number }} KHR</p>
+                        </div>
+                        <div class="rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 p-3">
+                            <p class="text-xs text-blue-700 dark:text-blue-300">Order</p>
+                            <p class="text-sm font-bold text-blue-900 dark:text-blue-100">{{ totalPrice | number }} KHR</p>
+                        </div>
+                        <div class="rounded-xl border p-3"
+                            [class.border-green-200]="cashChange >= 0"
+                            [class.bg-green-50]="cashChange >= 0"
+                            [class.border-red-200]="cashChange < 0"
+                            [class.bg-red-50]="cashChange < 0">
+                            <p class="text-xs" [class.text-green-700]="cashChange >= 0" [class.text-red-600]="cashChange < 0">Change</p>
+                            <p class="text-sm font-bold" [class.text-green-900]="cashChange >= 0" [class.text-red-700]="cashChange < 0">{{ cashChange | number }} KHR</p>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 dark:bg-gray-900 dark:border-gray-700 overflow-hidden">
+                        <div class="px-4 py-3 border-b border-slate-200 dark:border-gray-700 flex items-center justify-between">
                             <div>
-                                <p class="text-sm font-semibold text-slate-800 dark:text-slate-100">Cash in Drawer Now</p>
-                                <p class="text-xs text-slate-500 dark:text-slate-400">Available bills/notes for change</p>
+                                <p class="text-sm font-semibold text-slate-900 dark:text-white">Drawer Cash</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Available now for change</p>
                             </div>
                             <button type="button"
-                                class="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:border-gray-700 dark:text-slate-200 dark:hover:bg-gray-700"
+                                class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:bg-gray-800 dark:border-gray-700 dark:text-slate-200 dark:hover:bg-gray-700"
                                 (click)="loadCashDrawer()"
                                 [disabled]="isLoadingCashDrawer">
                                 <mat-icon class="icon-size-4" [svgIcon]="'mdi:refresh'"></mat-icon>
@@ -146,15 +236,15 @@
                             Loading drawer cash...
                         </div>
 
-                        <div *ngIf="!isLoadingCashDrawer && cashDrawer" class="p-3 space-y-3">
+                        <div *ngIf="!isLoadingCashDrawer && cashDrawer" class="p-4 space-y-3">
                             <div class="grid grid-cols-2 gap-2">
-                                <div class="rounded-lg border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-700 p-2 text-center">
-                                    <p class="text-xs text-gray-500 mb-0.5">Drawer USD</p>
-                                    <p class="text-sm font-bold text-green-700 dark:text-green-400">${{ cashDrawerTotalUsd | number:'1.2-2' }}</p>
+                                <div class="rounded-xl border border-green-200 bg-white dark:bg-gray-800 dark:border-green-800 p-3">
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">Drawer USD</p>
+                                    <p class="text-base font-bold text-green-700 dark:text-green-300">${{ cashDrawerTotalUsd | number:'1.2-2' }}</p>
                                 </div>
-                                <div class="rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-700 p-2 text-center">
-                                    <p class="text-xs text-gray-500 mb-0.5">Drawer KHR</p>
-                                    <p class="text-sm font-bold text-blue-700 dark:text-blue-400">{{ cashDrawerTotalKhr | number }} KHR</p>
+                                <div class="rounded-xl border border-blue-200 bg-white dark:bg-gray-800 dark:border-blue-800 p-3">
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">Drawer KHR</p>
+                                    <p class="text-base font-bold text-blue-700 dark:text-blue-300">{{ cashDrawerTotalKhr | number }} KHR</p>
                                 </div>
                             </div>
 
@@ -166,7 +256,7 @@
                                         [class.bg-green-50]="row.count > 0"
                                         [class.text-green-700]="row.count > 0"
                                         [class.border-green-200]="row.count > 0"
-                                        [class.bg-slate-50]="row.count === 0"
+                                        [class.bg-white]="row.count === 0"
                                         [class.text-slate-400]="row.count === 0"
                                         [class.border-slate-200]="row.count === 0">
                                         {{ row.label }} x {{ row.count }}
@@ -182,7 +272,7 @@
                                         [class.bg-blue-50]="row.count > 0"
                                         [class.text-blue-700]="row.count > 0"
                                         [class.border-blue-200]="row.count > 0"
-                                        [class.bg-slate-50]="row.count === 0"
+                                        [class.bg-white]="row.count === 0"
                                         [class.text-slate-400]="row.count === 0"
                                         [class.border-slate-200]="row.count === 0">
                                         {{ row.label }} x {{ row.count }}
@@ -191,75 +281,34 @@
                             </div>
                         </div>
 
-                        <div *ngIf="!isLoadingCashDrawer && !cashDrawer" class="p-3 text-sm text-slate-500 dark:text-slate-300">
+                        <div *ngIf="!isLoadingCashDrawer && !cashDrawer" class="p-4 text-sm text-slate-500 dark:text-slate-300">
                             Drawer cash is not loaded yet. Click Refresh to view available bills/notes.
                         </div>
                     </div>
 
-                    <div class="rounded-xl border border-slate-200 bg-white dark:bg-gray-800 dark:border-gray-700 p-3 space-y-3">
-                        <div>
-                            <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Customer gave KHR</label>
-                            <input type="number" min="0" step="100"
-                                class="mt-1 w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-lg font-semibold text-gray-900 focus:border-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-                                placeholder="Example: 10000"
-                                [(ngModel)]="cashReceivedKhrAmount"
-                                (ngModelChange)="onCashPaymentInputChange()" />
-                        </div>
-
-                        <div>
-                            <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Customer gave USD</label>
-                            <input type="number" min="0" step="1"
-                                class="mt-1 w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-lg font-semibold text-gray-900 focus:border-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-                                placeholder="Example: 1"
-                                [(ngModel)]="cashReceivedUsdAmount"
-                                (ngModelChange)="onCashPaymentInputChange()" />
-                            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Use whole USD bills only. The drawer will choose change from available cash.</p>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2">
-                        <div class="rounded-lg border border-green-200 bg-white dark:bg-gray-800 dark:border-green-700 p-2 text-center">
-                            <p class="text-xs text-gray-400 mb-0.5">Received total</p>
-                            <p class="text-sm font-bold text-green-700 dark:text-green-400">{{ cashReceivedTotalInKhr | number }} KHR</p>
-                        </div>
-                        <div class="rounded-lg border border-blue-200 bg-white dark:bg-gray-800 dark:border-blue-700 p-2 text-center">
-                            <p class="text-xs text-gray-400 mb-0.5">Order total</p>
-                            <p class="text-sm font-bold text-blue-700 dark:text-blue-400">{{ totalPrice | number }} KHR</p>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-between items-center px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700">
-                        <span class="text-sm text-slate-600 dark:text-slate-300">Change</span>
-                        <span class="font-bold text-base"
-                            [class.text-green-600]="cashChange >= 0"
-                            [class.text-red-500]="cashChange < 0">
-                            {{ cashChange | number }} KHR
-                        </span>
-                    </div>
-
-                    <div *ngIf="isPreviewingCashChange" class="flex items-center justify-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
-                        <mat-progress-spinner *ngIf="isPreviewingCashChange" [diameter]="18" [mode]="'indeterminate'"></mat-progress-spinner>
+                    <div *ngIf="isPreviewingCashChange" class="flex items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+                        <mat-progress-spinner [diameter]="18" [mode]="'indeterminate'"></mat-progress-spinner>
                         Checking available change...
                     </div>
 
                     <div *ngIf="cashPreviewError"
-                        class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 dark:bg-red-900/20 dark:border-red-700 dark:text-red-300">
+                        class="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 dark:bg-red-900/20 dark:border-red-700 dark:text-red-300">
                         {{ cashPreviewError }}
                     </div>
 
-                    <div *ngIf="cashChangePreview" class="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 overflow-hidden">
+                    <div *ngIf="cashChangePreview && !cashChangeResult" class="rounded-2xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 overflow-hidden">
                         <div class="flex items-center gap-2 px-4 py-3 bg-amber-100 dark:bg-amber-900/40 border-b border-amber-200 dark:border-amber-700">
                             <mat-icon class="icon-size-5 text-amber-700 dark:text-amber-300" svgIcon="mdi:cash-check"></mat-icon>
                             <span class="font-semibold text-amber-800 dark:text-amber-200">Change to Prepare</span>
                         </div>
                         <div class="p-4 space-y-4">
-                            <div class="rounded-lg bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700 p-3 text-center">
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Change amount</p>
+                            <div class="rounded-xl bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700 p-3 text-center">
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Change amount</p>
                                 <p class="text-2xl font-bold text-amber-700 dark:text-amber-400">{{ cashChangePreview.change_khr | number }} KHR</p>
                             </div>
 
                             <div *ngIf="cashPreviewBreakdownItems.length > 0">
-                                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Give these bills/notes</p>
+                                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Give these bills/notes</p>
                                 <div class="flex flex-wrap gap-2">
                                     <div *ngFor="let item of cashPreviewBreakdownItems" class="rounded-full px-3 py-1.5 text-sm font-semibold border bg-white">
                                         {{ item.label }} x {{ item.count }}
@@ -272,33 +321,26 @@
                     <div>
                         <label class="text-xs text-slate-500 dark:text-slate-400">Note (optional)</label>
                         <input type="text"
-                            class="mt-1 w-full rounded-lg border border-gray-300 bg-white py-1.5 px-2 text-xs text-gray-800 focus:border-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                            class="mt-1 w-full rounded-xl border border-slate-300 bg-white py-2 px-3 text-sm text-slate-800 focus:border-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                             placeholder="e.g. Customer paid with $5 + 5000 KHR"
                             [(ngModel)]="cashNote" />
                     </div>
                 </div>
             </section>
 
-            <section *ngIf="cashChangeResult" class="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 overflow-hidden">
+            <section *ngIf="cashChangeResult" class="rounded-2xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 overflow-hidden shadow-sm">
                 <div class="flex items-center gap-2 px-4 py-3 bg-amber-100 dark:bg-amber-900/40 border-b border-amber-200 dark:border-amber-700">
                     <mat-icon class="icon-size-5 text-amber-700 dark:text-amber-300" svgIcon="mdi:cash-check"></mat-icon>
                     <span class="font-semibold text-amber-800 dark:text-amber-200">Give Change to Customer</span>
                 </div>
                 <div class="p-4 space-y-4">
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="rounded-lg bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700 p-3 text-center">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Change (KHR)</p>
-                            <p class="text-2xl font-bold text-amber-700 dark:text-amber-400">{{ cashChangeResult.change_khr | number }} KHR</p>
-                        </div>
-                        <div *ngIf="cashChangeResult.change_usd"
-                            class="rounded-lg bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700 p-3 text-center">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Change (USD)</p>
-                            <p class="text-2xl font-bold text-amber-700 dark:text-amber-400">${{ cashChangeResult.change_usd | number:'1.2-2' }}</p>
-                        </div>
+                    <div class="rounded-xl bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700 p-3 text-center">
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Change (KHR)</p>
+                        <p class="text-2xl font-bold text-amber-700 dark:text-amber-400">{{ cashChangeResult.change_khr | number }} KHR</p>
                     </div>
 
                     <div *ngIf="cashChangeBreakdownItems.length > 0">
-                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Bills to give back</p>
+                        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Bills to give back</p>
                         <div class="flex flex-wrap gap-2">
                             <div *ngFor="let item of cashChangeBreakdownItems" class="rounded-full px-3 py-1.5 text-sm font-semibold border bg-white">
                                 {{ item.label }} x {{ item.count }}
@@ -307,7 +349,7 @@
                     </div>
 
                     <button type="button"
-                        class="w-full text-white font-semibold p-3 bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors flex items-center justify-center gap-2"
+                        class="w-full text-white font-semibold p-3 bg-amber-600 hover:bg-amber-700 rounded-xl transition-colors flex items-center justify-center gap-2"
                         (click)="dismissChangeResult()">
                         <mat-icon class="icon-size-5" svgIcon="mdi:check-circle-outline"></mat-icon>
                         Done - Open Receipt
@@ -315,8 +357,9 @@
                 </div>
             </section>
 
-            <button type="button"
-                class="w-full text-white font-semibold p-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center justify-center gap-2"
+            <button *ngIf="!cashChangeResult"
+                type="button"
+                class="w-full text-white font-semibold p-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl transition-colors flex items-center justify-center gap-2 shadow-sm"
                 [disabled]="isOrderBeingMade || isCalculatingChange || carts.length === 0 || (paymentMethod === 'cash' && !canPlaceCashOrder)"
                 (click)="placeOrder()">
                 <mat-progress-spinner *ngIf="isOrderBeingMade || isCalculatingChange" [diameter]="18" [mode]="'indeterminate'"></mat-progress-spinner>

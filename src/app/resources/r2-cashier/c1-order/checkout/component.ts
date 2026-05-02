@@ -374,6 +374,9 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
                         this.cashReceivedKhrAmount = 0;
                         this.cashReceivedUsdAmount = 0;
                         this.cashNote = '';
+                        this.cashChangePreview = null;
+                        this.cashPreviewBreakdownItems = [];
+                        this.cashPreviewError = '';
                         this.cashChangeResult = res.data;
                         this.cashChangeBreakdownItems = this._buildCashChangeBreakdown(res.data.change_breakdown);
                         this.cashPendingOrder = order;
