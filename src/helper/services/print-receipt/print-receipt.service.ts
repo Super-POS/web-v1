@@ -1,4 +1,6 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { HelperConfirmationConfig, HelperConfirmationService } from 'helper/services/confirmation';
 
 export interface PrintableOrder {
     receipt_number: number;
@@ -36,95 +38,165 @@ const CLUB54_LOGO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAA
 
 @Injectable({ providedIn: 'root' })
 export class PrintReceiptService {
+    private readonly _confirmation = inject(HelperConfirmationService);
 
     /**
-     * Three slips (Customer, Cashier, Barista), each on its own print page. Page height is content
-     * driven (`@page` width + auto height). Line-item count sets `--dm` for typography density.
-     * Match print dialog paper width to RECEIPT_PAGE_WIDTH_MM (72 vs 80).
+     * Prints Barista prep, then Customer, then Cashier slips one at a time. Each step opens the
+     * app confirmation dialog; Print opens the system print dialog for that slip only. Skip goes
+     * to the next step. Page width / density match RECEIPT_PAGE_WIDTH_MM and line count.
      */
     print(order: PrintableOrder): void {
-        const html = this._buildHtml(order);
-        const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
-        const url  = URL.createObjectURL(blob);
+        void this._printSequenced(order);
+    }
 
-        const iframe = document.createElement('iframe');
-        const layoutWidthPx = Math.ceil(this._mmToCssPx(RECEIPT_PAGE_WIDTH_MM));
-        iframe.style.cssText = [
-            'position:fixed',
-            'top:-9999px',
-            'left:-9999px',
-            `width:${layoutWidthPx}px`,
-            'height:12000px',
-            'border:none',
-            'visibility:hidden',
-        ].join(';');
-        iframe.src = url;
+    private async _printSequenced(order: PrintableOrder): Promise<void> {
+        const steps: { config: HelperConfirmationConfig; kind: 'barista' | 'customer' | 'cashier' }[] = [
+            {
+                config: {
+                    title: 'Barista drink list',
+                    message: 'Print the prep ticket for the barista?',
+                    icon: { show: false },
+                    actions: {
+                        confirm: { show: true, label: 'Print', color: 'primary' },
+                        cancel: { show: true, label: 'Skip' },
+                    },
+                    dismissible: false,
+                },
+                kind: 'barista',
+            },
+            {
+                config: {
+                    title: 'Customer receipt',
+                    message: 'Print the customer copy?',
+                    icon: { show: false },
+                    actions: {
+                        confirm: { show: true, label: 'Print', color: 'primary' },
+                        cancel: { show: true, label: 'Skip' },
+                    },
+                    dismissible: false,
+                },
+                kind: 'customer',
+            },
+            {
+                config: {
+                    title: 'Cashier receipt',
+                    message: 'Print the cashier copy?',
+                    icon: { show: false },
+                    actions: {
+                        confirm: { show: true, label: 'Print', color: 'primary' },
+                        cancel: { show: true, label: 'Skip' },
+                    },
+                    dismissible: false,
+                },
+                kind: 'cashier',
+            },
+        ];
+        for (const step of steps) {
+            const ref = this._confirmation.open(step.config);
+            const result = await firstValueFrom(ref.afterClosed());
+            if (result !== 'confirmed') {
+                continue;
+            }
+            await this._printHtml(this._buildSingleSlipDocument(order, step.kind));
+        }
+    }
 
-        iframe.onload = () => {
-            const win = iframe.contentWindow;
-            const doc = iframe.contentDocument ?? win?.document;
+    /** Opens the print dialog for one HTML document; resolves after the print dialog closes or fallback timeout. */
+    private _printHtml(html: string): Promise<void> {
+        return new Promise((resolve) => {
+            const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const iframe = document.createElement('iframe');
+            const layoutWidthPx = Math.ceil(this._mmToCssPx(RECEIPT_PAGE_WIDTH_MM));
+            iframe.style.cssText = [
+                'position:fixed',
+                'top:-9999px',
+                'left:-9999px',
+                `width:${layoutWidthPx}px`,
+                'height:12000px',
+                'border:none',
+                'visibility:hidden',
+            ].join(';');
 
-            const runPrint = () => {
-                try {
-                    win?.focus();
-                    win?.print();
-                } catch {
-                    window.open(url, '_blank');
-                } finally {
-                    setTimeout(() => {
-                        URL.revokeObjectURL(url);
-                        document.body.removeChild(iframe);
-                    }, 60_000);
+            let settled = false;
+            const finish = () => {
+                if (settled) {
+                    return;
                 }
+                settled = true;
+                URL.revokeObjectURL(url);
+                if (iframe.parentNode) {
+                    document.body.removeChild(iframe);
+                }
+                resolve();
             };
 
-            // Layout fonts/tables before measuring heights.
-            win?.requestAnimationFrame(() => {
-                win?.requestAnimationFrame(runPrint);
-            });
-        };
+            let fallbackTimer: number | undefined;
 
-        document.body.appendChild(iframe);
+            iframe.onload = () => {
+                const win = iframe.contentWindow;
+                const onAfterPrint = () => {
+                    if (fallbackTimer !== undefined) {
+                        window.clearTimeout(fallbackTimer);
+                    }
+                    win?.removeEventListener('afterprint', onAfterPrint);
+                    window.setTimeout(finish, 300);
+                };
+                win?.addEventListener('afterprint', onAfterPrint);
+                fallbackTimer = window.setTimeout(() => {
+                    win?.removeEventListener('afterprint', onAfterPrint);
+                    finish();
+                }, 90_000);
+
+                const runPrint = () => {
+                    try {
+                        win?.focus();
+                        win?.print();
+                    } catch {
+                        if (fallbackTimer !== undefined) {
+                            window.clearTimeout(fallbackTimer);
+                        }
+                        win?.removeEventListener('afterprint', onAfterPrint);
+                        window.open(url, '_blank');
+                        window.setTimeout(finish, 300);
+                    }
+                };
+
+                win?.requestAnimationFrame(() => {
+                    win?.requestAnimationFrame(runPrint);
+                });
+            };
+
+            document.body.appendChild(iframe);
+            iframe.src = url;
+        });
     }
 
-    /** CSS pixels per mm at 96dpi (browser layout convention). */
-    private _mmToCssPx(mm: number): number {
-        return (mm * 96) / 25.4;
-    }
-
-    /** Line-item count for density scaling (`--dm`). */
-    private _lineCount(order: PrintableOrder): number {
-        const raw = order.details ?? order.orderDetails ?? [];
-        return Array.isArray(raw) ? raw.length : 0;
-    }
-
-    /**
-     * Base typography/layout scale from line-item count so large orders shrink before print,
-     * reducing reliance on transform blur and keeping hierarchy readable.
-     */
-    private _densityMultiplier(lineCount: number): number {
-        const n = Math.max(0, Math.floor(lineCount));
-        if (n <= 6) return 1;
-        if (n <= 9) return 0.94;
-        if (n <= 12) return 0.88;
-        if (n <= 16) return 0.82;
-        if (n <= 22) return 0.76;
-        if (n <= 30) return 0.70;
-        return 0.64;
-    }
-
-    private _buildHtml(order: PrintableOrder): string {
+    private _buildSingleSlipDocument(order: PrintableOrder, kind: 'barista' | 'customer' | 'cashier'): string {
         const lineCount = this._lineCount(order);
         const dm = this._densityMultiplier(lineCount);
-        const customerSlip = this._buildSlip(order, 'Customer Copy');
-        const cashierSlip  = this._buildSlip(order, 'Cashier Copy');
-        const baristaSlip  = this._buildBaristaSlip(order);
-
+        const inner =
+            kind === 'barista'
+                ? this._buildBaristaSlip(order)
+                : kind === 'customer'
+                  ? this._buildSlip(order, 'Customer Copy')
+                  : this._buildSlip(order, 'Cashier Copy');
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <style>
+${this._layoutStyles()}
+</style>
+</head>
+<body class="receipt-root" style="--dm:${dm}">
+  ${inner}
+</body>
+</html>`;
+    }
+
+    private _layoutStyles(): string {
+        return `
   @page { size: ${RECEIPT_PAGE_WIDTH_MM}mm auto; margin: 0; }
   html, body { height: auto; min-height: auto; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -289,14 +361,33 @@ export class PrintReceiptService {
   .prep-drink { font-weight: 700; font-size: calc(10px * var(--dm)); color: #000; }
   .prep-mod { font-size: calc(8px * var(--dm)); color: #333; margin-top: 2px; padding-left: 1px; line-height: 1.3; }
   .prep-note { font-size: calc(8px * var(--dm)); font-style: italic; color: #444; margin-top: 2px; }
-</style>
-</head>
-<body class="receipt-root" style="--dm:${dm}">
-  ${customerSlip}
-  ${cashierSlip}
-  ${baristaSlip}
-</body>
-</html>`;
+`.trim();
+    }
+
+    /** CSS pixels per mm at 96dpi (browser layout convention). */
+    private _mmToCssPx(mm: number): number {
+        return (mm * 96) / 25.4;
+    }
+
+    /** Line-item count for density scaling (`--dm`). */
+    private _lineCount(order: PrintableOrder): number {
+        const raw = order.details ?? order.orderDetails ?? [];
+        return Array.isArray(raw) ? raw.length : 0;
+    }
+
+    /**
+     * Base typography/layout scale from line-item count so large orders shrink before print,
+     * reducing reliance on transform blur and keeping hierarchy readable.
+     */
+    private _densityMultiplier(lineCount: number): number {
+        const n = Math.max(0, Math.floor(lineCount));
+        if (n <= 6) return 1;
+        if (n <= 9) return 0.94;
+        if (n <= 12) return 0.88;
+        if (n <= 16) return 0.82;
+        if (n <= 22) return 0.76;
+        if (n <= 30) return 0.70;
+        return 0.64;
     }
 
     private _escapeHtml(s: string): string {
