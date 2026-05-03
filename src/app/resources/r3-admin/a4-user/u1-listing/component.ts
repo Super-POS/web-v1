@@ -29,6 +29,8 @@ import { CapitalizePipe } from 'helper/pipes/capitalize.pipe';
 import { HelperConfirmationConfig, HelperConfirmationService } from 'helper/services/confirmation';
 import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
+import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
 import { ChangePasswordUserComponent } from '../u6-change-password/component';
 import { CreateUserComponent } from '../u4-create/component';
 import { FilterUserComponent } from '../u3-filter/component';
@@ -55,6 +57,7 @@ import { SkeletonComponent } from './skeleton';
         MatMenuModule,
         UiSwitchModule,
         SkeletonComponent,
+        UsdFromKhrPipe,
     ],
 })
 export class UserComponent implements OnInit, OnDestroy {
@@ -64,6 +67,9 @@ export class UserComponent implements OnInit, OnDestroy {
     private snackBarService = inject(SnackbarService);
     private helpersConfirmationService = inject(HelperConfirmationService);
     private matDialog = inject(MatDialog);
+    private readonly _exchangeRates = inject(ExchangeRateSettingService);
+
+    usdRate = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
 
     displayedColumns: string[] = ['no', 'profile', 'number', 'status', 'last_log', 'total_sale', 'total_price', 'action'];
     dataSource: MatTableDataSource<User> = new MatTableDataSource<User>([]);
@@ -77,6 +83,16 @@ export class UserComponent implements OnInit, OnDestroy {
     roles: { id: number; name: string }[] = [];
     constructor(private route: ActivatedRoute, private cdr: ChangeDetectorRef, private dialog: MatDialog) { }
     ngOnInit(): void {
+        this._exchangeRates.fetchAdmin().subscribe({
+            next: () => {
+                this.usdRate = this._exchangeRates.khrPerUsd;
+                this.cdr.markForCheck();
+            },
+            error: () => {
+                this.usdRate = this._exchangeRates.khrPerUsd;
+                this.cdr.markForCheck();
+            },
+        });
         this.getData(this.page, this.limit);
         this._setUp()
     }

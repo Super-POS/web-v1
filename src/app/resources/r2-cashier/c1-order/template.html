@@ -103,7 +103,9 @@
                         <div class="container-tab-content py-4 pr-3 ">
                             <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-hidden">
                                 <menu-item *ngFor="let menuItem of item.products; trackBy: trackByMenuItemId"
-                                    [data]="menuItem" (result)="addToCart($event, 1)">
+                                    [data]="menuItem"
+                                    [khrPerUsdRate]="cashExchangeRate"
+                                    (result)="addToCart($event, 1)">
                                 </menu-item>
                                 <span *ngIf="item.products.length === 0">No menu items!</span>
                             </div>
@@ -114,7 +116,9 @@
                 <div class="container-tab-content py-4 pr-3" *ngIf="selectedTab">
                     <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-hidden">
                         <menu-item *ngFor="let menuItem of filteredSelectedTabProducts; trackBy: trackByMenuItemId"
-                            [data]="menuItem" (result)="addToCart($event, 1)">
+                            [data]="menuItem"
+                            [khrPerUsdRate]="cashExchangeRate"
+                            (result)="addToCart($event, 1)">
                         </menu-item>
                         <span *ngIf="filteredSelectedTabProducts.length === 0" class="col-span-full text-center text-slate-500 py-10 border border-dashed border-slate-300 rounded-xl bg-white dark:bg-gray-800">
                             No menu items found.
@@ -169,9 +173,9 @@
                         <!-- Change amounts -->
                         <div class="grid grid-cols-2 gap-3">
                             <div class="rounded-lg bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700 p-3 text-center">
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Change (KHR)</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Change (USD equiv.)</p>
                                 <p class="text-2xl font-bold text-amber-700 dark:text-amber-400">
-                                    {{ cashChangeResult.change_khr | number }} ៛
+                                    ${{ cashChangeResult.change_khr | usdFromKhr:cashExchangeRate | number:'1.2-2' }}
                                 </p>
                             </div>
                             <div *ngIf="cashChangeResult.change_usd"
@@ -206,11 +210,11 @@
                         <div class="rounded-lg bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 divide-y divide-slate-100 dark:divide-gray-700 text-sm">
                             <div class="flex justify-between px-3 py-2">
                                 <span class="text-slate-500 dark:text-slate-400">Order total</span>
-                                <span class="font-medium">{{ cashChangeResult.order_total | number }} KHR</span>
+                                <span class="font-medium">${{ cashChangeResult.order_total | usdFromKhr:cashExchangeRate | number:'1.2-2' }}</span>
                             </div>
                             <div class="flex justify-between px-3 py-2">
-                                <span class="text-slate-500 dark:text-slate-400">Received (KHR equiv.)</span>
-                                <span class="font-medium">{{ cashChangeResult.received_total_khr | number }} KHR</span>
+                                <span class="text-slate-500 dark:text-slate-400">Received (equiv.)</span>
+                                <span class="font-medium">${{ cashChangeResult.received_total_khr | usdFromKhr:cashExchangeRate | number:'1.2-2' }}</span>
                             </div>
                         </div>
 
@@ -248,7 +252,7 @@
                                 <span class="font-medium truncate">{{item?.name}}</span>
                                 <span *ngIf="item?.modifierSummary" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ item.modifierSummary }}</span>
                                 <span *ngIf="item?.line_note" class="text-xs text-gray-600 dark:text-gray-300 italic mt-0.5">{{ item.line_note }}</span>
-                                <span class="text-sm text-green-600">{{ item?.unit_price | number }} Riel</span>
+                                <span class="text-sm text-green-600">${{ item?.unit_price | usdFromKhr:cashExchangeRate | number:'1.2-2' }} each</span>
                             </div>
                         </div>
                         <div class="flex items-center justify-between">
@@ -275,7 +279,7 @@
 
             <div class="p-4 border-t border-slate-200 dark:border-gray-700">
                 <div class="text-center w-full p-3 flex justify-center rounded-lg bg-slate-900 dark:bg-slate-700 mb-3">
-                    <span class="text-white">Total: {{ totalPrice | number }} KHR</span>
+                    <span class="text-white">Total: ${{ totalPrice | usdFromKhr:cashExchangeRate | number:'1.2-2' }}</span>
                 </div>
 
                 <button type="button"

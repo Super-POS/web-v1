@@ -29,7 +29,7 @@
         </div>
         <div class="rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm">
             <div class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Today · Revenue</div>
-            <div class="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">{{ dailySummary.revenueRiel | number }} KHR</div>
+            <div class="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">${{ dailySummary.revenueRiel | usdFromKhr:usdRate | number:'1.2-2' }}</div>
         </div>
         <div class="rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm">
             <div class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Today · Awaiting pay</div>
@@ -77,8 +77,7 @@
                             </div>
                             <!-- Centered Number -->
                             <div class="flex-grow flex items-center -mt-3">
-                                <div class="text-green-600 text-lg md:text-4xl font-semibold">{{dashboardData?.dashboard?.statistic.total ??
-                                    0 | number}} KHR</div>
+                                <div class="text-green-600 text-lg md:text-4xl font-semibold">${{ (dashboardData?.dashboard?.statistic.total ?? 0) | usdFromKhr:usdRate | number:'1.2-2' }}</div>
                             </div>
 
                             <!-- Comparison Info -->
@@ -94,7 +93,7 @@
                                 <span [ngClass]="{
                                     'text-green-500': dashboardData?.dashboard?.statistic.totalPercentageIncrease >= 0,
                                     'text-red-500': dashboardData?.dashboard?.statistic.totalPercentageIncrease < 0
-                                  }">( {{dashboardData?.dashboard?.statistic.saleIncreasePreviousDay ?? 0 | number }} )</span>
+                                  }">( ${{ (dashboardData?.dashboard?.statistic.saleIncreasePreviousDay ?? 0) | usdFromKhr:usdRate | number:'1.2-2' }} )</span>
                                 <span>Compared to yesterday</span>
                             </div>
 
@@ -264,7 +263,7 @@
                                 </td>
                                 <td class="text-right pr-4">
                                     <div class="flex justify-end items-end gap-1">
-                                        <span> {{ user?.totalAmount | number }} KHR</span>
+                                        <span> ${{ user?.totalAmount | usdFromKhr:usdRate | number:'1.2-2' }}</span>
                                         <span class="text-green-600"> ({{ user?.percentageChange }}%)</span>
                                     </div>
                                 </td>
@@ -277,12 +276,12 @@
         
             <!-- Chart View -->
             <ng-container *ngIf="chartView">
-                <cicle-chart-sale *ngIf="cashierData?.data?.length" [dataSouce]="cashierData"></cicle-chart-sale>
+                <cicle-chart-sale *ngIf="cashierData?.data?.length" [dataSouce]="cashierData" [usdRate]="usdRate"></cicle-chart-sale>
             </ng-container>
         
             <!-- Line Chart View -->
             <ng-container *ngIf="lineView">
-                <sup-bar-chart-sale *ngIf="cashierData?.data?.length" [dataSouce]="cashierData"></sup-bar-chart-sale>
+                <sup-bar-chart-sale *ngIf="cashierData?.data?.length" [dataSouce]="cashierData" [usdRate]="usdRate"></sup-bar-chart-sale>
             </ng-container>
         
             <!-- No Data Template -->
@@ -324,7 +323,7 @@
                 <div>
                     <div class="w-full bg-transparent dark:bg-opacity-5 pb-1 mt-10">
                         <!-- Pass selectedDate3 to the cicle-chart component -->
-                        <cicle-chart [selectedDate]="selectedDate3"></cicle-chart>
+                        <cicle-chart [selectedDate]="selectedDate3" [usdRate]="usdRate"></cicle-chart>
                     </div>
                 </div>
             </div>
@@ -353,7 +352,7 @@
                 <div>
                     <div class="w-full bg-transparent dark:bg-opacity-5 -mt-4 pb-1">
                         <!-- Ensure the chart container has a fixed or dynamic height -->
-                        <sup-bar-chart [selectedDate]="selectedDate4" class="h-[200px]"></sup-bar-chart>
+                        <sup-bar-chart [selectedDate]="selectedDate4" [usdRate]="usdRate" class="h-[200px]"></sup-bar-chart>
                     </div>
                 </div>
             </div>

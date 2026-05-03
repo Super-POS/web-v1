@@ -18,6 +18,7 @@ import { ModifierGroupDialogComponent } from './group-dialog/component';
 import { ModifierOptionDialogComponent } from './option-dialog/component';
 import { MenuIngredientService } from '../p3-ingredient/service';
 import { IngredientItem } from '../p3-ingredient/interface';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
 
 @Component({
     selector: 'admin-menu-modifier',
@@ -40,6 +41,7 @@ export class AdminModifierComponent implements OnInit {
     private _snack = inject(SnackbarService);
     private _ingredientService = inject(MenuIngredientService);
     private _confirmation = inject(HelperConfirmationService);
+    private _exchange = inject(ExchangeRateSettingService);
 
     groups: ModifierGroupRow[] = [];
     ingredients: IngredientItem[] = [];
@@ -48,11 +50,18 @@ export class AdminModifierComponent implements OnInit {
     search = '';
 
     ngOnInit(): void {
-        this.load();
+        this._exchange.fetchAdmin().subscribe({
+            next: () => this.load(),
+            error: () => this.load(),
+        });
         this._ingredientService.getData().subscribe({
             next: (res) => (this.ingredients = res?.data ?? []),
             error: () => (this.ingredients = []),
         });
+    }
+
+    deltaUsd(khrDelta: number): number {
+        return this._exchange.khrToUsd(Number(khrDelta) || 0);
     }
 
     load(): void {

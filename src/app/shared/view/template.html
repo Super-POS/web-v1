@@ -122,9 +122,9 @@
 
                     <!-- Unit Price Column -->
                     <ng-container matColumnDef="unit_price">
-                        <th mat-header-cell *matHeaderCellDef class="w-20 ">Price (KHR)</th>
+                        <th mat-header-cell *matHeaderCellDef class="w-20 ">Price</th>
                         <td mat-cell *matCellDef="let element" class="text-right">
-                            <span>{{ element.unit_price | number }}</span>
+                            <span>${{ element.unit_price | usdFromKhr:usdRate | number:'1.2-2' }}</span>
                         </td>
                     </ng-container>
 
@@ -140,7 +140,7 @@
                     <ng-container matColumnDef="total">
                         <th mat-header-cell *matHeaderCellDef class="min-w-36 text-center">Total</th>
                         <td mat-cell *matCellDef="let element" class="text-right pr-9">
-                            <span>{{ (element.unit_price * element.qty) | number }}</span>
+                            <span>${{ (element.unit_price * element.qty) | usdFromKhr:usdRate | number:'1.2-2' }}</span>
                         </td>
                     </ng-container>
 
@@ -150,15 +150,13 @@
                 </table>
                 <div *ngIf="(row?.discount_amount ?? 0) > 0 && row?.coupon_code" class="flex justify-end text-sm text-slate-600 border-t pt-2 pr-[5px] gap-2">
                     <span>Subtotal</span>
-                    <span>{{ getTotal() | number }} KHR</span>
+                    <span>${{ getTotal() | usdFromKhr:usdRate | number:'1.2-2' }}</span>
                 </div>
                 <div *ngIf="(row?.discount_amount ?? 0) > 0 && row?.coupon_code" class="flex justify-end text-sm text-green-700 font-medium pr-[5px] gap-2">
                     <span>Discount ({{ row.coupon_code }}, {{ row.discount_percent }}%)</span>
-                    <span>-{{ row.discount_amount | number }} KHR</span>
+                    <span>-${{ row.discount_amount | usdFromKhr:usdRate | number:'1.2-2' }}</span>
                 </div>
-                <div class="flex justify-end text-gray-600 font-semibold border-t pt-3 pr-[5px]">Total (Riel): {{
-                    getGrandTotal() |
-                    number }}
+                <div class="flex justify-end text-gray-600 font-semibold border-t pt-3 pr-[5px]">Total: ${{ getGrandTotal() | usdFromKhr:usdRate | number:'1.2-2' }}
                 </div>
             </div>
 

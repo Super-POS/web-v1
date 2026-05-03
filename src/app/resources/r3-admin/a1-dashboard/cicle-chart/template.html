@@ -10,7 +10,7 @@
             </div>
             <div class="text-right pl-3">
                 <p class="text-sm font-semibold text-emerald-600 dark:text-emerald-400">{{ item.soldQty | number }} sold</p>
-                <p class="text-xs text-slate-500">{{ item.revenue | number }} KHR</p>
+                <p class="text-xs text-slate-500">${{ item.revenue | usdFromKhr:usdRate | number:'1.2-2' }}</p>
             </div>
         </div>
     </div>

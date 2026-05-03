@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit }    from '@angular/core';
+import { ChangeDetectorRef, Component, Inject, OnInit, inject } from '@angular/core';
 import { CommonModule }                 from '@angular/common';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatProgressSpinnerModule }     from '@angular/material/progress-spinner';
@@ -10,6 +10,8 @@ import { HttpErrorResponse }    from '@angular/common/http';
 import { SnackbarService }      from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants          from 'helper/shared/constants';
 import { Data, Detail }         from 'app/resources/r2-cashier/c2-sale/interface';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
+import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
 @Component({
     selector: 'shared-details',
     standalone: true,
@@ -20,13 +22,18 @@ import { Data, Detail }         from 'app/resources/r2-cashier/c2-sale/interface
         MatDialogModule,
         MatButtonModule,
         MatTableModule,
-        MatProgressSpinnerModule
+        MatProgressSpinnerModule,
+        UsdFromKhrPipe,
     ],
 })
 export class SharedDetailsComponent implements OnInit {
     displayedColumns: string[] = ['product', 'price', 'qty', 'total'];
     dataSource: MatTableDataSource<Detail> = new MatTableDataSource<Detail>([]);
 
+    private readonly _exchangeRates = inject(ExchangeRateSettingService);
+    private readonly _cdr = inject(ChangeDetectorRef);
+
+    usdRate = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
 
     constructor(
         @Inject(MAT_DIALOG_DATA) public data: Data,
@@ -37,6 +44,16 @@ export class SharedDetailsComponent implements OnInit {
 
     // ===> onInit method to initialize the component
     ngOnInit(): void {
+        this._exchangeRates.fetchCashier().subscribe({
+            next: () => {
+                this.usdRate = this._exchangeRates.khrPerUsd;
+                this._cdr.markForCheck();
+            },
+            error: () => {
+                this.usdRate = this._exchangeRates.khrPerUsd;
+                this._cdr.markForCheck();
+            },
+        });
         this.dataSource.data = this.data.details;
     }
 

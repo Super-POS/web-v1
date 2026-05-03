@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { HelperConfirmationConfig, HelperConfirmationService } from 'helper/services/confirmation';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
 
 export interface PrintableOrder {
     receipt_number: number | string;
@@ -66,6 +67,7 @@ const CLUB54_LOGO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+gAAAPoEAIAA
 @Injectable({ providedIn: 'root' })
 export class PrintReceiptService {
     private readonly _confirmation = inject(HelperConfirmationService);
+    private readonly _exchangeRates = inject(ExchangeRateSettingService);
 
     /**
      * Prints Barista prep, then Customer, then Cashier slips one at a time. Each step opens the
@@ -323,17 +325,14 @@ ${this._layoutStyles()}
   .logo-wrap { text-align: center; margin-bottom: calc(5px * var(--dm)); }
   .logo-circle {
     display: inline-block;
-    background: #0a0a0a;
-    border-radius: 50%;
-    width: calc(50px * var(--dm));
-    height: calc(50px * var(--dm));
-    line-height: calc(50px * var(--dm));
+    line-height: 0;
     text-align: center;
-    overflow: hidden;
+    vertical-align: middle;
   }
   .logo-circle img {
-    width: calc(40px * var(--dm));
-    height: calc(40px * var(--dm));
+    width: calc(48px * var(--dm));
+    height: auto;
+    max-height: calc(56px * var(--dm));
     object-fit: contain;
     vertical-align: middle;
   }
@@ -539,10 +538,13 @@ ${this._layoutStyles()}
 
     /** Subtotal line, optional coupon discount, then running total before payment rows. */
     private _subtotalAndDiscountRows(order: PrintableOrder): string {
-        const disc = Math.round(Number(order.discount_amount ?? 0));
+        const rate = this._orderKhrPerUsd(order);
+        const disc = Number(order.discount_amount ?? 0);
         const total = Number(order.total_price ?? 0);
         if (disc > 0) {
             const sub = total + disc;
+            const subUsd = ExchangeRateSettingService.khrToUsd(sub, rate);
+            const discUsd = ExchangeRateSettingService.khrToUsd(disc, rate);
             const code = (order.coupon_code ?? '').toString().trim();
             const pct =
                 order.discount_percent != null && Number.isFinite(Number(order.discount_percent))
@@ -556,10 +558,11 @@ ${this._layoutStyles()}
             } else if (pct) {
                 discLabel = `Discount (${this._escapeHtml(pct)}%)`;
             }
-            return `<tr><td>Subtotal</td><td>${this._fmt(sub)} &#x17DB;</td></tr>
-<tr><td>${discLabel}</td><td>-${this._fmt(disc)} &#x17DB;</td></tr>`;
+            return `<tr><td>Subtotal</td><td>$${this._fmtUsd(subUsd)}</td></tr>
+<tr><td>${discLabel}</td><td>-$${this._fmtUsd(discUsd)}</td></tr>`;
         }
-        return `<tr><td>Subtotal</td><td>${this._fmt(total)} &#x17DB;</td></tr>`;
+        const totalUsd = ExchangeRateSettingService.khrToUsd(total, rate);
+        return `<tr><td>Subtotal</td><td>$${this._fmtUsd(totalUsd)}</td></tr>`;
     }
 
     /** Rows between Subtotal and Tax: pay by, customer paid, change (cash). */
@@ -597,40 +600,42 @@ ${this._layoutStyles()}
 
     private _formatCashTender(order: PrintableOrder): string {
         const parts: string[] = [];
+        const rate = this._orderKhrPerUsd(order);
         const k = order.receipt_tender_khr;
         const u = order.receipt_tender_usd;
         if (k != null && k > 0) {
-            parts.push(`${this._fmt(k)} KHR`);
+            parts.push(`$${this._fmtUsd(ExchangeRateSettingService.khrToUsd(k, rate))}`);
         }
         if (u != null && u > 0) {
-            parts.push(`$${this._fmt(u)} USD`);
+            parts.push(`$${this._fmtUsd(u)}`);
         }
         if (parts.length > 0) {
             return this._escapeHtml(parts.join(' + '));
         }
         const total = order.receipt_received_khr;
         if (total != null && total > 0) {
-            return this._escapeHtml(`${this._fmt(total)} KHR`);
+            return this._escapeHtml(`$${this._fmtUsd(ExchangeRateSettingService.khrToUsd(total, rate))}`);
         }
         return '';
     }
 
     private _formatChange(order: PrintableOrder): string {
+        const rate = this._orderKhrPerUsd(order);
         const s = order.receipt_change_summary;
         if (s && (s.khr > 0 || s.usd > 0)) {
             const parts: string[] = [];
             if (s.khr > 0) {
-                parts.push(`${this._fmt(s.khr)} KHR`);
+                parts.push(`$${this._fmtUsd(ExchangeRateSettingService.khrToUsd(s.khr, rate))}`);
             }
             if (s.usd > 0) {
-                parts.push(`$${this._fmt(s.usd)} USD`);
+                parts.push(`$${this._fmtUsd(s.usd)}`);
             }
             return this._escapeHtml(parts.join(' + '));
         }
         const ck = order.receipt_change_khr;
         const hasTender = !!this._formatCashTender(order) || (order.receipt_received_khr != null && order.receipt_received_khr > 0);
         if (ck != null && hasTender) {
-            return this._escapeHtml(`${this._fmt(ck)} KHR`);
+            return this._escapeHtml(`$${this._fmtUsd(ExchangeRateSettingService.khrToUsd(ck, rate))}`);
         }
         return '';
     }
@@ -777,15 +782,18 @@ ${this._layoutStyles()}
               }).format(new Date(order.ordered_at as string)).replace(',', '')
             : '-';
 
+        const rate = this._orderKhrPerUsd(order);
         const rows = lines.map(d => {
-            const name  = d.product?.name ?? d.menu?.name ?? '-';
-            const price = this._fmt(d.unit_price);
-            const total = this._fmt(d.unit_price * d.qty);
+            const name = d.product?.name ?? d.menu?.name ?? '-';
+            const unitKhr = Number(d.unit_price ?? 0);
+            const qty = Number(d.qty ?? 0);
+            const price = this._fmtUsd(ExchangeRateSettingService.khrToUsd(unitKhr, rate));
+            const total = this._fmtUsd(ExchangeRateSettingService.khrToUsd(unitKhr * qty, rate));
             return `<tr>
                 <td class="item-name">${this._escapeHtml(name)}</td>
-                <td class="num">${price}</td>
+                <td class="num">$${price}</td>
                 <td class="num">x${d.qty}</td>
-                <td class="num">${total}</td>
+                <td class="num">$${total}</td>
             </tr>`;
         }).join('');
 
@@ -837,7 +845,9 @@ ${this._layoutStyles()}
     ${this._subtotalAndDiscountRows(order)}
     ${this._totalPaymentRows(order)}
     <tr><td style="font-size:10px;color:#555">Tax (0%)</td><td style="font-size:10px;color:#555">-</td></tr>
-    <tr class="grand"><td>TOTAL</td><td>${this._fmt(order.total_price)} &#x17DB;</td></tr>
+    <tr class="grand"><td>TOTAL</td><td>$${this._fmtUsd(
+        ExchangeRateSettingService.khrToUsd(Number(order.total_price ?? 0), this._orderKhrPerUsd(order)),
+    )}</td></tr>
   </table>
 
   <hr class="dash">
@@ -850,8 +860,21 @@ ${this._layoutStyles()}
 </div>`;
     }
 
-    private _fmt(n: number): string {
-        return Math.round(Number(n)).toLocaleString('en-US');
+    private _orderKhrPerUsd(order: PrintableOrder): number {
+        const r = order.receipt_exchange_rate;
+        if (r != null && Number.isFinite(Number(r)) && Number(r) > 0) {
+            return Number(r);
+        }
+        return this._exchangeRates.khrPerUsd;
+    }
+
+    /** Formats USD for receipt display ($ prefix added in markup). Stored order amounts are converted from KHR. */
+    private _fmtUsd(n: number): string {
+        const x = Number(n);
+        if (!Number.isFinite(x)) {
+            return '0.00';
+        }
+        return x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     /** Telegram / website pickups: derive display name from profile (not only DB `name`). */

@@ -44,7 +44,7 @@
                 <div class="grid grid-cols-2 gap-2 sm:min-w-[320px]">
                     <div class="rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 px-4 py-2">
                         <p class="text-xs text-blue-600 dark:text-blue-300">Order total</p>
-                        <p class="text-lg font-bold text-blue-800 dark:text-blue-200">{{ totalPrice | number }} KHR</p>
+                        <p class="text-lg font-bold text-blue-800 dark:text-blue-200">${{ totalPrice | usdFromKhr:cashExchangeRate | number:'1.2-2' }}</p>
                     </div>
                     <div class="rounded-xl border border-slate-200 bg-slate-50 dark:bg-gray-800 dark:border-gray-700 px-4 py-2">
                         <p class="text-xs text-slate-500 dark:text-slate-400">Item lines</p>
@@ -72,10 +72,10 @@
                     </div>
                     <div class="flex flex-col items-end gap-0.5 text-right">
                         <div class="rounded-full bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 text-sm font-semibold dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800">
-                            {{ totalPrice | number }} KHR
+                            ${{ totalPrice | usdFromKhr:cashExchangeRate | number:'1.2-2' }}
                         </div>
                         <span *ngIf="discountAmountKhr > 0" class="text-xs text-slate-500 dark:text-slate-400">
-                            Subtotal {{ cartSubtotal | number }} - discount {{ discountAmountKhr | number }}
+                            Subtotal ${{ cartSubtotal | usdFromKhr:cashExchangeRate | number:'1.2-2' }} - discount ${{ discountAmountKhr | usdFromKhr:cashExchangeRate | number:'1.2-2' }}
                         </span>
                     </div>
                 </div>
@@ -100,8 +100,8 @@
                             <p class="inline-flex rounded-full bg-slate-100 dark:bg-gray-700 px-2 py-1 text-xs font-semibold text-slate-600 dark:text-slate-200">
                                 Qty {{ item.qty }}
                             </p>
-                            <p class="mt-2 text-xs text-slate-500 dark:text-slate-300">{{ item.unit_price | number }} KHR each</p>
-                            <p class="mt-1 text-base font-bold text-slate-900 dark:text-white">{{ item.qty * item.unit_price | number }} KHR</p>
+                            <p class="mt-2 text-xs text-slate-500 dark:text-slate-300">${{ item.unit_price | usdFromKhr:cashExchangeRate | number:'1.2-2' }} each</p>
+                            <p class="mt-1 text-base font-bold text-slate-900 dark:text-white">${{ item.qty * item.unit_price | usdFromKhr:cashExchangeRate | number:'1.2-2' }}</p>
                         </div>
                     </div>
                 </div>
@@ -122,7 +122,7 @@
                         <option *ngFor="let c of activeCoupons" [value]="c.code">{{ c.code }} ({{ c.discount_percent }}% off)</option>
                     </select>
                     <p *ngIf="discountAmountKhr > 0" class="text-sm font-semibold text-green-700 dark:text-green-400">
-                        Discount: -{{ discountAmountKhr | number }} KHR
+                        Discount: -${{ discountAmountKhr | usdFromKhr:cashExchangeRate | number:'1.2-2' }}
                     </p>
                 </div>
             </section>
@@ -196,7 +196,7 @@
                         <div>
                             <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                 <mat-icon class="icon-size-4 shrink-0 text-blue-600 dark:text-blue-400" svgIcon="mdi:currency-rial"></mat-icon>
-                                Customer gave KHR
+                                Customer gave (Riel notes)
                             </label>
                             <input type="number" min="0" step="100"
                                 class="mt-1 w-full rounded-xl border border-slate-300 bg-white py-3 px-3 text-lg font-semibold text-slate-900 focus:border-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
@@ -229,11 +229,13 @@
                     <div class="grid grid-cols-3 gap-2">
                         <div class="rounded-xl border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800 p-3">
                             <p class="text-xs text-green-700 dark:text-green-300">Received</p>
-                            <p class="text-sm font-bold text-green-900 dark:text-green-100">{{ cashReceivedTotalInKhr | number }} KHR</p>
+                            <p class="text-sm font-bold text-green-900 dark:text-green-100 tabular-nums">${{ cashReceivedTotalInKhr | usdFromKhr:cashExchangeRate | number:'1.2-2' }}</p>
+                            <p class="text-xs font-medium text-green-800/90 dark:text-green-200/90 tabular-nums mt-0.5">{{ cashReceivedTotalInKhr | number:'1.0-0' }} ៛</p>
                         </div>
                         <div class="rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 p-3">
                             <p class="text-xs text-blue-700 dark:text-blue-300">Order</p>
-                            <p class="text-sm font-bold text-blue-900 dark:text-blue-100">{{ totalPrice | number }} KHR</p>
+                            <p class="text-sm font-bold text-blue-900 dark:text-blue-100 tabular-nums">${{ totalPrice | usdFromKhr:cashExchangeRate | number:'1.2-2' }}</p>
+                            <p class="text-xs font-medium text-blue-800/90 dark:text-blue-200/90 tabular-nums mt-0.5">{{ totalPrice | number:'1.0-0' }} ៛</p>
                         </div>
                         <div class="rounded-xl border p-3"
                             [class.border-green-200]="cashChange >= 0"
@@ -241,7 +243,10 @@
                             [class.border-red-200]="cashChange < 0"
                             [class.bg-red-50]="cashChange < 0">
                             <p class="text-xs" [class.text-green-700]="cashChange >= 0" [class.text-red-600]="cashChange < 0">Change</p>
-                            <p class="text-sm font-bold" [class.text-green-900]="cashChange >= 0" [class.text-red-700]="cashChange < 0">{{ cashChange | number }} KHR</p>
+                            <p class="text-sm font-bold tabular-nums" [class.text-green-900]="cashChange >= 0" [class.text-red-700]="cashChange < 0">${{ cashChange | usdFromKhr:cashExchangeRate | number:'1.2-2' }}</p>
+                            <p class="text-xs font-medium tabular-nums mt-0.5"
+                                [class.text-green-900]="cashChange >= 0"
+                                [class.text-red-700]="cashChange < 0">{{ cashChange | number:'1.0-0' }} ៛</p>
                         </div>
                     </div>
 
@@ -272,8 +277,8 @@
                                     <p class="text-base font-bold text-green-700 dark:text-green-300">${{ cashDrawerTotalUsd | number:'1.2-2' }}</p>
                                 </div>
                                 <div class="rounded-xl border border-blue-200 bg-white dark:bg-gray-800 dark:border-blue-800 p-3">
-                                    <p class="text-xs text-slate-500 dark:text-slate-400">Drawer KHR</p>
-                                    <p class="text-base font-bold text-blue-700 dark:text-blue-300">{{ cashDrawerTotalKhr | number }} KHR</p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">Drawer (KHR as USD equiv.)</p>
+                                    <p class="text-base font-bold text-blue-700 dark:text-blue-300">${{ cashDrawerTotalKhr | usdFromKhr:cashExchangeRate | number:'1.2-2' }}</p>
                                 </div>
                             </div>
 
@@ -294,7 +299,7 @@
                             </div>
 
                             <div>
-                                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">KHR notes</p>
+                                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Riel note counts</p>
                                 <div class="flex flex-wrap gap-1.5">
                                     <span *ngFor="let row of cashDrawerKhrRows"
                                         class="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-semibold"
@@ -333,7 +338,7 @@
                         <div class="p-4 space-y-4">
                             <div class="rounded-xl bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700 p-3 text-center">
                                 <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Change amount</p>
-                                <p class="text-2xl font-bold text-amber-700 dark:text-amber-400">{{ cashChangePreview.change_khr | number }} KHR</p>
+                                <p class="text-2xl font-bold text-amber-700 dark:text-amber-400">${{ cashChangePreview.change_khr | usdFromKhr:cashExchangeRate | number:'1.2-2' }}</p>
                             </div>
 
                             <div *ngIf="cashPreviewBreakdownItems.length > 0">
@@ -351,7 +356,7 @@
                         <label class="text-xs text-slate-500 dark:text-slate-400">Note (optional)</label>
                         <input type="text"
                             class="mt-1 w-full rounded-xl border border-slate-300 bg-white py-2 px-3 text-sm text-slate-800 focus:border-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-                            placeholder="e.g. Customer paid with $5 + 5000 KHR"
+                            placeholder="e.g. Customer paid mixed cash (note in journal)"
                             [(ngModel)]="cashNote" />
                     </div>
                 </div>
@@ -364,8 +369,8 @@
                 </div>
                 <div class="p-4 space-y-4">
                     <div class="rounded-xl bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700 p-3 text-center">
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Change (KHR)</p>
-                        <p class="text-2xl font-bold text-amber-700 dark:text-amber-400">{{ cashChangeResult.change_khr | number }} KHR</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Change (USD equiv.)</p>
+                        <p class="text-2xl font-bold text-amber-700 dark:text-amber-400">${{ cashChangeResult.change_khr | usdFromKhr:cashExchangeRate | number:'1.2-2' }}</p>
                     </div>
 
                     <div *ngIf="cashChangeBreakdownItems.length > 0">

@@ -1,5 +1,5 @@
 import { CommonModule, HashLocationStrategy, LocationStrategy, NgClass, NgFor, NgIf } from '@angular/common';
-import { ChangeDetectorRef, Component, inject, OnDestroy, OnInit }  from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule }              from '@angular/forms';
 import { MatButtonModule }          from '@angular/material/button';
 import { MatCheckboxModule }        from '@angular/material/checkbox';
@@ -31,6 +31,8 @@ import { SaleCicleChartComponent }      from './cicle-chart-sale/component';
 import { DashbordService }              from './service';
 import {  CashierData, DailySalesSummary, DashboardResponse, ProductTypeData, SalesData, StataticData }    from './interface'; //CashierData
 import { ReportComponent }              from './report/component';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
+import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
 
 @Component({
     selector: 'admin-dashboard',
@@ -61,10 +63,16 @@ import { ReportComponent }              from './report/component';
         MatNativeDateModule,
         SaleCashierBarChartComponent,
         SaleCicleChartComponent,
+        UsdFromKhrPipe,
     ],
     providers: [{ provide: LocationStrategy, useClass: HashLocationStrategy }],
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+    private readonly _exchangeRates = inject(ExchangeRateSettingService);
+
+    /** KHR per USD for converting dashboard amounts (stored values are KHR). */
+    usdRate = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
+
     private _unsubscribeAll: Subject<any> = new Subject<any>();
     private _organizationDataSubject = new BehaviorSubject<StataticData[]>([]);
     organizationData$ = this._organizationDataSubject.asObservable();
@@ -123,6 +131,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         const now = new Date();
         this.today = format(now, 'yyyy-MM-dd');
+
+        this._exchangeRates.fetchAdmin().subscribe({
+            next: () => {
+                this.usdRate = this._exchangeRates.khrPerUsd;
+                this._changeDetectorRef.markForCheck();
+            },
+            error: () => {
+                this.usdRate = this._exchangeRates.khrPerUsd;
+                this._changeDetectorRef.markForCheck();
+            },
+        });
+
         this.initializeForm();
         this.fetchUserData();
         this.startCarousel();

@@ -15,7 +15,7 @@
             <span> {{ data?.name }} </span>
         </p>
         <p class="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
-            {{ data?.unit_price | number }} Riel
+            ${{ data?.unit_price | usdFromKhr:khrPerUsdRate | number:'1.2-2' }}
         </p>
     </div>
 </div>

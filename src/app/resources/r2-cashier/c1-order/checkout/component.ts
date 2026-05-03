@@ -28,6 +28,8 @@ import { env } from 'envs/env';
 import { BarayPaidWatcherService } from '../baray-paid-watcher.service';
 import { CashierCouponOption, OrderCartLine } from '../interface';
 import { OrderService } from '../service';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
+import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
 
 type PaymentMethod = 'cash' | 'qr';
 
@@ -85,6 +87,7 @@ function flatCount(obj: CashDrawer | null, key: keyof Denominations): number {
         MatProgressSpinnerModule,
         NgForOf,
         NgIf,
+        UsdFromKhrPipe,
     ],
 })
 export class OrderCheckoutComponent implements OnInit, OnDestroy {
@@ -111,7 +114,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
     private _barayPendingOrderId: number | null = null;
     private _barayWaitSub: Subscription | null = null;
 
-    cashExchangeRate = 4100;
+    cashExchangeRate = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
     cashReceivedKhrAmount: number | null = null;
     cashReceivedUsdAmount: number | null = null;
     cashNote = '';
@@ -126,6 +129,8 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
     cashChangeResult: MakeChangeResponse['data'] | null = null;
     cashChangeBreakdownItems: { label: string; count: number; currency: 'USD' | 'KHR' }[] = [];
     cashPendingOrder: OrderReceiptData | null = null;
+
+    private readonly _exchangeRateSetting = inject(ExchangeRateSettingService);
 
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
@@ -150,6 +155,17 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
             this._router.navigate(['/cashier/order']);
             return;
         }
+
+        this._exchangeRateSetting.fetchCashier().subscribe({
+            next: () => {
+                this.cashExchangeRate = this._exchangeRateSetting.khrPerUsd;
+                this._changeDetectorRef.markForCheck();
+            },
+            error: () => {
+                this.cashExchangeRate = this._exchangeRateSetting.khrPerUsd;
+                this._changeDetectorRef.markForCheck();
+            },
+        });
 
         this.carts = draft.carts;
         this._syncTotalsFromCartAndCoupon();

@@ -18,6 +18,8 @@ import { MenuService } from '../service';
 import { MenuIngredientService } from '../../p3-ingredient/service';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
+import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
 
 @Component({
     selector: 'dashboard-gm-fast-view-customer',
@@ -36,6 +38,7 @@ import { catchError } from 'rxjs/operators';
         MatCheckboxModule,
         DatePipe,
         DecimalPipe,
+        UsdFromKhrPipe,
     ]
 })
 export class ViewDialogComponent implements OnInit, OnDestroy {
@@ -54,7 +57,21 @@ export class ViewDialogComponent implements OnInit, OnDestroy {
         private _snackbar: SnackbarService,
         private menuService: MenuService,
         private _ingredientService: MenuIngredientService,
+        private _exchange: ExchangeRateSettingService,
     ) { }
+
+    get usdRate(): number {
+        return this._exchange.khrPerUsd;
+    }
+
+    menuUnitUsd(): number {
+        return this._exchange.khrToUsd(this.element?.unit_price);
+    }
+
+    menuRevenueUsd(): number {
+        const khr = (Number(this.element?.total_sale) || 0) * Number(this.element?.unit_price || 0);
+        return this._exchange.khrToUsd(khr);
+    }
 
     ngOnInit(): void {
         this.viewData();
@@ -74,6 +91,7 @@ export class ViewDialogComponent implements OnInit, OnDestroy {
                 catchError(() => of({ data: [] as SaleOrderViewRow[] })),
             ),
             ingredients: ing$,
+            rateBootstrap: this._exchange.fetchAdmin().pipe(catchError(() => of(null))),
         }).subscribe({
             next: ({ sales, ingredients }) => {
                 this.dataSource.data = sales.data;

@@ -3,9 +3,10 @@ import { ChangeDetectorRef, Component, ElementRef, Input, OnChanges, OnInit, Sim
 import { MatIconModule }    from '@angular/material/icon';
 import { env }              from 'envs/env';
 import { SnackbarService }  from 'helper/services/snack-bar/snack-bar.service';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
 import { ApexOptions, NgApexchartsModule } from "ng-apexcharts";
 import { DashbordService }  from '../service';
-import { CashierData, DashboardResponse }      from '../interface';
+import { CashierData }      from '../interface';
 @Component({
     selector: 'sup-bar-chart-sale',
     standalone: true,
@@ -16,8 +17,15 @@ import { CashierData, DashboardResponse }      from '../interface';
 export class SaleCashierBarChartComponent implements OnInit, OnChanges {
     @ViewChild("chartContainer1", { read: ElementRef }) chartContainer!: ElementRef;
     chartOptions: Partial<ApexOptions> = {};
-    @Input() dataSouce: CashierData; // Receive data source from parent
+    @Input() dataSouce: CashierData;
+
+    @Input() usdRate = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
+
     fileUrl = env.FILE_BASE_URL;
+
+    private _lastLabels: string[] = [];
+    private _lastData: number[] = [];
+
     constructor(
         private _cdr: ChangeDetectorRef,
         private _snackBarService: SnackbarService,
@@ -35,17 +43,35 @@ export class SaleCashierBarChartComponent implements OnInit, OnChanges {
     ngOnChanges(changes: SimpleChanges): void {
         if (changes['dataSouce'] && !changes['dataSouce'].firstChange) {
             this.processDataAndUpdateChart();
+            return;
+        }
+        if (changes['usdRate'] && !changes['usdRate'].firstChange && this._lastData.length > 0) {
+            this.updateChart(this._lastLabels, this._lastData);
         }
     }
     // Process data and update the chart
     private processDataAndUpdateChart(): void {
-        const labels = this.dataSouce.data.map((e)=>e.name); // Extract names
-        const data = this.dataSouce.data.map((e)=>e.totalAmount); // Extract total amounts
-        this.updateChart(labels, data); // Update chart with processed data
+        if (!this.dataSouce?.data?.length) {
+            return;
+        }
+        const labels = this.dataSouce.data.map((e) => e.name);
+        const data = this.dataSouce.data.map((e) => e.totalAmount);
+        this.updateChart(labels, data);
     }
 
-    // Update the chart with the processed data
     private updateChart(labels: string[], data: number[]): void {
+        const r = this.usdRate;
+        this._lastLabels = [...labels];
+        this._lastData = [...data];
+        const maxKhr = Math.max(...data, 0) + 10_000;
+        const formatUsdTick = (khrTick: number): string => {
+            const usd = ExchangeRateSettingService.khrToUsd(khrTick, r);
+            if (!Number.isFinite(usd)) {
+                return '0';
+            }
+            return usd >= 1_000 ? `${(usd / 1_000).toFixed(1)}k` : usd.toFixed(usd >= 10 ? 0 : 2);
+        };
+
         this.chartOptions = {
             chart: {
                 height: 270,
@@ -64,7 +90,7 @@ export class SaleCashierBarChartComponent implements OnInit, OnChanges {
                 width: 0
             },
             series: [
-                { name: "Sales volume", data: data, color: '#3D5AFE' }
+                { name: "Sales volume (USD)", data: data, color: '#3D5AFE' }
             ],
             plotOptions: {
                 bar: { columnWidth: "20%" }
@@ -88,11 +114,17 @@ export class SaleCashierBarChartComponent implements OnInit, OnChanges {
             },
             yaxis: {
                 min: 0,
-                max: Math.max(...data) + 10000,
+                max: maxKhr,
                 tickAmount: 5,
                 labels: {
-                    formatter: function (value) { return value.toFixed(0); }
+                    formatter: formatUsdTick,
                 }
+            },
+            tooltip: {
+                y: {
+                    formatter: (khrPoint: number) =>
+                        `$${ExchangeRateSettingService.khrToUsd(khrPoint, r).toFixed(2)}`,
+                },
             },
             grid: {
                 show: true,

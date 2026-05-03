@@ -11,7 +11,7 @@
         </button>
     </div>
 
-    <div class="p-4 md-form-field-appearance-outline w-full">
+    <div class="p-4 md-form-field-appearance-outline w-full" *ngIf="formReady">
         <form [formGroup]="menuForm" class="pt-4 w-full">
             <div class="rounded-none h-fit lg:h-auto">
                 <div class="p-2">
@@ -52,9 +52,9 @@
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Price (KHR)</mat-label>
-                <input matInput type="number" formControlName="unit_price" placeholder="Enter price (KHR)">
-                <mat-error>Please enter price in Riel</mat-error>
+                <mat-label>Price (USD)</mat-label>
+                <input matInput type="number" step="0.01" formControlName="unit_price_usd" placeholder="Enter price (USD)">
+                <mat-error>Please enter a valid USD price</mat-error>
             </mat-form-field>
 
             <div class="w-full border-t border-slate-200 dark:border-slate-600 pt-4 mt-2" *ngIf="menuForm">

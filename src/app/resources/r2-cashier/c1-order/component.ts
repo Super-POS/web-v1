@@ -31,6 +31,8 @@ import { ViewDetailSaleComponent } from 'app/shared/view/component';
 import { CashierCashDrawerService } from '../c3-cash-drawer/service';
 import { MakeChangeResponse } from '../c3-cash-drawer/interface';
 import { PrintableOrder, PrintReceiptService } from 'helper/services/print-receipt/print-receipt.service';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
+import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
 
 // ── Cash-drawer denomination tables (local to avoid cross-feature import) ──
 const CD_USD: { label: string; key: string; value: number }[] = [
@@ -76,7 +78,8 @@ CD_KHR.forEach(d => (CD_ALL_MAP[d.key] = { label: d.label, currency: 'KHR' }));
         NgIf,
         NgForOf,
         MatButtonModule,
-        MatProgressSpinnerModule
+        MatProgressSpinnerModule,
+        UsdFromKhrPipe,
     ]
 })
 
@@ -107,7 +110,7 @@ export class OrderComponent implements OnInit, OnDestroy {
 
     /** Cash payment mode */
     cashPaymentMode: boolean = false;
-    cashExchangeRate: number = 4100;
+    cashExchangeRate: number = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
     cashReceivedDenoms: Record<string, number> = {};
     cashNote: string = '';
 
@@ -139,6 +142,8 @@ export class OrderComponent implements OnInit, OnDestroy {
     cashChangeBreakdownItems: { label: string; count: number; currency: 'USD' | 'KHR' }[] = [];
     cashPendingOrder: OrderReceiptData | null = null;
     isCalculatingChange: boolean = false;
+
+    private readonly _exchangeRateSetting = inject(ExchangeRateSettingService);
 
     private _initCashDenoms(): Record<string, number> {
         const obj: Record<string, number> = {};
@@ -198,6 +203,17 @@ export class OrderComponent implements OnInit, OnDestroy {
 
     // ===> onInit method to initialize the component
     ngOnInit(): void {
+
+        this._exchangeRateSetting.fetchCashier().subscribe({
+            next: () => {
+                this.cashExchangeRate = this._exchangeRateSetting.khrPerUsd;
+                this._changeDetectorRef.markForCheck();
+            },
+            error: () => {
+                this.cashExchangeRate = this._exchangeRateSetting.khrPerUsd;
+                this._changeDetectorRef.markForCheck();
+            },
+        });
 
         const checkoutDraft = this._service.getCheckoutDraft();
         if (checkoutDraft) {
@@ -447,7 +463,11 @@ export class OrderComponent implements OnInit, OnDestroy {
         if (hasModifiers) {
             this.matDialog
                 .open(ModifierPickDialogComponent, {
-                    data: { ...incomingItem, _qty: addQty } as MenuItem & { _qty: number },
+                    data: {
+                        ...incomingItem,
+                        _qty: addQty,
+                        _khrPerUsd: this.cashExchangeRate,
+                    } as MenuItem & { _qty: number; _khrPerUsd: number },
                     width: '100%',
                     maxWidth: '520px',
                     autoFocus: false,
@@ -703,6 +723,7 @@ export class OrderComponent implements OnInit, OnDestroy {
                         const printOrder: PrintableOrder = {
                             ...order,
                             payment_method: 'cash',
+                            receipt_exchange_rate: savedExchangeRate,
                             receipt_received_khr: res.data.received_khr,
                             receipt_change_khr: res.data.change_khr,
                             receipt_change_summary: res.data.change_summary,

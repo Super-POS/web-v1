@@ -1,5 +1,5 @@
 // ================================================================>> Core Library
-import { DatePipe, DecimalPipe, NgClass, NgIf } from '@angular/common';
+import { DatePipe, DecimalPipe, NgIf } from '@angular/common';
 import { HttpErrorResponse }    from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule }          from '@angular/forms';
@@ -30,6 +30,8 @@ import GlobalConstants from 'helper/shared/constants';
 import { FilterSaleComponent } from './filter/component';
 import { SaleService } from './service';
 import { Data, List } from './interface';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
+import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
 
 // Component decorator specifying metadata for the component
 @Component({
@@ -39,7 +41,6 @@ import { Data, List } from './interface';
     styleUrl: './style.scss',
     imports: [
         MatTableModule,
-        NgClass,
         NgIf,
         DatePipe,
         DecimalPipe,
@@ -51,10 +52,14 @@ import { Data, List } from './interface';
         MatButtonModule,
         MatPaginatorModule,
         MatMenuModule,
-        MatTooltipModule
+        MatTooltipModule,
+        UsdFromKhrPipe,
     ]
 })
 export class SaleComponent implements OnInit {
+
+    private _exchangeRates = inject(ExchangeRateSettingService);
+    usdRate = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
 
     constructor(
         private saleService: SaleService,
@@ -79,6 +84,16 @@ export class SaleComponent implements OnInit {
 
     // ngOnInit, called after the component is initialized
     ngOnInit(): void {
+        this._exchangeRates.fetchCashier().subscribe({
+            next: () => {
+                this.usdRate = this._exchangeRates.khrPerUsd;
+                this.cdr.markForCheck();
+            },
+            error: () => {
+                this.usdRate = this._exchangeRates.khrPerUsd;
+                this.cdr.markForCheck();
+            },
+        });
         this.getData(this.page, this.limit);
         this.initSetup();
     }

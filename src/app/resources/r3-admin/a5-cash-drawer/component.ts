@@ -1,6 +1,6 @@
 import { CommonModule, DatePipe, DecimalPipe, NgFor, NgIf } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,6 +15,8 @@ import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
 import { CashDrawer, Denominations, TransactionLog } from './interface';
 import { AdminCashDrawerService } from './service';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
+import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
 
 interface DenomRow {
     label: string;
@@ -72,9 +74,13 @@ function flatCount(obj: any, key: string): number {
         MatPaginatorModule,
         MatProgressSpinnerModule,
         MatTooltipModule,
+        UsdFromKhrPipe,
     ],
 })
 export class AdminCashDrawerComponent implements OnInit {
+
+    private readonly _exchangeRates = inject(ExchangeRateSettingService);
+    exchangeRate = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
 
     constructor(
         private service: AdminCashDrawerService,
@@ -119,6 +125,16 @@ export class AdminCashDrawerComponent implements OnInit {
     logsTotal = 0;
 
     ngOnInit(): void {
+        this._exchangeRates.fetchAdmin().subscribe({
+            next: () => {
+                this.exchangeRate = this._exchangeRates.khrPerUsd;
+                this.cdr.markForCheck();
+            },
+            error: () => {
+                this.exchangeRate = this._exchangeRates.khrPerUsd;
+                this.cdr.markForCheck();
+            },
+        });
         this.loadCurrent();
         this.loadLogs();
     }

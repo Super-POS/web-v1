@@ -1,5 +1,5 @@
 import { DatePipe, DecimalPipe, NgClass, NgIf } from "@angular/common";
-import { ChangeDetectorRef, Component, Inject, OnInit } from "@angular/core";
+import { ChangeDetectorRef, Component, Inject, OnInit, inject } from "@angular/core";
 import { MAT_DIALOG_DATA, MatDialog, MatDialogConfig, MatDialogRef } from "@angular/material/dialog";
 import { SnackbarService } from "helper/services/snack-bar/snack-bar.service";
 import { UserService } from "../service";
@@ -17,6 +17,8 @@ import { env } from 'envs/env';
 import { User } from "../interface";
 import { UpdateUserComponent } from "../u5-update/component";
 import { Data } from "./interface";
+import { ExchangeRateSettingService } from "helper/services/exchange-rate-setting/exchange-rate-setting.service";
+import { UsdFromKhrPipe } from "helper/pipes/usd-from-khr.pipe";
 @Component({
     selector: 'shared-view-user',
     standalone: true,
@@ -37,6 +39,7 @@ import { Data } from "./interface";
         MatMenuModule,
         MatTabsModule,
         MatTableModule,
+        UsdFromKhrPipe,
     ]
 })
 export class ViewUserComponent implements OnInit {
@@ -44,6 +47,10 @@ export class ViewUserComponent implements OnInit {
     fileUrl = env.FILE_BASE_URL;
     isLoading: boolean = false
     element: any
+
+    private readonly _exchangeRates = inject(ExchangeRateSettingService);
+    usdRate = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
+
     displayedColumns: string[] = ['no', 'receipt', 'price', 'ordered_at', 'ordered_at_time', 'seller'];
     dataSource: MatTableDataSource<Data> = new MatTableDataSource<Data>([]);
     constructor(
@@ -56,7 +63,17 @@ export class ViewUserComponent implements OnInit {
     ) { }
 
     ngOnInit(): void {
-        this.viewData()
+        this._exchangeRates.fetchAdmin().subscribe({
+            next: () => {
+                this.usdRate = this._exchangeRates.khrPerUsd;
+                this.cdr.markForCheck();
+            },
+            error: () => {
+                this.usdRate = this._exchangeRates.khrPerUsd;
+                this.cdr.markForCheck();
+            },
+        });
+        this.viewData();
     }
 
     viewData() {
@@ -65,8 +82,10 @@ export class ViewUserComponent implements OnInit {
             this.element = res.data;
             this.dataSource.data = res.sale;
             this.isLoading = false;
+            this.cdr.markForCheck();
         }, (err) => {
             this.isLoading = false;
+            this.cdr.markForCheck();
             this._snackbar.openSnackBar(err.error.message, 'Dismiss');
         });
     }

@@ -1,6 +1,6 @@
 import { DatePipe, DecimalPipe, NgIf } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
@@ -14,13 +14,15 @@ import GlobalConstants from 'helper/shared/constants';
 
 import { IncomingWebsiteOrder } from './interface';
 import { IncomingWebOrdersService } from './service';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
+import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
 
 @Component({
     selector: 'cashier-incoming-web-orders',
     standalone: true,
     templateUrl: './template.html',
     styleUrl: './style.scss',
-    imports: [NgIf, DatePipe, DecimalPipe, MatIconModule, MatButtonModule, MatMenuModule, MatTableModule, MatPaginatorModule],
+    imports: [NgIf, DatePipe, DecimalPipe, MatIconModule, MatButtonModule, MatMenuModule, MatTableModule, MatPaginatorModule, UsdFromKhrPipe],
 })
 export class IncomingWebOrdersComponent implements OnInit, OnDestroy {
     @ViewChild(MatPaginator)
@@ -34,6 +36,10 @@ export class IncomingWebOrdersComponent implements OnInit, OnDestroy {
     private readonly _snackBarService = inject(SnackbarService);
     private readonly _confirmation = inject(HelperConfirmationService);
     private readonly _printReceipt = inject(PrintReceiptService);
+    private readonly _exchangeRates = inject(ExchangeRateSettingService);
+    private readonly _cdr = inject(ChangeDetectorRef);
+
+    usdRate = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
 
     displayedColumns: string[] = ['no', 'order_no', 'receipt', 'customer', 'total', 'status', 'ordered_at', 'items', 'action'];
     dataSource = new MatTableDataSource<IncomingWebsiteOrder>([]);
@@ -44,6 +50,16 @@ export class IncomingWebOrdersComponent implements OnInit, OnDestroy {
     private _pollTimer: ReturnType<typeof setInterval> | null = null;
 
     ngOnInit(): void {
+        this._exchangeRates.fetchCashier().subscribe({
+            next: () => {
+                this.usdRate = this._exchangeRates.khrPerUsd;
+                this._cdr.markForCheck();
+            },
+            error: () => {
+                this.usdRate = this._exchangeRates.khrPerUsd;
+                this._cdr.markForCheck();
+            },
+        });
         this.refresh();
         this._pollTimer = setInterval(() => this.refreshQuiet(), 30_000);
     }
@@ -241,6 +257,7 @@ export class IncomingWebOrdersComponent implements OnInit, OnDestroy {
         return {
             receipt_number: receiptNum,
             order_number: row.order_number ?? null,
+            receipt_exchange_rate: this.usdRate,
             total_price: Number(row.total_price ?? 0),
             coupon_code: row.coupon_code ?? null,
             discount_percent:

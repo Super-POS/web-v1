@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 // ================================================================>> Custom Libraries (Application-specific)
 import { env } from 'envs/env';
 import { MenuItem } from '../interface';
+import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
 
 
 @Component({
@@ -19,12 +20,16 @@ import { MenuItem } from '../interface';
     imports: [
 
         MatIconModule,
-        DecimalPipe
+        DecimalPipe,
+        UsdFromKhrPipe,
     ],
 })
 export class MenuItemComponent {
 
     @Input() data: MenuItem;
+    /** KHR charged per USD; drives on-card price label. */
+    @Input() khrPerUsdRate: number | null | undefined;
+
     @Output() result = new EventEmitter<MenuItem>;
     public fileUrl: string = env.FILE_BASE_URL;
 

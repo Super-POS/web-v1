@@ -11,6 +11,8 @@ import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
 import { CashDrawer, ChangeBreakdown, Denominations, MakeChangeResponse } from './interface';
 import { CashierCashDrawerService } from './service';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
+import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
 
 interface DenomRow {
     label: string;
@@ -76,6 +78,7 @@ function flatCount(obj: any, key: string): number {
         MatButtonModule,
         MatProgressSpinnerModule,
         MatTooltipModule,
+        UsdFromKhrPipe,
     ],
 })
 export class CashierCashDrawerComponent implements OnInit {
@@ -84,6 +87,7 @@ export class CashierCashDrawerComponent implements OnInit {
         private service: CashierCashDrawerService,
         private snackBar: SnackbarService,
         private cdr: ChangeDetectorRef,
+        private _exchangeRates: ExchangeRateSettingService,
     ) {}
 
     readonly usdDenoms = USD_DENOMS;
@@ -97,7 +101,7 @@ export class CashierCashDrawerComponent implements OnInit {
 
     // ── Make Change tab ───────────────────────────────────────────────────────
     orderId: number | null = null;
-    exchangeRate: number = 4100;
+    exchangeRate: number = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
     receivedDenoms: Record<string, number> = this.initReceivedDenoms();
     changeNote = '';
     submittingChange = false;
@@ -111,6 +115,16 @@ export class CashierCashDrawerComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        this._exchangeRates.fetchCashier().subscribe({
+            next: () => {
+                this.exchangeRate = this._exchangeRates.khrPerUsd;
+                this.cdr.detectChanges();
+            },
+            error: () => {
+                this.exchangeRate = this._exchangeRates.khrPerUsd;
+                this.cdr.detectChanges();
+            },
+        });
         this.loadCurrent();
     }
 
@@ -213,7 +227,7 @@ export class CashierCashDrawerComponent implements OnInit {
 
     resetChange(): void {
         this.orderId = null;
-        this.exchangeRate = 4100;
+        this.exchangeRate = this._exchangeRates.khrPerUsd;
         [...USD_DENOMS, ...KHR_DENOMS].forEach(d => { this.receivedDenoms[d.key] = 0; });
         this.changeNote = '';
         this.changeResult = null;

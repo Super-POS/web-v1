@@ -24,6 +24,7 @@ import { MenuIngredientService } from '../../p3-ingredient/service';
 import { IngredientItem } from '../../p3-ingredient/interface';
 import { ModifierAdminService } from '../../p6-modifier/service';
 import { ModifierGroupRow } from '../../p6-modifier/interface';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
 
 @Component({
     selector: 'app-menu-create-page',
@@ -58,8 +59,11 @@ export class MenuCreatePageComponent implements OnInit {
     private _ingredientService = inject(MenuIngredientService);
     private _modifierService = inject(ModifierAdminService);
     private router = inject(Router);
+    private _exchange = inject(ExchangeRateSettingService);
 
-    menuForm: UntypedFormGroup;
+    formReady = false;
+
+    menuForm!: UntypedFormGroup;
     saving = false;
     src = 'icons/image.jpg';
     setup: any[] = [];
@@ -69,21 +73,29 @@ export class MenuCreatePageComponent implements OnInit {
     fileUrl: string = env.FILE_BASE_URL;
 
     ngOnInit(): void {
+        this._ingredientService.getData().subscribe({
+            next: (res) => (this.ingredients = res.data ?? []),
+        });
+        this._exchange.fetchAdmin().subscribe({
+            next: () => this.bootstrapForm(),
+            error: () => this.bootstrapForm(),
+        });
+    }
+
+    private bootstrapForm(): void {
         this.menuForm = this.formBuilder.group({
             code: [null, [Validators.required]],
             name: [null, [Validators.required]],
             type_id: [null, [Validators.required]],
             image: [null, [Validators.required]],
-            unit_price: [null, [Validators.required]],
+            unit_price_usd: [null, [Validators.required, Validators.min(0.01)]],
             recipes: this.formBuilder.array([]) as FormArray,
             modifier_items: [[]],
         });
 
         this.loadSetup();
-        this._ingredientService.getData().subscribe({
-            next: (res) => (this.ingredients = res.data ?? []),
-        });
         this._loadModifierData();
+        this.formReady = true;
     }
 
     get recipeRows(): FormArray {
@@ -136,7 +148,7 @@ export class MenuCreatePageComponent implements OnInit {
             name: String(raw.name ?? '').trim(),
             type_id: Number(raw.type_id),
             image: raw.image,
-            unit_price: Number(raw.unit_price),
+            unit_price: this._exchange.usdToKhr(Number(raw.unit_price_usd)),
             recipes,
         };
     }
@@ -228,7 +240,7 @@ export class MenuCreatePageComponent implements OnInit {
     }
 
     submit(): void {
-        if (this.menuForm.invalid || this.saving) return;
+        if (!this.formReady || this.menuForm.invalid || this.saving) return;
         const body = this._buildPayload();
         if (!body) return;
 

@@ -1,5 +1,5 @@
 import { CommonModule }         from '@angular/common';
-import { ChangeDetectorRef, Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject, OnDestroy, OnInit, inject } from '@angular/core';
 import { MatButtonModule }      from '@angular/material/button';
 import { MatCheckboxModule }    from '@angular/material/checkbox';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
@@ -13,6 +13,8 @@ import { env }                  from 'envs/env';
 import { SnackbarService }      from 'helper/services/snack-bar/snack-bar.service';
 import { Subject }              from 'rxjs';
 import { PrintReceiptService }  from 'helper/services/print-receipt/print-receipt.service';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
+import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
 @Component({
     selector: 'dashboard-gm-fast-view-customer',
     templateUrl: './template.html',
@@ -27,10 +29,16 @@ import { PrintReceiptService }  from 'helper/services/print-receipt/print-receip
         MatTabsModule,
         MatMenuModule,
         MatCheckboxModule,
+        UsdFromKhrPipe,
     ]
 })
 export class ViewDetailSaleComponent implements OnInit, OnDestroy {
     private _unsubscribeAll: Subject<any> = new Subject<any>();
+    private readonly _exchangeRates = inject(ExchangeRateSettingService);
+
+    /** KHR per USD for display conversion (stored line amounts are KHR). */
+    usdRate = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
+
     // Component properties
     displayedColumns: string[] = ['number', 'name', 'unit_price', 'qty', 'total'];
     dataSource: MatTableDataSource<any> = new MatTableDataSource<any>([]);
@@ -49,6 +57,17 @@ export class ViewDetailSaleComponent implements OnInit, OnDestroy {
 
     // Method to initialize the component
     ngOnInit(): void {
+        this._exchangeRates.fetchCashier().subscribe({
+            next: () => {
+                this.usdRate = this._exchangeRates.khrPerUsd;
+                this.cdr.markForCheck();
+            },
+            error: () => {
+                this.usdRate = this._exchangeRates.khrPerUsd;
+                this.cdr.markForCheck();
+            },
+        });
+
         const raw = this.row?.orderDetails || this.row?.details;
         if (this.row && raw?.length) {
             this.dataSource.data = raw.map((d: any) => ({

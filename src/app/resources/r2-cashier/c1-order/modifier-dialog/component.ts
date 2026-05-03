@@ -8,6 +8,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatRadioModule } from '@angular/material/radio';
 import { MenuItem, NormalizedModifierGroup } from '../interface';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
+import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
 
 export interface ModifierPickResult {
     modifier_option_ids: number[];
@@ -28,11 +30,17 @@ export interface ModifierPickResult {
         MatInputModule,
         MatRadioModule,
         DecimalPipe,
+        UsdFromKhrPipe,
     ],
 })
 export class ModifierPickDialogComponent {
     private _dialogRef = inject(MatDialogRef<ModifierPickDialogComponent, ModifierPickResult | undefined>);
-    data = inject<MenuItem & { _qty: number }>(MAT_DIALOG_DATA);
+    data = inject<MenuItem & { _qty: number; _khrPerUsd?: number }>(MAT_DIALOG_DATA);
+
+    get khrPerUsdRate(): number {
+        const v = Number(this.data?._khrPerUsd);
+        return Number.isFinite(v) && v > 0 ? v : ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
+    }
 
     /** group id -> option id */
     selected: Record<number, number> = {};

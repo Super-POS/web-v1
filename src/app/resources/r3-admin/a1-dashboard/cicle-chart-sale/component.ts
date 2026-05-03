@@ -2,9 +2,10 @@ import { NgIf }             from '@angular/common';
 import { ChangeDetectorRef, Component, ElementRef, Input, OnChanges, OnInit, SimpleChanges, ViewChild } from '@angular/core';
 import { MatIconModule }    from '@angular/material/icon';
 import { SnackbarService }  from 'helper/services/snack-bar/snack-bar.service';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
 import { ApexOptions, NgApexchartsModule } from 'ng-apexcharts';
 import { DashbordService }  from '../service';
-import {CashierData, DashboardResponse }      from '../interface';
+import { CashierData }      from '../interface';
 
 @Component({
     selector: 'cicle-chart-sale',
@@ -16,7 +17,9 @@ import {CashierData, DashboardResponse }      from '../interface';
 export class SaleCicleChartComponent implements OnInit, OnChanges {
     @ViewChild("chartContainer2", { read: ElementRef, static: false }) chartContainer!: ElementRef<HTMLDivElement>;
     chartOptions: Partial<ApexOptions> = {};
-    @Input() dataSouce: CashierData; // Receive data source from parent
+    @Input() dataSouce: CashierData;
+
+    @Input() usdRate = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
 
     constructor(
         private _cdr: ChangeDetectorRef,
@@ -36,28 +39,37 @@ export class SaleCicleChartComponent implements OnInit, OnChanges {
     ngOnChanges(changes: SimpleChanges): void {
         if (changes['dataSouce'] && !changes['dataSouce'].firstChange) {
             this.processDataAndUpdateChart();
+            return;
+        }
+        if (changes['usdRate'] && !changes['usdRate'].firstChange && this.dataSouce?.data?.length) {
+            this.processDataAndUpdateChart();
         }
     }
 
 
-      // Process data and update the chart
       private processDataAndUpdateChart(): void {
-        const labels = this.dataSouce.data.map((e)=>e.name)// Extract names
-        const data = this.dataSouce.data.map((e)=>e.totalAmount); // Extract total amounts
-        this._updateChart(labels, data); // Update chart with processed data
+        if (!this.dataSouce?.data?.length) {
+            return;
+        }
+        const labels = this.dataSouce.data.map((e) => e.name);
+        const data = this.dataSouce.data.map((e) => e.totalAmount);
+        this._updateChart(labels, data);
     }
 
-    // Update the chart with the processed data
     private _updateChart(labels: string[], data: number[]): void {
-        const totalSum = data.reduce((a, b) => a + b, 0);
+        const r = this.usdRate;
+        const totalKhr = data.reduce((a, b) => a + b, 0);
+        const totalUsdStr = `$${ExchangeRateSettingService.khrToUsd(totalKhr, r).toFixed(2)}`;
 
         this.chartOptions = {
             chart: {
                 type: 'donut',
                 height: 400,
             },
-            series: data, // Use the data from the API
-            labels: labels.map((label, index) => `${label} (${data[index]})`), // Format the labels with values
+            series: data,
+            labels: labels.map((label, index) =>
+                `${label} ($${ExchangeRateSettingService.khrToUsd(data[index], r).toFixed(2)})`,
+            ),
             legend: {
                 position: 'bottom',
                 horizontalAlign: 'center',
@@ -98,7 +110,7 @@ export class SaleCicleChartComponent implements OnInit, OnChanges {
                                 fontSize: '18px',
                                 fontFamily: 'Arial, sans-serif',
                                 color: '#373d3f',
-                                formatter: () => `${totalSum}` // Display total sum of data
+                                formatter: () => totalUsdStr
                             }
                         }
                     }
@@ -107,14 +119,14 @@ export class SaleCicleChartComponent implements OnInit, OnChanges {
             tooltip: {
                 enabled: true,
                 y: {
-                    formatter: (val) => `${val}`, // Display raw value only
+                    formatter: (val: number) =>
+                        `$${ExchangeRateSettingService.khrToUsd(val, r).toFixed(2)}`,
                 },
             },
             dataLabels: {
-                enabled: true, // Enable data labels
-                formatter: function (val, opts) {
-                    return opts.w.config.series[opts.seriesIndex]; // Show only raw values
-                },
+                enabled: true,
+                formatter: (_val: number, opts: any) =>
+                    `$${ExchangeRateSettingService.khrToUsd(opts.w.config.series[opts.seriesIndex], r).toFixed(2)}`,
                 style: {
                     fontSize: '12px',
                     colors: ['#000']

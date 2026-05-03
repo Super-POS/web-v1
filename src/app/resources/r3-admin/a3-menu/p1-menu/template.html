@@ -15,6 +15,15 @@
             </div>
         </div>
 
+        <div class="flex flex-wrap items-center gap-2 border border-slate-200 dark:border-gray-600 rounded-[0.65rem] px-2 py-1">
+            <span class="text-xs text-gray-600 dark:text-gray-300 whitespace-nowrap">KHR / 1 USD</span>
+            <input type="number" [(ngModel)]="khrPerUsdInput"
+                class="w-28 h-9 px-2 rounded border border-slate-300 dark:border-gray-600 dark:bg-gray-800 text-sm" />
+            <button mat-stroked-button type="button" color="primary" (click)="saveExchangeRate()" [disabled]="savingExchangeRate">
+                Save rate
+            </button>
+        </div>
+
         <div class="flex items-center gap-2">
             <!-- Search & Filter -->
             <div
@@ -178,9 +187,9 @@
                     </ng-container>
 
                     <ng-container matColumnDef="price">
-                        <th mat-header-cell *matHeaderCellDef class="min-w-[100px] text-right">Price (KHR)</th>
+                        <th mat-header-cell *matHeaderCellDef class="min-w-[120px] text-right">Price (USD)</th>
                         <td mat-cell *matCellDef="let element" class="text-right">
-                            <span class="text-gray-500">{{element.unit_price | number}}</span>
+                            <span class="text-gray-500">${{ unitPriceUsd(element) | number:'1.2-2' }}</span>
                         </td>
                     </ng-container>
 
@@ -192,9 +201,9 @@
                     </ng-container>
 
                     <ng-container matColumnDef="total_sale_price">
-                        <th mat-header-cell *matHeaderCellDef class="min-w-[130px] text-right ">Total</th>
+                        <th mat-header-cell *matHeaderCellDef class="min-w-[130px] text-right ">Revenue (USD)</th>
                         <td mat-cell *matCellDef="let element" class="text-right">
-                            <span class="text-gray-500">{{element.total_sale * element.unit_price | number}}</span>
+                            <span class="text-gray-500">${{ totalSaleRevenueUsd(element) | number:'1.2-2' }}</span>
                         </td>
                     </ng-container>
 

@@ -1,6 +1,6 @@
 // ================================================================================>> Core Library
 import { CommonModule }             from '@angular/common';
-import { Component, OnInit }        from '@angular/core';
+import { Component, inject, OnInit }        from '@angular/core';
 import { FormsModule }              from '@angular/forms';
 import { Router }                   from '@angular/router';
 
@@ -23,6 +23,8 @@ import { env } from 'envs/env';
 import { helperAnimations }             from 'helper/animations';
 import { HelperConfirmationService }    from 'helper/services/confirmation';
 import { SnackbarService }              from 'helper/services/snack-bar/snack-bar.service';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
+import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
 
 // ===>> Shared
 import { DialogConfigService }          from 'app/shared/dialog-config.service';
@@ -54,9 +56,13 @@ import { HttpErrorResponse } from '@angular/common/http';
         MatIconModule,
         MatMenuModule,
         MatBadgeModule,
+        UsdFromKhrPipe,
     ],
 })
 export class SaleComponent implements OnInit {
+
+    private readonly _exchangeRates = inject(ExchangeRateSettingService);
+    usdRate = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
 
     // ===>> Data
     public data             : Data[]  = [];
@@ -130,6 +136,14 @@ export class SaleComponent implements OnInit {
 
     ngOnInit(): void {
 
+        this._exchangeRates.fetchAdmin().subscribe({
+            next: () => {
+                this.usdRate = this._exchangeRates.khrPerUsd;
+            },
+            error: () => {
+                this.usdRate = this._exchangeRates.khrPerUsd;
+            },
+        });
         this.getSetupData();
         this.getData();
 

@@ -26,6 +26,7 @@ import { DialogConfigService }                                  from 'app/shared
 import { ErrorHandleService }                                   from 'app/shared/error-handle.service';
 import { MatBadgeModule }                                       from '@angular/material/badge';
 import { MenuService } from './service';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
 import { Data, List } from './interface';
 import { FilterDialogComponent } from './filter-dialog/component';
 import { ViewDialogComponent } from './view-dialog/component';
@@ -59,6 +60,8 @@ export class MenuListComponent implements OnInit {
 
     // Injecting necessary services
     private _service = inject(MenuService);
+
+    private _exchange = inject(ExchangeRateSettingService);
 
     private snackBarService = inject(SnackbarService);
     private router = inject(Router);
@@ -104,11 +107,14 @@ export class MenuListComponent implements OnInit {
 
     public shortedItems: any[] = [
         { name: 'Menu name' , value: 'name' },
-        { name: 'Price (KHR)'   , value: 'unit_price' },
+        { name: 'Unit price', value: 'unit_price' },
         { name: 'Total' , value: 'total_sale' },
     ];
 
-    public selectedShortedItem     :  any             = this.shortedItems[0];
+    public selectedShortedItem: any = this.shortedItems[0];
+
+    public khrPerUsdInput = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
+    public savingExchangeRate = false;
     public shortedOrder            :  string          = 'desc';
 
 
@@ -128,8 +134,52 @@ export class MenuListComponent implements OnInit {
     // Initialization logic
 
     ngOnInit(): void {
-        this.getSetupData();
-        this.getData();
+        this._exchange.fetchAdmin().subscribe({
+            next: () => {
+                this.khrPerUsdInput = this._exchange.khrPerUsd;
+                this.getSetupData();
+                this.getData();
+            },
+            error: () => {
+                this.khrPerUsdInput = this._exchange.khrPerUsd;
+                this.getSetupData();
+                this.getData();
+            },
+        });
+    }
+
+    unitPriceUsd(row: Data): number {
+        return this._exchange.khrToUsd(row.unit_price);
+    }
+
+    totalSaleRevenueUsd(row: Data): number {
+        return this._exchange.khrToUsd((Number(row.total_sale) || 0) * Number(row.unit_price));
+    }
+
+    saveExchangeRate(): void {
+        const v = Number(this.khrPerUsdInput);
+        if (!Number.isFinite(v) || v < 1000 || v > 100000) {
+            this.snackBarService.openSnackBar(
+                'Exchange rate must be between 1,000 and 100,000 KHR per USD.',
+                GlobalConstants.error,
+            );
+            return;
+        }
+        if (this.savingExchangeRate) return;
+        this.savingExchangeRate = true;
+        this._exchange.patchAdmin(v).subscribe({
+            next: () => {
+                this.savingExchangeRate = false;
+                this.khrPerUsdInput = this._exchange.khrPerUsd;
+                this.snackBarService.openSnackBar('Exchange rate saved.', GlobalConstants.success);
+                this.getData();
+                this.cdr.detectChanges();
+            },
+            error: (err: HttpErrorResponse) => {
+                this.savingExchangeRate = false;
+                this.snackBarService.openSnackBar(err?.error?.message ?? GlobalConstants.genericError, GlobalConstants.error);
+            },
+        });
     }
 
     // ===>> Get Setup Data for Filtering

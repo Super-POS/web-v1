@@ -35,6 +35,8 @@ import { MenuIngredientService } from '../../p3-ingredient/service';
 import { IngredientItem } from '../../p3-ingredient/interface';
 import { ModifierAdminService } from '../../p6-modifier/service';
 import { ModifierGroupRow } from '../../p6-modifier/interface';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
+
 @Component({
     selector: 'app-menu-form-dialog',
     templateUrl: './template.html',
@@ -92,6 +94,7 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
         private menuService: MenuService,
         private _ingredientService: MenuIngredientService,
         private _modifierService: ModifierAdminService,
+        private _exchange: ExchangeRateSettingService,
     ) { }
 
     // ngOnInit method
@@ -102,6 +105,16 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
         });
         this.ngBuilderForm();
         this._loadModifierData();
+        this._exchange.fetchAdmin().subscribe({
+            next: () => {
+                if (this.data?.menu?.unit_price != null && this.menuForm) {
+                    this.menuForm.patchValue({
+                        unit_price_usd: this._exchange.khrToUsd(this.data.menu.unit_price),
+                    });
+                }
+            },
+            error: () => {},
+        });
     }
 
     get recipeRows(): FormArray {
@@ -167,7 +180,7 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
             code: String(raw.code ?? '').trim(),
             name: String(raw.name ?? '').trim(),
             type_id: Number(raw.type_id),
-            unit_price: Number(raw.unit_price),
+            unit_price: this._exchange.usdToKhr(Number(raw.unit_price_usd)),
             recipes,
         };
 
@@ -300,12 +313,22 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
                 ? existing.map((r) => this._recipeGroup(r))
                 : [],
         ) as FormArray;
+        const usdGuess =
+            this.data?.menu?.unit_price != null
+                ? ExchangeRateSettingService.khrToUsd(
+                      this.data.menu.unit_price,
+                      ExchangeRateSettingService.FALLBACK_KHR_PER_USD,
+                  )
+                : null;
         this.menuForm = this.formBuilder.group({
             code: [this.data?.menu?.code || null, [Validators.required]],
             name: [this.data?.menu?.name || null, [Validators.required]],
             type_id: [this.data?.menu?.type?.id || null, [Validators.required]],
             image: [null, this.data.menu == null ? Validators.required : []],
-            unit_price: [this.data?.menu?.unit_price || null, [Validators.required]],
+            unit_price_usd: [
+                usdGuess,
+                [Validators.required, Validators.min(0.01)],
+            ],
             recipes: recipeArray,
             modifier_items: [[]],
         });

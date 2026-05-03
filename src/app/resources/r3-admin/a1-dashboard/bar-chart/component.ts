@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { MatIconModule }    from '@angular/material/icon';
 import { SnackbarService }  from 'helper/services/snack-bar/snack-bar.service';
+import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
 import { ApexOptions, NgApexchartsModule } from "ng-apexcharts";
 import { DashbordService }  from '../service';
 import { DashboardResponse } from '../interface';
@@ -19,10 +20,17 @@ import { DashboardResponse } from '../interface';
 })
 export class BarChartComponent implements OnInit, OnChanges, AfterViewInit {
     @Input() selectedDate: { thisWeek?: string; thisMonth?: string; threeMonthAgo?: string; sixMonthAgo?: string } | null = null;
+
+    /** KHR per USD; API series points are stored as KHR. */
+    @Input() usdRate = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
+
     @ViewChild("chartContainer", { read: ElementRef }) chartContainer!: ElementRef;
 
     chartOptions: Partial<ApexOptions> = {};
     public data: DashboardResponse | null = null;
+
+    private _lastLabels: string[] = [];
+    private _lastData: number[] = [];
 
     private dayMapping: { [key: string]: string } = {
         'Monday': 'Monday',
@@ -49,6 +57,10 @@ export class BarChartComponent implements OnInit, OnChanges, AfterViewInit {
     ngOnChanges(changes: SimpleChanges): void {
         if (changes['selectedDate'] && this.selectedDate) {
             this.fetchData(this.selectedDate);
+            return;
+        }
+        if (changes['usdRate'] && !changes['usdRate'].firstChange && this._lastData.length > 0) {
+            this.updateChart(this._lastLabels, this._lastData);
         }
     }
 
@@ -85,9 +97,18 @@ export class BarChartComponent implements OnInit, OnChanges, AfterViewInit {
     }
     
 
-    // Update the chart with new data
     private updateChart(labels: string[], data: number[]): void {
-        const maxValue = Math.max(...data) + 10000;
+        const r = this.usdRate;
+        this._lastLabels = [...labels];
+        this._lastData = [...data];
+        const maxValue = Math.max(...data, 0) + 10_000;
+        const formatUsdTick = (khrTick: number): string => {
+            const usd = ExchangeRateSettingService.khrToUsd(khrTick, r);
+            if (!Number.isFinite(usd)) {
+                return '0';
+            }
+            return usd >= 1_000 ? `${(usd / 1_000).toFixed(1)}k` : usd.toFixed(usd >= 10 ? 0 : 2);
+        };
 
         this.chartOptions = {
             chart: {
@@ -98,7 +119,7 @@ export class BarChartComponent implements OnInit, OnChanges, AfterViewInit {
                 toolbar: { show: false },
             },
             stroke: { curve: 'smooth', width: 0 },
-            series: [{ name: "Sales volume", data, color: '#3D5AFE' }],
+            series: [{ name: "Sales volume (USD)", data, color: '#3D5AFE' }],
             plotOptions: { bar: { columnWidth: "50%" } },
             dataLabels: { enabled: false },
             legend: {
@@ -115,9 +136,14 @@ export class BarChartComponent implements OnInit, OnChanges, AfterViewInit {
                 max: maxValue,
                 tickAmount: 5,
                 labels: {
-                    formatter: (value: number) =>
-                        value >= 1_000 ? (value / 1_000).toFixed(1) + 'k' : value.toString(),
+                    formatter: formatUsdTick,
                 }
+            },
+            tooltip: {
+                y: {
+                    formatter: (khrPoint: number) =>
+                        `$${ExchangeRateSettingService.khrToUsd(khrPoint, r).toFixed(2)}`,
+                },
             },
             grid: {
                 show: true,

@@ -55,13 +55,13 @@
                         <div class="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-900 dark:border-blue-800 p-5 shadow-sm">
                             <div class="flex items-center justify-between mb-4">
                                 <div>
-                                    <p class="text-sm text-slate-500 dark:text-slate-400">Total KHR</p>
-                                    <p class="text-xs text-slate-400 dark:text-slate-500">Cash notes</p>
+                                    <p class="text-sm text-slate-500 dark:text-slate-400">Riel notes (USD equiv.)</p>
+                                    <p class="text-xs text-slate-400 dark:text-slate-500">At current rate</p>
                                 </div>
                                 <mat-icon class="icon-size-7 text-blue-600 dark:text-blue-300" svgIcon="mdi:cash-multiple"></mat-icon>
                             </div>
                             <p class="text-3xl font-bold text-blue-700 dark:text-blue-400">
-                                {{ drawerTotalKhr | number }} ៛
+                                ${{ drawerTotalKhr | usdFromKhr:exchangeRate | number:'1.2-2' }}
                             </p>
                         </div>
 
@@ -121,11 +121,11 @@
                         <section class="rounded-2xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
                             <div class="px-5 py-4 border-b border-slate-100 dark:border-gray-700 flex items-center justify-between">
                                 <div>
-                                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">KHR Denominations</h2>
+                                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Riel note denominations</h2>
                                     <p class="text-sm text-slate-500 dark:text-slate-400">Notes currently available for making change.</p>
                                 </div>
                                 <span class="rounded-full bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 text-sm font-semibold">
-                                    {{ drawerTotalKhr | number }} ៛
+                                    ${{ drawerTotalKhr | usdFromKhr:exchangeRate | number:'1.2-2' }}
                                 </span>
                             </div>
                             <div class="p-5 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-3">
@@ -142,7 +142,7 @@
                                         </span>
                                     </div>
                                     <p class="text-sm text-slate-500 dark:text-slate-400 mt-3">Subtotal</p>
-                                    <p class="text-xl font-semibold text-slate-900 dark:text-white">{{ row.total | number }} ៛</p>
+                                    <p class="text-xl font-semibold text-slate-900 dark:text-white">${{ row.total | usdFromKhr:exchangeRate | number:'1.2-2' }}</p>
                                 </div>
                             </div>
                         </section>
@@ -227,10 +227,10 @@
                             <div>
                                 <div class="flex items-center justify-between mb-3">
                                     <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                        KHR received
+                                        Riel notes received (count bills)
                                     </h3>
                                     <span class="rounded-full bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 text-sm font-semibold">
-                                        {{ receivedKhrTotal | number }} ៛
+                                        ${{ receivedKhrTotal | usdFromKhr:exchangeRate | number:'1.2-2' }}
                                     </span>
                                 </div>
                                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3">
@@ -250,7 +250,7 @@
                                                 <mat-icon class="icon-size-4" svgIcon="mdi:plus"></mat-icon>
                                             </button>
                                         </div>
-                                        <p class="text-xs text-center text-slate-400 mt-2">= {{ (receivedDenoms[d.key] || 0) * d.value | number }} ៛</p>
+                                        <p class="text-xs text-center text-slate-400 mt-2">equiv. ${{ ((receivedDenoms[d.key] || 0) * d.value) | usdFromKhr:exchangeRate | number:'1.2-2' }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -288,8 +288,8 @@
                                     <p class="text-2xl font-bold text-green-700 dark:text-green-400">${{ receivedUsdTotal | number:'1.2-2' }}</p>
                                 </div>
                                 <div class="rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 p-4">
-                                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Total KHR received</p>
-                                    <p class="text-2xl font-bold text-blue-700 dark:text-blue-400">{{ receivedKhrTotal | number }} ៛</p>
+                                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Riel received (USD equiv.)</p>
+                                    <p class="text-2xl font-bold text-blue-700 dark:text-blue-400">${{ receivedKhrTotal | usdFromKhr:exchangeRate | number:'1.2-2' }}</p>
                                 </div>
                             </div>
                         </section>
@@ -303,9 +303,9 @@
                             <div class="p-5 space-y-4">
                                 <div class="grid grid-cols-1 gap-3">
                                     <div class="rounded-xl bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700 p-4 text-center">
-                                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Change (KHR)</p>
+                                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Change (USD equiv.)</p>
                                         <p class="text-3xl font-bold text-amber-700 dark:text-amber-400">
-                                            {{ changeResult.change_khr | number }} ៛
+                                            ${{ changeResult.change_khr | usdFromKhr:exchangeRate | number:'1.2-2' }}
                                         </p>
                                     </div>
                                     <div *ngIf="changeResult.change_usd" class="rounded-xl bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700 p-4 text-center">
