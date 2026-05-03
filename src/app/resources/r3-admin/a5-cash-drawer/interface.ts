@@ -37,6 +37,12 @@ export interface DepositBody {
     note?: string;
 }
 
+export type WithdrawBody = DepositBody;
+
+export interface ResetBalanceBody {
+    note?: string;
+}
+
 // GET /api/admin/cash-drawer/logs → flat denomination counts + cashier object
 export interface TransactionLog extends Denominations {
     id: number;

@@ -1,7 +1,7 @@
 <div class="out-create-section md-form-field-appearance-outline">
     <div mat-dialog-title class="min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pr-2.5">
         <div class="flex flex-1 items-center text-slate-500">
-            <h1 class="text-3xl">Create ingredients</h1>
+            <h1 class="text-3xl">Create</h1>
         </div>
         <div class="flex items-center cursor-pointer">
             <mat-icon class="-mb-0.5" [svgIcon]="'heroicons_outline:x-mark'" (click)="closeDialog()"></mat-icon>
@@ -9,36 +9,33 @@
     </div>
 
     <div class="out-create-body px-4 pb-2">
-        <form [formGroup]="form" class="out-create-content border-t pt-4 space-y-2">
+        <form [formGroup]="form" class="out-create-content border-t pt-4">
             <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Ingredient name</mat-label>
-                <input matInput formControlName="name" />
+                <mat-label>Coupon code</mat-label>
+                <input matInput formControlName="code" placeholder="e.g. SUMMER10" maxlength="64" class="uppercase" />
+                <mat-error>Code must be at least 2 characters</mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Unit</mat-label>
-                <mat-select formControlName="unit">
-                    <mat-option [value]="''">(none)</mat-option>
-                    <mat-option *ngFor="let u of unitOptions" [value]="u">{{ u }}</mat-option>
-                </mat-select>
+                <mat-label>Discount (%)</mat-label>
+                <input matInput type="number" formControlName="discount_percent" min="0.01" max="100" step="0.01" placeholder="10" />
+                <mat-error>Enter a percent between 0.01 and 100</mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Quantity</mat-label>
-                <input matInput type="number" formControlName="quantity" />
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Low stock alert (at or below)</mat-label>
-                <input matInput type="number" formControlName="low_stock_threshold" />
-                <mat-hint>Same unit as quantity — status shows Low when stock is at or below this level.</mat-hint>
+                <mat-label>Coupon note (optional)</mat-label>
+                <input matInput formControlName="note" maxlength="500" placeholder="Internal note" />
             </mat-form-field>
         </form>
     </div>
 
     <mat-dialog-actions>
         <div class="w-full flex justify-end px-1">
-            <button class="helpers-mat-button-md text-white bg-[#102d71]" mat-flat-button (click)="submit()"
+            <button
+                class="helpers-mat-button-md text-white bg-[#102d71]"
+                mat-flat-button
+                type="button"
+                (click)="submit()"
                 [disabled]="isSaving || !form.valid">
                 <span *ngIf="!isSaving">Create</span>
                 <mat-progress-spinner *ngIf="isSaving" [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>

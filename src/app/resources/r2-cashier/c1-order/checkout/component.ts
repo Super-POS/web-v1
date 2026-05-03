@@ -21,12 +21,12 @@ import { ViewDetailSaleComponent } from 'app/shared/view/component';
 import { CashDrawer, Denominations, MakeChangeResponse } from '../../c3-cash-drawer/interface';
 import { CashierCashDrawerService } from '../../c3-cash-drawer/service';
 import { Data as OrderReceiptData } from '../../c2-sale/interface';
-import { PrintReceiptService } from 'helper/services/print-receipt/print-receipt.service';
+import { PrintableOrder, PrintReceiptService } from 'helper/services/print-receipt/print-receipt.service';
 import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
 import { env } from 'envs/env';
 import { BarayPaidWatcherService } from '../baray-paid-watcher.service';
-import { OrderCartLine } from '../interface';
+import { CashierCouponOption, OrderCartLine } from '../interface';
 import { OrderService } from '../service';
 
 type PaymentMethod = 'cash' | 'qr';
@@ -97,6 +97,10 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
     fileUrl = env.FILE_BASE_URL;
     carts: OrderCartLine[] = [];
     totalPrice = 0;
+    cartSubtotal = 0;
+    discountAmountKhr = 0;
+    activeCoupons: CashierCouponOption[] = [];
+    selectedCouponCode = '';
     paymentMethod: PaymentMethod = 'qr';
     isOrderBeingMade = false;
     isCalculatingChange = false;
@@ -148,7 +152,23 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
         }
 
         this.carts = draft.carts;
-        this.totalPrice = draft.totalPrice || this._calculateTotal();
+        this._syncTotalsFromCartAndCoupon();
+        this._service.listActiveCoupons().subscribe({
+            next: (res) => {
+                this.activeCoupons = res.data || [];
+                const wanted = draft.couponCode?.trim().toUpperCase() || '';
+                this.selectedCouponCode =
+                    wanted && this.activeCoupons.some((c) => c.code === wanted) ? wanted : '';
+                this._syncTotalsFromCartAndCoupon();
+                this._changeDetectorRef.markForCheck();
+            },
+            error: () => {
+                this.activeCoupons = [];
+                this.selectedCouponCode = '';
+                this._syncTotalsFromCartAndCoupon();
+                this._changeDetectorRef.markForCheck();
+            },
+        });
         this._cashPreviewChanges
             .pipe(debounceTime(350), takeUntil(this._unsubscribeAll))
             .subscribe(() => this.previewCashChange());
@@ -180,12 +200,23 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
         return this.cashReceivedKhrTotal > 0 || this.cashReceivedUsdTotal > 0;
     }
 
+    /** After coupon the amount due can be 0 KHR (e.g. 100% off). */
+    get isZeroPayable(): boolean {
+        return this.carts.length > 0 && this.totalPrice <= 0;
+    }
+
     get canPlaceCashOrder(): boolean {
-        return this.carts.length > 0 &&
+        if (this.carts.length === 0 || this.isPreviewingCashChange) {
+            return false;
+        }
+        if (this.isZeroPayable) {
+            return true;
+        }
+        return (
             this.cashHasPayment &&
             this.cashChange >= 0 &&
-            !!this.cashChangePreview &&
-            !this.isPreviewingCashChange;
+            !!this.cashChangePreview
+        );
     }
 
     selectPaymentMethod(method: PaymentMethod): void {
@@ -235,7 +266,15 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
     }
 
     previewCashChange(): void {
-        if (this.cashChange < 0 || !this.cashHasPayment || this.carts.length === 0) {
+        if (this.carts.length === 0 || this.totalPrice <= 0) {
+            this.isPreviewingCashChange = false;
+            this.cashChangePreview = null;
+            this.cashPreviewBreakdownItems = [];
+            this.cashPreviewError = '';
+            return;
+        }
+
+        if (this.cashChange < 0 || !this.cashHasPayment) {
             this.isPreviewingCashChange = false;
             return;
         }
@@ -265,8 +304,32 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
     }
 
     backToCart(): void {
-        this._service.setCheckoutDraft({ carts: this.carts, totalPrice: this.totalPrice });
+        this._service.setCheckoutDraft({
+            carts: this.carts,
+            totalPrice: this._calculateTotal(),
+            couponCode: this.selectedCouponCode?.trim() || null,
+        });
         this._router.navigate(['/cashier/order']);
+    }
+
+    onCouponChange(): void {
+        this._syncTotalsFromCartAndCoupon();
+        this.onCashPaymentInputChange();
+    }
+
+    private _syncTotalsFromCartAndCoupon(): void {
+        const sub = this._calculateTotal();
+        this.cartSubtotal = sub;
+        let discount = 0;
+        const sel = this.selectedCouponCode?.trim().toUpperCase();
+        if (sel) {
+            const c = this.activeCoupons.find((x) => x.code === sel);
+            if (c) {
+                discount = Math.round((sub * Number(c.discount_percent)) / 100);
+            }
+        }
+        this.discountAmountKhr = discount;
+        this.totalPrice = Math.max(0, sub - discount);
     }
 
     placeOrder(): void {
@@ -351,15 +414,47 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
         const savedReceivedKhr = Math.max(0, Math.round(this.cashReceivedKhrTotal));
         const savedReceivedUsd = Math.max(0, Math.round(this.cashReceivedUsdTotal));
         const savedNote = this.cashNote?.trim() || undefined;
+        const skipDrawer = this.isZeroPayable;
 
         this.isOrderBeingMade = true;
-        this._service.create({ cart: JSON.stringify(this._buildCartPayload()), deferred_telegram: false }).subscribe({
+        this._service
+            .create({
+                cart: JSON.stringify(this._buildCartPayload()),
+                deferred_telegram: false,
+                coupon_code: this.selectedCouponCode?.trim() || undefined,
+            })
+            .subscribe({
             next: (response) => {
                 this.isOrderBeingMade = false;
                 const order = response.data;
                 this._service.clearCheckoutDraft();
                 this.carts = [];
                 this.totalPrice = 0;
+
+                if (skipDrawer) {
+                    this.cashReceivedKhrAmount = null;
+                    this.cashReceivedUsdAmount = null;
+                    this.cashNote = '';
+                    this.cashChangePreview = null;
+                    this.cashPreviewBreakdownItems = [];
+                    this.cashPreviewError = '';
+                    this.cashChangeResult = null;
+                    this.cashChangeBreakdownItems = [];
+                    this.cashPendingOrder = order;
+                    this._snackBarService.openSnackBar(response.message || 'Order placed.', GlobalConstants.success);
+                    const printOrder: PrintableOrder = {
+                        ...order,
+                        payment_method: 'cash',
+                        receipt_exchange_rate: savedExchangeRate,
+                        receipt_received_khr: 0,
+                        receipt_change_khr: 0,
+                        receipt_change_summary: { khr: 0, usd: 0 },
+                    };
+                    this._printReceipt.print(printOrder);
+                    this._changeDetectorRef.detectChanges();
+                    return;
+                }
+
                 this.isCalculatingChange = true;
 
                 this._cashDrawer.makeChange({
@@ -382,7 +477,17 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
                         this.cashPendingOrder = order;
                         this.loadCashDrawer();
                         this._snackBarService.openSnackBar(response.message || 'Order placed.', GlobalConstants.success);
-                        this._printReceipt.print(order);
+                        const printOrder: PrintableOrder = {
+                            ...order,
+                            payment_method: 'cash',
+                            receipt_tender_khr: savedReceivedKhr,
+                            receipt_tender_usd: savedReceivedUsd,
+                            receipt_exchange_rate: savedExchangeRate,
+                            receipt_received_khr: res.data.received_khr,
+                            receipt_change_khr: res.data.change_khr,
+                            receipt_change_summary: res.data.change_summary,
+                        };
+                        this._printReceipt.print(printOrder);
                     },
                     error: (err: HttpErrorResponse) => {
                         this.isCalculatingChange = false;
@@ -410,7 +515,12 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
         }
 
         this.isOrderBeingMade = true;
-        this._service.create({ cart: JSON.stringify(this._buildCartPayload()) }).subscribe({
+        this._service
+            .create({
+                cart: JSON.stringify(this._buildCartPayload()),
+                coupon_code: this.selectedCouponCode?.trim() || undefined,
+            })
+            .subscribe({
             next: (response) => {
                 this.isOrderBeingMade = false;
                 const order = response.data;

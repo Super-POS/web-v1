@@ -1,0 +1,40 @@
+<div class="list-sale-section w-full bg-white dark:bg-gray-800 mt-4 mx-4 rounded-tl-lg rounded-tr-lg">
+    <div class="bg-white min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5 dark:bg-gray-800 border-b border-slate-200 dark:border-gray-700">
+        <div class="flex flex-1 items-center font-medium">
+            <mat-icon class="text-gray-600 dark:text-white icon-size-5" [svgIcon]="'heroicons_outline:home'"></mat-icon>
+            <span class="text-lg text-gray-600 dark:text-white ml-1.5">Admin</span>
+            <mat-icon class="-mb-0.5" [svgIcon]="'mat_solid:chevron_right'"></mat-icon>
+            <span class="text-lg text-gray-600 dark:text-white -mb-0.5">Finance</span>
+        </div>
+    </div>
+
+    <div class="list-sale-body p-5 pb-8">
+        <p class="text-slate-600 dark:text-slate-400 text-sm max-w-3xl mb-6">
+            Open any area below for numbers, history, and controls related to money, discounts, cash handling, and pricing.
+        </p>
+
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <a
+                *ngFor="let area of areas"
+                [routerLink]="area.link"
+                class="group flex flex-col rounded-lg border border-slate-200 dark:border-gray-600 bg-white dark:bg-gray-800/80 p-4 shadow-sm hover:border-[#102d71] hover:shadow-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#102d71] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900"
+            >
+                <div class="flex items-start gap-3">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-slate-200 group-hover:bg-[#102d71]/10 group-hover:text-[#102d71]">
+                        <mat-icon class="icon-size-6" [svgIcon]="area.icon"></mat-icon>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-base font-semibold text-slate-800 dark:text-white">{{ area.title }}</span>
+                            <mat-icon
+                                class="icon-size-5 text-slate-400 group-hover:text-[#102d71] shrink-0"
+                                [svgIcon]="'mat_solid:chevron_right'"
+                            ></mat-icon>
+                        </div>
+                        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400 leading-snug">{{ area.description }}</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>

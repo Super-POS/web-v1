@@ -1,4 +1,4 @@
-<div class="bg-white dark:bg-gray-800 h-full">
+<div class="bg-white dark:bg-gray-800 h-full w-full min-w-0">
 
     <!-- Header -->
     <div class="min-h-14 flex items-center gap-2 py-2 pl-5 pr-4 border-b dark:border-gray-700">
@@ -6,7 +6,7 @@
         <span class="text-lg font-medium text-gray-600 dark:text-gray-200">Cash Drawer</span>
     </div>
 
-    <mat-tab-group animationDuration="200ms" class="cash-drawer-tabs">
+    <mat-tab-group animationDuration="200ms" class="cash-drawer-tabs" (selectedTabChange)="onCashDrawerTabChange($event)">
 
         <!-- ── Tab 1: Current Balance ─────────────────────────────────────────── -->
         <mat-tab class="w-full">
@@ -85,7 +85,7 @@
                 Deposit
             </ng-template>
 
-            <div class="p-4 max-w-4xl">
+            <div class="p-4 w-full">
                 <!-- USD section -->
                 <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
                     USD Denominations
@@ -94,19 +94,21 @@
                     <div *ngFor="let d of usdDenoms"
                         class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 p-3">
                         <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2 text-center">{{ d.label }}</p>
-                        <div class="flex items-center justify-between gap-1">
-                            <button mat-icon-button class="w-7 h-7 min-w-0 leading-none"
+                        <div class="flex items-center justify-center gap-0.5 mb-2">
+                            <button mat-icon-button type="button" class="!w-9 !h-9 min-w-0 leading-none"
                                 (click)="decrement(depositDenoms, d.key)">
                                 <mat-icon class="icon-size-4" svgIcon="mdi:minus"></mat-icon>
                             </button>
-                            <input type="number" min="0"
-                                class="w-full text-center text-base font-bold bg-transparent border-0 outline-none text-gray-900 dark:text-white"
-                                [(ngModel)]="depositDenoms[d.key]">
-                            <button mat-icon-button class="w-7 h-7 min-w-0 leading-none"
+                            <button mat-icon-button type="button" class="!w-9 !h-9 min-w-0 leading-none"
                                 (click)="increment(depositDenoms, d.key)">
                                 <mat-icon class="icon-size-4" svgIcon="mdi:plus"></mat-icon>
                             </button>
                         </div>
+                        <input type="number" min="0" step="1" inputmode="numeric"
+                            [ngModel]="depositDenoms[d.key]"
+                            (ngModelChange)="setDepositDenomCount(d.key, $event)"
+                            placeholder="Quantity"
+                            class="denom-qty-input w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-2 text-center text-sm font-semibold outline-none focus:border-blue-500 dark:focus:border-blue-400">
                         <p class="text-xs text-center text-gray-400 mt-1">= ${{ (depositDenoms[d.key] || 0) * d.value | number:'1.0-0' }}</p>
                     </div>
                 </div>
@@ -119,19 +121,21 @@
                     <div *ngFor="let d of khrDenoms"
                         class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 p-3">
                         <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2 text-center">{{ d.label }}</p>
-                        <div class="flex items-center justify-between gap-1">
-                            <button mat-icon-button class="w-7 h-7 min-w-0 leading-none"
+                        <div class="flex items-center justify-center gap-0.5 mb-2">
+                            <button mat-icon-button type="button" class="!w-9 !h-9 min-w-0 leading-none"
                                 (click)="decrement(depositDenoms, d.key)">
                                 <mat-icon class="icon-size-4" svgIcon="mdi:minus"></mat-icon>
                             </button>
-                            <input type="number" min="0"
-                                class="w-full text-center text-base font-bold bg-transparent border-0 outline-none text-gray-900 dark:text-white"
-                                [(ngModel)]="depositDenoms[d.key]">
-                            <button mat-icon-button class="w-7 h-7 min-w-0 leading-none"
+                            <button mat-icon-button type="button" class="!w-9 !h-9 min-w-0 leading-none"
                                 (click)="increment(depositDenoms, d.key)">
                                 <mat-icon class="icon-size-4" svgIcon="mdi:plus"></mat-icon>
                             </button>
                         </div>
+                        <input type="number" min="0" step="1" inputmode="numeric"
+                            [ngModel]="depositDenoms[d.key]"
+                            (ngModelChange)="setDepositDenomCount(d.key, $event)"
+                            placeholder="Quantity"
+                            class="denom-qty-input w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-2 text-center text-sm font-semibold outline-none focus:border-blue-500 dark:focus:border-blue-400">
                         <p class="text-xs text-center text-gray-400 mt-1">= {{ (depositDenoms[d.key] || 0) * d.value | number }} ៛</p>
                     </div>
                 </div>
@@ -171,7 +175,174 @@
             </div>
         </mat-tab>
 
-        <!-- ── Tab 3: Transaction Logs ─────────────────────────────────────────── -->
+        <!-- ── Tab 3: Withdraw ───────────────────────────────────────────────────── -->
+        <mat-tab>
+            <ng-template mat-tab-label>
+                <mat-icon class="icon-size-4 mr-1" svgIcon="mdi:cash-minus"></mat-icon>
+                Withdraw
+            </ng-template>
+
+            <div class="p-4 w-full">
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Remove bills from the drawer. Each row shows how many notes are in the drawer now; you cannot withdraw more than that count.
+                </p>
+
+                <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                    USD Denominations
+                </h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6">
+                    <div *ngFor="let d of usdDenoms"
+                        class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 p-3">
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1 text-center">{{ d.label }}</p>
+                        <ng-container *ngIf="drawerDenomAvailable(d) as avail">
+                            <p class="text-xs text-center text-emerald-800 dark:text-emerald-300 mb-2 px-0.5 leading-snug">
+                                In drawer:
+                                <span class="font-semibold">{{ avail.count }}</span> bills
+                                <span class="text-gray-600 dark:text-gray-400"> (${{ avail.total | number:'1.0-0' }})</span>
+                            </p>
+                        </ng-container>
+                        <p *ngIf="loadingCurrent && drawerDenomAvailable(d) === null" class="text-xs text-center text-gray-400 mb-2">Loading drawer...</p>
+                        <p *ngIf="!loadingCurrent && drawerDenomAvailable(d) === null" class="text-xs text-center text-amber-700 dark:text-amber-300 mb-2">No drawer data</p>
+                        <div class="flex items-center justify-center gap-0.5 mb-2">
+                            <button mat-icon-button type="button" class="!w-9 !h-9 min-w-0 leading-none"
+                                (click)="decrement(withdrawDenoms, d.key)">
+                                <mat-icon class="icon-size-4" svgIcon="mdi:minus"></mat-icon>
+                            </button>
+                            <button mat-icon-button type="button" class="!w-9 !h-9 min-w-0 leading-none"
+                                (click)="increment(withdrawDenoms, d.key, maxWithdrawFor(d.key))">
+                                <mat-icon class="icon-size-4" svgIcon="mdi:plus"></mat-icon>
+                            </button>
+                        </div>
+                        <input type="number" min="0" step="1" inputmode="numeric"
+                            [attr.max]="maxWithdrawFor(d.key) ?? null"
+                            [ngModel]="withdrawDenoms[d.key]"
+                            (ngModelChange)="setWithdrawDenomCount(d.key, $event)"
+                            placeholder="Quantity"
+                            class="denom-qty-input w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-2 text-center text-sm font-semibold outline-none focus:border-rose-500 dark:focus:border-rose-400">
+                        <p class="text-xs text-center text-gray-400 mt-1">= ${{ (withdrawDenoms[d.key] || 0) * d.value | number:'1.0-0' }}</p>
+                    </div>
+                </div>
+
+                <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                    KHR Denominations
+                </h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-6">
+                    <div *ngFor="let d of khrDenoms"
+                        class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 p-3">
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1 text-center">{{ d.label }}</p>
+                        <ng-container *ngIf="drawerDenomAvailable(d) as avail">
+                            <p class="text-xs text-center text-emerald-800 dark:text-emerald-300 mb-2 px-0.5 leading-snug">
+                                In drawer:
+                                <span class="font-semibold">{{ avail.count }}</span> notes
+                                <span class="text-gray-600 dark:text-gray-400"> ({{ avail.total | number }} ៛)</span>
+                            </p>
+                        </ng-container>
+                        <p *ngIf="loadingCurrent && drawerDenomAvailable(d) === null" class="text-xs text-center text-gray-400 mb-2">Loading drawer...</p>
+                        <p *ngIf="!loadingCurrent && drawerDenomAvailable(d) === null" class="text-xs text-center text-amber-700 dark:text-amber-300 mb-2">No drawer data</p>
+                        <div class="flex items-center justify-center gap-0.5 mb-2">
+                            <button mat-icon-button type="button" class="!w-9 !h-9 min-w-0 leading-none"
+                                (click)="decrement(withdrawDenoms, d.key)">
+                                <mat-icon class="icon-size-4" svgIcon="mdi:minus"></mat-icon>
+                            </button>
+                            <button mat-icon-button type="button" class="!w-9 !h-9 min-w-0 leading-none"
+                                (click)="increment(withdrawDenoms, d.key, maxWithdrawFor(d.key))">
+                                <mat-icon class="icon-size-4" svgIcon="mdi:plus"></mat-icon>
+                            </button>
+                        </div>
+                        <input type="number" min="0" step="1" inputmode="numeric"
+                            [attr.max]="maxWithdrawFor(d.key) ?? null"
+                            [ngModel]="withdrawDenoms[d.key]"
+                            (ngModelChange)="setWithdrawDenomCount(d.key, $event)"
+                            placeholder="Quantity"
+                            class="denom-qty-input w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-2 text-center text-sm font-semibold outline-none focus:border-rose-500 dark:focus:border-rose-400">
+                        <p class="text-xs text-center text-gray-400 mt-1">= {{ (withdrawDenoms[d.key] || 0) * d.value | number }} ៛</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-5">
+                    <div class="rounded-xl border border-rose-200 bg-rose-50 dark:bg-rose-900/20 dark:border-rose-800 p-3 text-center">
+                        <p class="text-xs text-gray-500 mb-1">Total USD to withdraw</p>
+                        <p class="text-xl font-bold text-rose-700 dark:text-rose-400">${{ withdrawUsdTotal | number:'1.2-2' }}</p>
+                    </div>
+                    <div class="rounded-xl border border-rose-200 bg-rose-50 dark:bg-rose-900/20 dark:border-rose-800 p-3 text-center">
+                        <p class="text-xs text-gray-500 mb-1">Total KHR to withdraw</p>
+                        <p class="text-xl font-bold text-rose-700 dark:text-rose-400">{{ withdrawKhrTotal | number }} ៛</p>
+                    </div>
+                </div>
+
+                <div class="mb-5">
+                    <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Note (optional)</label>
+                    <textarea rows="2" [(ngModel)]="withdrawNote" placeholder="e.g. Bank deposit, change float reduction"
+                        class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm outline-none focus:border-rose-400 resize-none">
+                    </textarea>
+                </div>
+
+                <div class="flex gap-3">
+                    <button mat-flat-button color="warn" (click)="submitWithdraw()" [disabled]="submittingWithdraw">
+                        <mat-icon *ngIf="!submittingWithdraw" class="icon-size-5 mr-1" svgIcon="mdi:cash-minus"></mat-icon>
+                        <mat-spinner *ngIf="submittingWithdraw" diameter="18" class="mr-2"></mat-spinner>
+                        {{ submittingWithdraw ? 'Processing...' : 'Withdraw' }}
+                    </button>
+                    <button mat-stroked-button (click)="resetWithdraw()" [disabled]="submittingWithdraw">
+                        <mat-icon class="icon-size-5 mr-1" svgIcon="mdi:refresh"></mat-icon>
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </mat-tab>
+
+        <!-- ── Tab 4: Reset balance ─────────────────────────────────────────────── -->
+        <mat-tab>
+            <ng-template mat-tab-label>
+                <mat-icon class="icon-size-4 mr-1" svgIcon="mdi:delete-sweep"></mat-icon>
+                Reset balance
+            </ng-template>
+
+            <div class="p-4 w-full min-w-0">
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                    Clears every USD and KHR denomination count in the drawer to zero. Add a note below so the reason appears in transaction logs.
+                </p>
+
+                <div *ngIf="loadingCurrent" class="flex justify-center py-16">
+                    <mat-spinner diameter="40"></mat-spinner>
+                </div>
+
+                <ng-container *ngIf="!loadingCurrent && currentDrawer">
+                    <div class="grid grid-cols-2 gap-3 mb-5">
+                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 p-3">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Current total USD</p>
+                            <p class="text-lg font-semibold text-gray-900 dark:text-white">${{ drawerTotalUsd | number:'1.2-2' }}</p>
+                        </div>
+                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 p-3">
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Current total KHR</p>
+                            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ drawerTotalKhr | number }} ៛</p>
+                        </div>
+                    </div>
+
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Note for log</label>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Optional, but recommended so auditors know why the drawer was cleared.</p>
+                    <textarea rows="3" [(ngModel)]="resetBalanceNote" placeholder="e.g. End-of-day cash moved to safe, drawer recount"
+                        class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm outline-none focus:border-violet-500 dark:focus:border-violet-400 resize-y min-h-[5rem] mb-4">
+                    </textarea>
+
+                    <button mat-flat-button type="button" color="warn" (click)="confirmResetBalance()"
+                        [disabled]="submittingReset || drawerIsEmpty">
+                        <mat-spinner *ngIf="submittingReset" diameter="18" class="mr-2 inline-block align-middle"></mat-spinner>
+                        <mat-icon *ngIf="!submittingReset" class="icon-size-5 mr-1 align-middle" svgIcon="mdi:delete-sweep"></mat-icon>
+                        {{ submittingReset ? 'Resetting...' : 'Reset balance to zero' }}
+                    </button>
+                </ng-container>
+
+                <ng-container *ngIf="!loadingCurrent && !currentDrawer">
+                    <div class="flex flex-col items-center justify-center py-16 text-gray-400">
+                        <mat-icon class="icon-size-16" svgIcon="mdi:safe-square-outline"></mat-icon>
+                        <p class="mt-2">No cash drawer data found.</p>
+                    </div>
+                </ng-container>
+            </div>
+        </mat-tab>
+
+        <!-- ── Tab 5: Transaction Logs ─────────────────────────────────────────── -->
         <mat-tab>
             <ng-template mat-tab-label>
                 <mat-icon class="icon-size-4 mr-1" svgIcon="mdi:clipboard-text-clock-outline"></mat-icon>
@@ -209,7 +380,10 @@
                         <ng-container matColumnDef="usd_total">
                             <th mat-header-cell *matHeaderCellDef class="text-right">USD</th>
                             <td mat-cell *matCellDef="let row" class="text-right">
-                                <span *ngIf="logUsdTotal(row) > 0" class="text-green-700 dark:text-green-400 font-medium">
+                                <span *ngIf="logIsDrawerRemoval(row.type) && logUsdTotal(row) > 0" class="text-rose-600 dark:text-rose-400 font-medium">
+                                    -${{ logUsdTotal(row) | number:'1.2-2' }}
+                                </span>
+                                <span *ngIf="!logIsDrawerRemoval(row.type) && logUsdTotal(row) > 0" class="text-green-700 dark:text-green-400 font-medium">
                                     ${{ logUsdTotal(row) | number:'1.2-2' }}
                                 </span>
                                 <span *ngIf="logUsdTotal(row) === 0" class="text-gray-400">—</span>
@@ -219,7 +393,10 @@
                         <ng-container matColumnDef="khr_total">
                             <th mat-header-cell *matHeaderCellDef class="text-right">KHR</th>
                             <td mat-cell *matCellDef="let row" class="text-right">
-                                <span *ngIf="logKhrTotal(row) > 0" class="text-blue-700 dark:text-blue-400 font-medium">
+                                <span *ngIf="logIsDrawerRemoval(row.type) && logKhrTotal(row) > 0" class="text-rose-600 dark:text-rose-400 font-medium">
+                                    -{{ logKhrTotal(row) | number }} ៛
+                                </span>
+                                <span *ngIf="!logIsDrawerRemoval(row.type) && logKhrTotal(row) > 0" class="text-blue-700 dark:text-blue-400 font-medium">
                                     {{ logKhrTotal(row) | number }} ៛
                                 </span>
                                 <span *ngIf="logKhrTotal(row) === 0" class="text-gray-400">—</span>

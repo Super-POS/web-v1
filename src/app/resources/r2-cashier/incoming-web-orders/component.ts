@@ -1,8 +1,9 @@
-import { DatePipe, DecimalPipe, NgFor, NgIf } from '@angular/common';
+import { DatePipe, DecimalPipe, NgIf } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 
 import { HelperConfirmationConfig, HelperConfirmationService } from 'helper/services/confirmation';
@@ -17,7 +18,7 @@ import { IncomingWebOrdersService } from './service';
     standalone: true,
     templateUrl: './template.html',
     styleUrl: './style.scss',
-    imports: [NgIf, NgFor, DatePipe, DecimalPipe, MatIconModule, MatButtonModule, MatTableModule],
+    imports: [NgIf, DatePipe, DecimalPipe, MatIconModule, MatButtonModule, MatMenuModule, MatTableModule],
 })
 export class IncomingWebOrdersComponent implements OnInit, OnDestroy {
     private readonly _service = inject(IncomingWebOrdersService);

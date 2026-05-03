@@ -25,3 +25,8 @@ export interface IngredientUpdatePayload {
     quantity: number;
     low_stock_threshold?: number;
 }
+
+/** POST .../ingredients/:id/restock — adds to current quantity on the server. */
+export interface IngredientRestockPayload {
+    add: number;
+}

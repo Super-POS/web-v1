@@ -1,0 +1,85 @@
+<div class="list-sale-section bg-white dark:bg-gray-800 mt-4 mx-4 rounded-tl-lg rounded-tr-lg">
+    <div class="bg-white min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5 dark:bg-gray-800">
+        <div class="flex flex-1 items-center font-medium">
+            <div class="flex items-center">
+                <mat-icon class="text-gray-600 dark:text-white icon-size-5" [svgIcon]="'heroicons_outline:home'"></mat-icon>
+            </div>
+            <div class="flex items-center ml-1.5">
+                <span class="text-lg text-gray-600 dark:text-white -mb-0.5">Admin</span>
+            </div>
+            <div class="flex items-center">
+                <mat-icon class="-mb-0.5" [svgIcon]="'mat_solid:chevron_right'"></mat-icon>
+                <span class="text-lg text-gray-600 dark:text-white -mb-0.5">Coupons</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button class="helpers-mat-button-sm w-6" type="button" (click)="openCreateDialog()" mat-stroked-button>
+                <mat-icon class="icon-size-6 text-slate-500" svgIcon="heroicons_outline:plus"></mat-icon>
+            </button>
+        </div>
+    </div>
+
+    <div class="list-sale-body">
+        <ng-container *ngIf="isLoading">
+            <div class="px-4 py-6 text-slate-500">Getting data from API...</div>
+        </ng-container>
+
+        <div *ngIf="rows.length === 0 && !isLoading" class="no-data bg-white border-t dark:bg-gray-800">
+            <div class="flex flex-col justify-center items-center mb-4 py-12">
+                <mat-icon class="icon-size-24" svgIcon="toc"></mat-icon>
+                <span class="text-2xl -mt-3">No data</span>
+                <span class="text-sm text-slate-500 mt-2 px-6 text-center">Use the + button to create a coupon.</span>
+            </div>
+        </div>
+
+        <div *ngIf="rows.length > 0 && !isLoading" class="list-sale-content px-4 pb-4 bg-white rounded-bl-xl rounded-br-xl dark:bg-gray-800">
+            <div class="list-sale-data overflow-x-auto">
+                <table mat-table [dataSource]="rows" class="w-full min-w-[520px] coupon-table">
+                    <ng-container matColumnDef="code">
+                        <th mat-header-cell *matHeaderCellDef>Code</th>
+                        <td mat-cell *matCellDef="let r">
+                            <span class="font-mono font-semibold">{{ r.code }}</span>
+                        </td>
+                    </ng-container>
+                    <ng-container matColumnDef="discount_percent">
+                        <th mat-header-cell *matHeaderCellDef>Discount</th>
+                        <td mat-cell *matCellDef="let r">{{ r.discount_percent | number:'1.0-2' }}%</td>
+                    </ng-container>
+                    <ng-container matColumnDef="note">
+                        <th mat-header-cell *matHeaderCellDef>Note</th>
+                        <td mat-cell *matCellDef="let r" class="max-w-md text-slate-600 dark:text-slate-400">{{ r.note || '—' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="is_active">
+                        <th mat-header-cell *matHeaderCellDef>Active</th>
+                        <td mat-cell *matCellDef="let r">{{ r.is_active ? 'Yes' : 'No' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="actions" stickyEnd>
+                        <th mat-header-cell *matHeaderCellDef>Action</th>
+                        <td mat-cell *matCellDef="let r">
+                            <button mat-icon-button type="button" [matMenuTriggerFor]="couponRowMenu" aria-label="Open row actions">
+                                <mat-icon class="icon-size-6" svgIcon="mat_outline:more_vert"></mat-icon>
+                            </button>
+                            <mat-menu #couponRowMenu="matMenu">
+                                <button mat-menu-item type="button" (click)="openUpdateDialog(r)">
+                                    <mat-icon class="icon-size-6" svgIcon="mdi:square-edit-outline"></mat-icon>
+                                    <span class="text-lg">Edit</span>
+                                </button>
+                                <button mat-menu-item type="button" (click)="toggleActive(r)">
+                                    <mat-icon class="icon-size-6" [svgIcon]="r.is_active ? 'mdi:toggle-switch-off-outline' : 'mdi:toggle-switch'"></mat-icon>
+                                    <span class="text-lg">{{ r.is_active ? 'Deactivate' : 'Activate' }}</span>
+                                </button>
+                                <button mat-menu-item type="button" (click)="remove(r)">
+                                    <mat-icon class="icon-size-6 text-red-400" svgIcon="mdi:trash-can-outline"></mat-icon>
+                                    <span class="text-lg text-red-400">Delete data</span>
+                                </button>
+                            </mat-menu>
+                        </td>
+                    </ng-container>
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

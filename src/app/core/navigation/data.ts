@@ -16,6 +16,13 @@ const adminNavigation: HelperNavigationItem[] = [
         link: '/admin/pos',
     },
     {
+        id: 'finance',
+        title: 'Finance',
+        type: 'basic',
+        icon: 'mdi:finance',
+        link: '/admin/finance',
+    },
+    {
         id: 'menu',
         title: 'Menu',
         type: 'collapsable',
@@ -59,6 +66,13 @@ const adminNavigation: HelperNavigationItem[] = [
         type: 'basic',
         icon: 'mdi:account-group-outline',
         link: '/admin/users',
+    },
+    {
+        id: 'coupons',
+        title: 'Coupons',
+        type: 'basic',
+        icon: 'mdi:ticket-percent-outline',
+        link: '/admin/coupons',
     },
     {
         id: 'cash-drawer',

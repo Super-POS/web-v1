@@ -1,0 +1,21 @@
+.out-create-section {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    .out-create-body {
+        width: 100%;
+        height: calc(97% - 7.75rem);
+        overflow: auto;
+
+        .out-create-content {
+            width: 100%;
+            height: calc(90% - 8.75rem);
+        }
+
+        .out-create-content::-webkit-scrollbar {
+            width: 0 !important;
+            height: 0 !important;
+        }
+    }
+}

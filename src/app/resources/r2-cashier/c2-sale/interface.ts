@@ -16,6 +16,9 @@ export interface Data {
     id: number;
     receipt_number: number;
     total_price: number;
+    coupon_code?: string | null;
+    discount_percent?: number | null;
+    discount_amount?: number | null;
     ordered_at?: Date;
     /** api-v1 OrderChannelEnum */
     channel?: string;

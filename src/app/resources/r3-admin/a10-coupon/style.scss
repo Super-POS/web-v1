@@ -1,0 +1,33 @@
+.list-sale-section {
+    width: 100%;
+    height: calc(100dvh - 4.25rem) !important;
+    overflow: hidden;
+    z-index: 1;
+
+    .list-sale-body,
+    .no-data {
+        width: 100%;
+        height: calc(100dvh - 7.75rem);
+        overflow: hidden;
+
+        .list-sale-content {
+            width: 100%;
+            margin-bottom: 0.25rem;
+            height: calc(100dvh - 11rem);
+            overflow: hidden;
+        }
+    }
+}
+
+.list-sale-data {
+    width: 100%;
+    max-height: calc(100dvh - 12rem);
+    overflow: auto;
+}
+
+.coupon-table {
+    th.mat-mdc-header-cell,
+    td.mat-mdc-cell {
+        padding: 12px 8px;
+    }
+}

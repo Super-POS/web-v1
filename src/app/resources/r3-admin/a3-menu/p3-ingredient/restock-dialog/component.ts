@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, EventEmitter, Inject, OnInit, inject } from '@angular/core';
+import { Component, EventEmitter, Inject, inject } from '@angular/core';
 import { ReactiveFormsModule, UntypedFormBuilder, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -8,16 +8,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSelectModule } from '@angular/material/select';
 
 import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
-import { ingredientUnitSelectOptions } from '../ingredient-unit-options';
 import { IngredientItem } from '../interface';
 import { MenuIngredientService } from '../service';
 
 @Component({
-    selector: 'update-menu-ingredient',
+    selector: 'restock-menu-ingredient',
     templateUrl: './template.html',
     standalone: true,
     imports: [
@@ -26,41 +24,29 @@ import { MenuIngredientService } from '../service';
         MatDialogModule,
         MatFormFieldModule,
         MatInputModule,
-        MatSelectModule,
         MatButtonModule,
         MatIconModule,
         MatProgressSpinnerModule,
     ],
 })
-export class UpdateDialogComponent implements OnInit {
+export class RestockDialogComponent {
     resData = new EventEmitter<IngredientItem>();
 
-    private _dialogRef = inject(MatDialogRef<UpdateDialogComponent>);
+    private _dialogRef = inject(MatDialogRef<RestockDialogComponent>);
     private _formBuilder = inject(UntypedFormBuilder);
     private _service = inject(MenuIngredientService);
     private _snackBarService = inject(SnackbarService);
 
     isSaving = false;
 
-    unitOptions: string[] = [];
-
     form = this._formBuilder.group({
-        name: [null, [Validators.required]],
-        unit: [''],
-        quantity: [1, [Validators.required, Validators.min(0.0001)]],
-        low_stock_threshold: [1000, [Validators.required, Validators.min(0)]],
+        add: [null as number | null, [Validators.required, Validators.min(0.0001)]],
     });
 
     constructor(@Inject(MAT_DIALOG_DATA) public data: IngredientItem) {}
 
-    ngOnInit(): void {
-        this.unitOptions = ingredientUnitSelectOptions(this.data.unit);
-        this.form.patchValue({
-            name: this.data.name,
-            unit: this.data.unit ?? '',
-            quantity: Number(this.data.quantity),
-            low_stock_threshold: Number(this.data.low_stock_threshold ?? 1000),
-        });
+    currentQty(): number {
+        return Number(this.data.quantity);
     }
 
     submit(): void {
@@ -69,15 +55,15 @@ export class UpdateDialogComponent implements OnInit {
             return;
         }
 
+        const add = Number(this.form.value.add);
+        if (!Number.isFinite(add) || add <= 0) {
+            return;
+        }
+
         this._dialogRef.disableClose = true;
         this.isSaving = true;
 
-        this._service.update(this.data.id, {
-            name: this.form.value.name ?? '',
-            unit: this.form.value.unit ?? '',
-            quantity: Number(this.form.value.quantity),
-            low_stock_threshold: Number(this.form.value.low_stock_threshold ?? 1000),
-        }).subscribe({
+        this._service.restock(this.data.id, { add }).subscribe({
             next: (response) => {
                 this.resData.emit(response.data);
                 this._snackBarService.openSnackBar(response.message, GlobalConstants.success);

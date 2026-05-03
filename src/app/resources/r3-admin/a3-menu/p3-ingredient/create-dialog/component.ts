@@ -8,9 +8,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
 
 import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
+import { ingredientUnitSelectOptions } from '../ingredient-unit-options';
 import { IngredientItem } from '../interface';
 import { MenuIngredientService } from '../service';
 
@@ -24,6 +26,7 @@ import { MenuIngredientService } from '../service';
         MatDialogModule,
         MatFormFieldModule,
         MatInputModule,
+        MatSelectModule,
         MatButtonModule,
         MatIconModule,
         MatProgressSpinnerModule,
@@ -38,6 +41,8 @@ export class CreateDialogComponent implements OnInit {
     private _snackBarService = inject(SnackbarService);
 
     isSaving = false;
+
+    readonly unitOptions = ingredientUnitSelectOptions();
 
     form = this._formBuilder.group({
         name: [null, [Validators.required]],

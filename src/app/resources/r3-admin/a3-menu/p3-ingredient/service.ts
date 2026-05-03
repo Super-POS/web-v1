@@ -7,6 +7,7 @@ import {
     IngredientCreatePayload,
     IngredientItem,
     IngredientResponse,
+    IngredientRestockPayload,
     IngredientUpdatePayload,
 } from './interface';
 
@@ -52,5 +53,13 @@ export class MenuIngredientService {
         return this._httpClient.get<IngredientResponse>(`${env.API_BASE_URL}/admin/menu/ingredients/restock/list`, {
             headers: this._httpOptions.headers,
         });
+    }
+
+    restock(id: number, body: IngredientRestockPayload): Observable<{ data: IngredientItem; message: string }> {
+        return this._httpClient.post<{ data: IngredientItem; message: string }>(
+            `${env.API_BASE_URL}/admin/menu/ingredients/${id}/restock`,
+            body,
+            this._httpOptions
+        );
     }
 }

@@ -17,7 +17,10 @@
 
             <mat-form-field appearance="outline" class="w-full">
                 <mat-label>Unit</mat-label>
-                <input matInput formControlName="unit" />
+                <mat-select formControlName="unit">
+                    <mat-option [value]="''">(none)</mat-option>
+                    <mat-option *ngFor="let u of unitOptions" [value]="u">{{ u }}</mat-option>
+                </mat-select>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="w-full">

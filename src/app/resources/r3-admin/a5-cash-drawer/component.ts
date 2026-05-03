@@ -7,8 +7,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatTabsModule } from '@angular/material/tabs';
+import { MatTabChangeEvent, MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { HelperConfirmationConfig } from 'helper/services/confirmation/interface';
+import { HelperConfirmationService } from 'helper/services/confirmation/service';
 import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
 import { CashDrawer, Denominations, TransactionLog } from './interface';
@@ -78,6 +80,7 @@ export class AdminCashDrawerComponent implements OnInit {
         private service: AdminCashDrawerService,
         private snackBar: SnackbarService,
         private cdr: ChangeDetectorRef,
+        private confirmation: HelperConfirmationService,
     ) {}
 
     readonly usdDenoms = USD_DENOMS;
@@ -93,6 +96,13 @@ export class AdminCashDrawerComponent implements OnInit {
     depositDenoms: Record<string, number> = this.initDenoms();
     depositNote = '';
     submittingDeposit = false;
+
+    withdrawDenoms: Record<string, number> = this.initDenoms();
+    withdrawNote = '';
+    submittingWithdraw = false;
+
+    resetBalanceNote = '';
+    submittingReset = false;
 
     private initDenoms(): Record<string, number> {
         const obj: Record<string, number> = {};
@@ -111,6 +121,15 @@ export class AdminCashDrawerComponent implements OnInit {
     ngOnInit(): void {
         this.loadCurrent();
         this.loadLogs();
+    }
+
+    /** Matches mat-tab order: Current Balance, Deposit, Withdraw, Reset balance, Transaction Logs */
+    private readonly tabIndexResetBalance = 3;
+
+    onCashDrawerTabChange(ev: MatTabChangeEvent): void {
+        if (ev.index === this.tabIndexResetBalance) {
+            this.loadCurrent();
+        }
     }
 
     // ── Current ───────────────────────────────────────────────────────────────
@@ -146,13 +165,125 @@ export class AdminCashDrawerComponent implements OnInit {
         return this.khrRows.reduce((s, r) => s + r.total, 0);
     }
 
+    get drawerIsEmpty(): boolean {
+        return !this.currentDrawer || (this.drawerTotalUsd === 0 && this.drawerTotalKhr === 0);
+    }
+
+    confirmResetBalance(): void {
+        if (!this.currentDrawer || this.submittingReset) {
+            return;
+        }
+        if (this.drawerIsEmpty) {
+            this.snackBar.openSnackBar('Drawer is already empty.', GlobalConstants.error);
+            return;
+        }
+        const config: HelperConfirmationConfig = {
+            title: 'Reset cash drawer balance',
+            message:
+                'Reset the entire cash drawer to zero? All USD and KHR bill counts will be cleared. <span class="font-medium">This cannot be undone.</span>',
+            icon: {
+                show: true,
+                name: 'heroicons_outline:exclamation-triangle',
+                color: 'warn',
+            },
+            actions: {
+                confirm: {
+                    show: true,
+                    label: 'Reset balance',
+                    color: 'warn',
+                },
+                cancel: {
+                    show: true,
+                    label: 'Cancel',
+                },
+            },
+            dismissible: true,
+        };
+        this.confirmation.open(config).afterClosed().subscribe((result: string | undefined) => {
+            if (result !== 'confirmed') {
+                return;
+            }
+            this.submittingReset = true;
+            const note = this.resetBalanceNote.trim();
+            this.service.resetBalance(note ? { note } : {}).subscribe({
+                next: (res) => {
+                    this.submittingReset = false;
+                    this.snackBar.openSnackBar(res.message || 'Balance reset', GlobalConstants.success);
+                    this.resetBalanceNote = '';
+                    this.loadCurrent();
+                    this.loadLogs();
+                },
+                error: (err: HttpErrorResponse) => {
+                    this.submittingReset = false;
+                    this.snackBar.openSnackBar(err.error?.message || GlobalConstants.genericError, GlobalConstants.error);
+                },
+            });
+        });
+    }
+
     // ── Deposit ───────────────────────────────────────────────────────────────
-    increment(denoms: Record<string, number>, key: string): void {
-        denoms[key] = (denoms[key] || 0) + 1;
+    increment(denoms: Record<string, number>, key: string, max?: number): void {
+        let next = (denoms[key] || 0) + 1;
+        if (max !== undefined) {
+            next = Math.min(next, max);
+        }
+        denoms[key] = next;
     }
 
     decrement(denoms: Record<string, number>, key: string): void {
         denoms[key] = Math.max(0, (denoms[key] || 0) - 1);
+    }
+
+    maxWithdrawFor(key: string): number | undefined {
+        if (!this.currentDrawer) {
+            return undefined;
+        }
+        return flatCount(this.currentDrawer, key);
+    }
+
+    /** Bill/note count and face-value total currently in the drawer for this denomination (withdraw UI). */
+    drawerDenomAvailable(d: { key: string; value: number }): { count: number; total: number } | null {
+        if (!this.currentDrawer) {
+            return null;
+        }
+        const count = flatCount(this.currentDrawer, d.key);
+        return { count, total: count * d.value };
+    }
+
+    setDepositDenomCount(key: string, value: unknown): void {
+        this.assignDenomCount(this.depositDenoms, key, value);
+    }
+
+    setWithdrawDenomCount(key: string, value: unknown): void {
+        const cap = this.maxWithdrawFor(key);
+        this.assignDenomCount(this.withdrawDenoms, key, value, cap);
+    }
+
+    private assignDenomCount(
+        denoms: Record<string, number>,
+        key: string,
+        value: unknown,
+        max?: number,
+    ): void {
+        let n = 0;
+        if (value !== '' && value !== null && value !== undefined) {
+            if (typeof value === 'string') {
+                const parsed = parseInt(value, 10);
+                n = Number.isFinite(parsed) ? parsed : 0;
+            } else {
+                n = Math.floor(Number(value));
+                if (!Number.isFinite(n)) {
+                    n = 0;
+                }
+            }
+        }
+        if (n < 0) {
+            n = 0;
+        }
+        if (max !== undefined && n > max) {
+            n = max;
+        }
+        denoms[key] = n;
     }
 
     get depositUsdTotal(): number {
@@ -192,6 +323,43 @@ export class AdminCashDrawerComponent implements OnInit {
         this.depositNote = '';
     }
 
+    get withdrawUsdTotal(): number {
+        return USD_DENOMS.reduce((s, d) => s + (this.withdrawDenoms[d.key] || 0) * d.value, 0);
+    }
+
+    get withdrawKhrTotal(): number {
+        return KHR_DENOMS.reduce((s, d) => s + (this.withdrawDenoms[d.key] || 0) * d.value, 0);
+    }
+
+    submitWithdraw(): void {
+        const nonZero = Object.fromEntries(
+            Object.entries(this.withdrawDenoms).filter(([, v]) => v > 0)
+        );
+        if (Object.keys(nonZero).length === 0) {
+            this.snackBar.openSnackBar('Please enter at least one denomination.', GlobalConstants.error);
+            return;
+        }
+        this.submittingWithdraw = true;
+        this.service.withdraw({ denominations: nonZero, note: this.withdrawNote }).subscribe({
+            next: (res) => {
+                this.submittingWithdraw = false;
+                this.snackBar.openSnackBar(res.message || 'Withdraw successful', GlobalConstants.success);
+                this.resetWithdraw();
+                this.loadCurrent();
+                this.loadLogs();
+            },
+            error: (err: HttpErrorResponse) => {
+                this.submittingWithdraw = false;
+                this.snackBar.openSnackBar(err.error?.message || GlobalConstants.genericError, GlobalConstants.error);
+            },
+        });
+    }
+
+    resetWithdraw(): void {
+        [...USD_DENOMS, ...KHR_DENOMS].forEach(d => { this.withdrawDenoms[d.key] = 0; });
+        this.withdrawNote = '';
+    }
+
     // ── Logs ──────────────────────────────────────────────────────────────────
     loadLogs(): void {
         this.loadingLogs = true;
@@ -228,12 +396,19 @@ export class AdminCashDrawerComponent implements OnInit {
         if (type === 'deposit')  return 'Deposit';
         if (type === 'change')   return 'Change';
         if (type === 'withdraw') return 'Withdraw';
+        if (type === 'reset')    return 'Reset';
         return type;
     }
 
     typeClass(type: string): string {
         if (type === 'deposit') return 'text-emerald-600';
-        if (type === 'change')  return 'text-amber-600';
+        if (type === 'change') return 'text-amber-600';
+        if (type === 'withdraw') return 'text-rose-600';
+        if (type === 'reset') return 'text-violet-600 dark:text-violet-400';
         return 'text-gray-500';
+    }
+
+    logIsDrawerRemoval(type: string): boolean {
+        return type === 'withdraw' || type === 'reset';
     }
 }

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { env } from 'envs/env';
-import { CashDrawerResponse, DepositBody, TransactionLogsResponse } from './interface';
+import { CashDrawerResponse, DepositBody, ResetBalanceBody, TransactionLogsResponse, WithdrawBody } from './interface';
 
 @Injectable({ providedIn: 'root' })
 export class AdminCashDrawerService {
@@ -15,6 +15,14 @@ export class AdminCashDrawerService {
 
     deposit(body: DepositBody): Observable<{ status_code: number; message: string }> {
         return this.http.post<{ status_code: number; message: string }>(`${env.API_BASE_URL}/admin/cash-drawer/deposit`, body);
+    }
+
+    withdraw(body: WithdrawBody): Observable<{ status_code: number; message: string }> {
+        return this.http.post<{ status_code: number; message: string }>(`${env.API_BASE_URL}/admin/cash-drawer/withdraw`, body);
+    }
+
+    resetBalance(body: ResetBalanceBody = {}): Observable<{ message?: string; data?: unknown }> {
+        return this.http.post<{ message?: string; data?: unknown }>(`${env.API_BASE_URL}/admin/cash-drawer/reset`, body);
     }
 
     getLogs(page: number = 1, limit: number = 20): Observable<TransactionLogsResponse> {

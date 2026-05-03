@@ -7,7 +7,7 @@ import { Observable, catchError, tap, throwError } from 'rxjs';
 
 // ================================================================>> Custom Library
 import { env } from 'envs/env';
-import { BarayPaymentIntentResponse, CheckoutDraft, IngredientStock, List, ResponseOrder } from './interface';
+import { BarayPaymentIntentResponse, CashierCouponOption, CheckoutDraft, IngredientStock, List, ResponseOrder } from './interface';
 @Injectable({
 
     providedIn: 'root',
@@ -22,6 +22,7 @@ export class OrderService {
         const cleanDraft: CheckoutDraft = {
             carts: (draft.carts || []).map((line) => ({ ...line })),
             totalPrice: Number(draft.totalPrice || 0),
+            couponCode: draft.couponCode?.trim() ? draft.couponCode.trim().toUpperCase() : null,
         };
         sessionStorage.setItem(this.checkoutDraftStorageKey, JSON.stringify(cleanDraft));
     }
@@ -40,6 +41,7 @@ export class OrderService {
             return {
                 carts: parsed.carts.map((line) => ({ ...line })),
                 totalPrice: Number(parsed.totalPrice || 0),
+                couponCode: parsed.couponCode?.trim() ? parsed.couponCode.trim().toUpperCase() : null,
             };
         } catch {
             return null;
@@ -72,19 +74,30 @@ export class OrderService {
         );
     }
 
+    listActiveCoupons(): Observable<{ data: CashierCouponOption[] }> {
+        return this.httpClient.get<{ data: CashierCouponOption[] }>(
+            `${env.API_BASE_URL}/cashier/ordering/coupons`,
+            { headers: new HttpHeaders().set('Content-Type', 'application/json') },
+        );
+    }
+
     // Must match api-v1 CreateOrderDto: cart (JSON string) + channel (OrderChannelEnum)
     create(body: {
         cart: string;
         channel?: 'walk_in' | 'telegram' | 'website';
         /** Baray: delay Telegram + receipt until pay webhook. */
         deferred_telegram?: boolean;
+        coupon_code?: string;
     }): Observable<ResponseOrder> {
-        const { cart, channel = 'walk_in', deferred_telegram = true } = body;
+        const { cart, channel = 'walk_in', deferred_telegram = true, coupon_code } = body;
 
         const requestBody: Record<string, unknown> = {
             cart,
             channel,
         };
+        if (coupon_code?.trim()) {
+            requestBody['coupon_code'] = coupon_code.trim().toUpperCase();
+        }
         if (deferred_telegram) {
             requestBody['deferred_telegram'] = true;
         }

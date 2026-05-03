@@ -84,6 +84,15 @@ export interface OrderCartLine {
 export interface CheckoutDraft {
     carts: OrderCartLine[];
     totalPrice: number;
+    /** Uppercase coupon code when cashier applied one at checkout */
+    couponCode?: string | null;
+}
+
+/** GET /cashier/ordering/coupons */
+export interface CashierCouponOption {
+    id: number;
+    code: string;
+    discount_percent: number;
 }
 // Interface for the response of creating or updating a sales order
 export interface ResponseOrder {

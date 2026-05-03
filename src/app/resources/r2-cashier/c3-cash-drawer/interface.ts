@@ -64,5 +64,8 @@ export interface MakeChangeResponse {
         order_total_khr?: number;
         received_khr?: number;
         received_total_khr?: number;
+        /** api-v1: KHR / USD parts of change returned to customer */
+        change_summary?: { khr: number; usd: number };
+        exchange_rate?: number;
     };
 }

@@ -1,15 +1,24 @@
 .cash-drawer-tabs {
+    width: 100%;
+
     .mat-mdc-tab-header {
         border-bottom: 1px solid #e5e7eb;
+    }
+
+    .mat-mdc-tab-body-content {
+        overflow: visible;
     }
 }
 
 input[type='number']::-webkit-inner-spin-button,
-input[type='number']::-webkit-outer-spin-button {
+input[type='number']::-webkit-outer-spin-button,
+.denom-qty-input::-webkit-inner-spin-button,
+.denom-qty-input::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 
-input[type='number'] {
+input[type='number'],
+.denom-qty-input {
     -moz-appearance: textfield;
 }

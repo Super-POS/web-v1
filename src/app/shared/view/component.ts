@@ -63,6 +63,15 @@ export class ViewDetailSaleComponent implements OnInit, OnDestroy {
         return this.dataSource.data.reduce((sum, item) => sum + (item.unit_price * item.qty), 0);
     }
 
+    /** Amount charged after coupon (matches API total_price). */
+    getGrandTotal(): number {
+        const paid = Number(this.row?.total_price);
+        if (Number.isFinite(paid)) {
+            return paid;
+        }
+        return this.getTotal();
+    }
+
     // Method to print the receipt on the connected thermal printer
     print(row: any) {
         this._printReceipt.print(row);

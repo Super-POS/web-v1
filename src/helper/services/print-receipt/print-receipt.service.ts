@@ -5,10 +5,27 @@ import { HelperConfirmationConfig, HelperConfirmationService } from 'helper/serv
 export interface PrintableOrder {
     receipt_number: number;
     total_price: number;
+    coupon_code?: string | null;
+    discount_percent?: number | null;
+    discount_amount?: number | null;
     ordered_at?: Date | string;
     cashier?: { name?: string };
     details?: PrintableDetail[];
     orderDetails?: PrintableDetail[];
+    /** `cash` | `qr` (Baray), etc. */
+    payment_method?: string;
+    /** Cash tender: KHR notes customer gave (checkout form) */
+    receipt_tender_khr?: number;
+    /** Cash tender: USD bills customer gave (checkout form) */
+    receipt_tender_usd?: number;
+    /** Exchange rate KHR per 1 USD when tender was entered */
+    receipt_exchange_rate?: number;
+    /** Total tendered in KHR equivalent (API makeChange) */
+    receipt_received_khr?: number;
+    /** Change due in KHR (API) */
+    receipt_change_khr?: number;
+    /** Change split KHR / USD (API change_summary) */
+    receipt_change_summary?: { khr: number; usd: number };
 }
 
 export interface PrintableDetailModifier {
@@ -54,7 +71,9 @@ export class PrintReceiptService {
             {
                 config: {
                     title: 'Barista drink list',
-                    message: 'Print the prep ticket for the barista?',
+                    message:
+                        '<p style="margin:0 0 4px 0;">Print the prep ticket for the barista?</p>' +
+                        this._buildBaristaPrepDialogOrderListHtml(order),
                     icon: { show: false },
                     actions: {
                         confirm: { show: true, label: 'Print', color: 'primary' },
@@ -390,12 +409,151 @@ ${this._layoutStyles()}
         return 0.64;
     }
 
+    private _paymentMethodLabel(order: PrintableOrder): string {
+        const raw = (order.payment_method ?? '').toString().trim().toLowerCase();
+        if (raw === 'cash') {
+            return 'Cash';
+        }
+        if (raw === 'qr') {
+            return 'QR (Baray)';
+        }
+        if (order.payment_method?.toString().trim()) {
+            return this._escapeHtml(order.payment_method!.toString().trim());
+        }
+        return '';
+    }
+
+    /** Subtotal line, optional coupon discount, then running total before payment rows. */
+    private _subtotalAndDiscountRows(order: PrintableOrder): string {
+        const disc = Math.round(Number(order.discount_amount ?? 0));
+        const total = Number(order.total_price ?? 0);
+        if (disc > 0 && order.coupon_code) {
+            const sub = total + disc;
+            const pct = order.discount_percent != null ? String(order.discount_percent) : '';
+            return `<tr><td>Subtotal</td><td>${this._fmt(sub)} &#x17DB;</td></tr>
+<tr><td>Discount (${this._escapeHtml(order.coupon_code)}${pct ? `, ${this._escapeHtml(pct)}%` : ''})</td><td>-${this._fmt(disc)} &#x17DB;</td></tr>`;
+        }
+        return `<tr><td>Subtotal</td><td>${this._fmt(total)} &#x17DB;</td></tr>`;
+    }
+
+    /** Rows between Subtotal and Tax: pay by, customer paid, change (cash). */
+    private _totalPaymentRows(order: PrintableOrder): string {
+        const methodKey = (order.payment_method ?? '').toString().trim().toLowerCase();
+        const label = this._paymentMethodLabel(order);
+        const hasCashExtras =
+            order.receipt_tender_khr != null ||
+            order.receipt_tender_usd != null ||
+            order.receipt_received_khr != null ||
+            order.receipt_change_khr != null ||
+            order.receipt_change_summary != null;
+        if (!label && !hasCashExtras) {
+            return '';
+        }
+        const small = 'style="font-size:9px;color:#444"';
+        let html = '';
+        if (label) {
+            html += `<tr><td>Pay by</td><td ${small}>${label}</td></tr>`;
+        }
+        const isCash = methodKey === 'cash' || (methodKey === '' && hasCashExtras);
+        if (!isCash) {
+            return html;
+        }
+        const tender = this._formatCashTender(order);
+        if (tender) {
+            html += `<tr><td>Customer paid</td><td ${small}>${tender}</td></tr>`;
+        }
+        const change = this._formatChange(order);
+        if (change) {
+            html += `<tr><td>Change</td><td ${small}>${change}</td></tr>`;
+        }
+        return html;
+    }
+
+    private _formatCashTender(order: PrintableOrder): string {
+        const parts: string[] = [];
+        const k = order.receipt_tender_khr;
+        const u = order.receipt_tender_usd;
+        if (k != null && k > 0) {
+            parts.push(`${this._fmt(k)} KHR`);
+        }
+        if (u != null && u > 0) {
+            parts.push(`$${this._fmt(u)} USD`);
+        }
+        if (parts.length > 0) {
+            return this._escapeHtml(parts.join(' + '));
+        }
+        const total = order.receipt_received_khr;
+        if (total != null && total > 0) {
+            return this._escapeHtml(`${this._fmt(total)} KHR`);
+        }
+        return '';
+    }
+
+    private _formatChange(order: PrintableOrder): string {
+        const s = order.receipt_change_summary;
+        if (s && (s.khr > 0 || s.usd > 0)) {
+            const parts: string[] = [];
+            if (s.khr > 0) {
+                parts.push(`${this._fmt(s.khr)} KHR`);
+            }
+            if (s.usd > 0) {
+                parts.push(`$${this._fmt(s.usd)} USD`);
+            }
+            return this._escapeHtml(parts.join(' + '));
+        }
+        const ck = order.receipt_change_khr;
+        const hasTender = !!this._formatCashTender(order) || (order.receipt_received_khr != null && order.receipt_received_khr > 0);
+        if (ck != null && hasTender) {
+            return this._escapeHtml(`${this._fmt(ck)} KHR`);
+        }
+        return '';
+    }
+
     private _escapeHtml(s: string): string {
         return s
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
+    }
+
+    /** HTML snippet for the barista print confirmation (innerHTML): ordered drinks list. */
+    private _buildBaristaPrepDialogOrderListHtml(order: PrintableOrder): string {
+        const lines = order.details ?? order.orderDetails ?? [];
+        if (lines.length === 0) {
+            return '<p style="margin-top:10px;font-size:13px;">No drinks on this order.</p>';
+        }
+        const items = lines
+            .map((d) => {
+                const nameRaw = d.product?.name ?? d.menu?.name ?? '-';
+                const name = this._escapeHtml(nameRaw);
+                const qty = Math.max(1, Math.round(Number(d.qty) || 1));
+                const modList = d.detailModifiers ?? d.detail_modifiers ?? [];
+                const modParts = modList
+                    .map((m) => {
+                        const label = (m.option_label ?? '').trim();
+                        const grp = (m.group_name ?? '').trim();
+                        if (label && grp) {
+                            return `${grp}: ${label}`;
+                        }
+                        return label || grp || '';
+                    })
+                    .filter(Boolean)
+                    .map((t) => this._escapeHtml(t));
+                const modsLine = modParts.length
+                    ? `<div style="font-size:12px;margin-top:2px;opacity:0.85;">${modParts.join(' · ')}</div>`
+                    : '';
+                const note = (d.line_note ?? '').trim();
+                const noteLine = note
+                    ? `<div style="font-size:11px;margin-top:2px;opacity:0.8;">${this._escapeHtml(note)}</div>`
+                    : '';
+                return `<li style="margin-bottom:10px;"><span style="font-weight:600;">${qty}×</span> ${name}${modsLine}${noteLine}</li>`;
+            })
+            .join('');
+        return `<div style="margin-top:12px;max-height:min(42vh,260px);overflow-y:auto;text-align:left;">
+    <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Ordered drinks</div>
+    <ul style="margin:0;padding-left:1.15rem;">${items}</ul>
+    </div>`;
     }
 
     /** Kitchen / barista: drinks only (qty, name, modifiers, line notes). No prices. */
@@ -523,7 +681,8 @@ ${this._layoutStyles()}
   <hr class="solid">
 
   <table class="total-tbl">
-    <tr><td>Subtotal</td><td>${this._fmt(order.total_price)} &#x17DB;</td></tr>
+    ${this._subtotalAndDiscountRows(order)}
+    ${this._totalPaymentRows(order)}
     <tr><td style="font-size:10px;color:#555">Tax (0%)</td><td style="font-size:10px;color:#555">-</td></tr>
     <tr class="grand"><td>TOTAL</td><td>${this._fmt(order.total_price)} &#x17DB;</td></tr>
   </table>

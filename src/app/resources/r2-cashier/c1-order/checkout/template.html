@@ -70,8 +70,13 @@
                         <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Order Review</h2>
                         <p class="text-sm text-slate-500 dark:text-slate-400">Confirm items before taking payment.</p>
                     </div>
-                    <div class="rounded-full bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 text-sm font-semibold dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800">
-                        {{ totalPrice | number }} KHR
+                    <div class="flex flex-col items-end gap-0.5 text-right">
+                        <div class="rounded-full bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 text-sm font-semibold dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800">
+                            {{ totalPrice | number }} KHR
+                        </div>
+                        <span *ngIf="discountAmountKhr > 0" class="text-xs text-slate-500 dark:text-slate-400">
+                            Subtotal {{ cartSubtotal | number }} - discount {{ discountAmountKhr | number }}
+                        </span>
                     </div>
                 </div>
 
@@ -104,6 +109,24 @@
         </main>
 
         <aside class="space-y-5 2xl:sticky 2xl:top-5 self-start">
+            <section class="rounded-2xl border border-slate-200 bg-white dark:bg-gray-800 dark:border-gray-700 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-100 dark:border-gray-700">
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Coupon</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Apply a promo code for this order (optional).</p>
+                </div>
+                <div class="p-4 space-y-2">
+                    <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Promo</label>
+                    <select [(ngModel)]="selectedCouponCode" (ngModelChange)="onCouponChange()"
+                        class="w-full rounded-xl border border-slate-300 bg-white py-2.5 px-3 text-sm font-medium text-slate-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+                        <option value="">No coupon</option>
+                        <option *ngFor="let c of activeCoupons" [value]="c.code">{{ c.code }} ({{ c.discount_percent }}% off)</option>
+                    </select>
+                    <p *ngIf="discountAmountKhr > 0" class="text-sm font-semibold text-green-700 dark:text-green-400">
+                        Discount: -{{ discountAmountKhr | number }} KHR
+                    </p>
+                </div>
+            </section>
+
             <section class="rounded-2xl border border-slate-200 bg-white dark:bg-gray-800 dark:border-gray-700 shadow-sm overflow-hidden">
                 <div class="px-5 py-4 border-b border-slate-100 dark:border-gray-700">
                     <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Payment Method</h2>

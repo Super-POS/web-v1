@@ -30,7 +30,7 @@ import { ModifierPickDialogComponent, ModifierPickResult } from './modifier-dial
 import { ViewDetailSaleComponent } from 'app/shared/view/component';
 import { CashierCashDrawerService } from '../c3-cash-drawer/service';
 import { MakeChangeResponse } from '../c3-cash-drawer/interface';
-import { PrintReceiptService } from 'helper/services/print-receipt/print-receipt.service';
+import { PrintableOrder, PrintReceiptService } from 'helper/services/print-receipt/print-receipt.service';
 
 // ── Cash-drawer denomination tables (local to avoid cross-feature import) ──
 const CD_USD: { label: string; key: string; value: number }[] = [
@@ -635,9 +635,11 @@ export class OrderComponent implements OnInit, OnDestroy {
             return;
         }
 
+        const prev = this._service.getCheckoutDraft();
         this._service.setCheckoutDraft({
             carts: this.carts,
             totalPrice: this.totalPrice,
+            couponCode: prev?.couponCode ?? null,
         });
         this._router.navigate(['/cashier/order/checkout']);
     }
@@ -698,8 +700,14 @@ export class OrderComponent implements OnInit, OnDestroy {
                         this.cashPendingOrder = order;
                         this.isCartSidebarOpen = true;
                         this._snackBarService.openSnackBar(response.message || 'Order placed.', GlobalConstants.success);
-                        // Auto-print receipt to connected thermal printer
-                        this._printReceipt.print(order);
+                        const printOrder: PrintableOrder = {
+                            ...order,
+                            payment_method: 'cash',
+                            receipt_received_khr: res.data.received_khr,
+                            receipt_change_khr: res.data.change_khr,
+                            receipt_change_summary: res.data.change_summary,
+                        };
+                        this._printReceipt.print(printOrder);
                     },
                     error: (err: HttpErrorResponse) => {
                         this.isCalculatingChange = false;

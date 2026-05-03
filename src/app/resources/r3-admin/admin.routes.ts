@@ -9,6 +9,8 @@ import { MenuIngredientComponent } from "./a3-menu/p3-ingredient/component";
 import { AdminModifierComponent } from "./a3-menu/p6-modifier/component";
 import { UserComponent }        from "./a4-user/u1-listing/component";
 import { AdminCashDrawerComponent } from "./a5-cash-drawer/component";
+import { AdminCouponComponent } from "./a10-coupon/component";
+import { AdminFinanceHubComponent } from "./a11-finance/component";
 
 export default [
     {
@@ -18,6 +20,10 @@ export default [
     {
         path                    : 'pos',
         component               : SaleComponent
+    },
+    {
+        path                    : 'finance',
+        component               : AdminFinanceHubComponent
     },
     {
         path                    : 'menu',
@@ -51,6 +57,10 @@ export default [
     {
         path                    : 'cash-drawer',
         component               : AdminCashDrawerComponent
+    },
+    {
+        path                    : 'coupons',
+        component               : AdminCouponComponent
     },
 
 ] as Routes;

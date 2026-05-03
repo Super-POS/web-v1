@@ -17,6 +17,15 @@
     <div class="list-sale-body w-full">
         <div class="p-4">
         <div *ngIf="isLoading">Getting data from API...</div>
+
+        <div *ngIf="!isLoading" class="mb-4 max-w-xl">
+            <mat-form-field appearance="outline" class="w-full" subscriptSizing="dynamic">
+                <mat-label>Search ingredients</mat-label>
+                <mat-icon matPrefix class="text-slate-400 icon-size-5" [svgIcon]="'heroicons_outline:magnifying-glass'"></mat-icon>
+                <input matInput type="text" [value]="searchText" (input)="onSearchInput($event)" placeholder="Filter by name or unit" autocomplete="off" />
+            </mat-form-field>
+        </div>
+
         <div *ngIf="!isLoading && dataSource.data.length === 0 && !restockMode" class="text-center py-8 text-gray-500">
             No data
         </div>
@@ -24,7 +33,11 @@
             No items need restock.
         </div>
 
-        <div *ngIf="!isLoading && dataSource.data.length > 0" class="w-full overflow-x-auto">
+        <div *ngIf="!isLoading && dataSource.data.length > 0 && dataSource.filteredData.length === 0" class="text-center py-8 text-gray-500">
+            No ingredients match your search.
+        </div>
+
+        <div *ngIf="!isLoading && dataSource.filteredData.length > 0" class="w-full overflow-x-auto">
             <table mat-table [dataSource]="dataSource" class="w-full min-w-full">
                 <ng-container matColumnDef="no">
                     <th mat-header-cell *matHeaderCellDef>No.</th>
@@ -51,6 +64,22 @@
                     <td mat-cell *matCellDef="let item">{{ item.low_stock_threshold ?? 1000 }}</td>
                 </ng-container>
 
+                <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Status</th>
+                    <td mat-cell *matCellDef="let item">
+                        <ng-container *ngIf="itemStockStatus(item) as st">
+                            <span
+                                class="font-medium"
+                                [ngClass]="{
+                                    'text-red-600 dark:text-red-400': st.key === 'out',
+                                    'text-amber-600 dark:text-amber-400': st.key === 'low',
+                                    'text-emerald-600 dark:text-emerald-400': st.key === 'ok'
+                                }"
+                            >{{ st.label }}</span>
+                        </ng-container>
+                    </td>
+                </ng-container>
+
                 <ng-container matColumnDef="created_at">
                     <th mat-header-cell *matHeaderCellDef>Date</th>
                     <td mat-cell *matCellDef="let item">{{ item.created_at | date: 'dd-MMM-yyy' }}</td>
@@ -58,12 +87,16 @@
 
                 <ng-container matColumnDef="action">
                     <th mat-header-cell *matHeaderCellDef>Action</th>
-                    <td mat-cell *matCellDef="let item; let i = index">
+                    <td mat-cell *matCellDef="let item">
                         <button mat-icon-button [matMenuTriggerFor]="menu">
                             <mat-icon class="icon-size-6" svgIcon="mat_outline:more_vert"></mat-icon>
                         </button>
                         <mat-menu #menu="matMenu">
-                            <button mat-menu-item (click)="openUpdateDialog(item, i)">
+                            <button mat-menu-item (click)="openRestockDialog(item)">
+                                <mat-icon class="icon-size-6" svgIcon="heroicons_outline:plus-circle"></mat-icon>
+                                <span class="text-lg">Restock</span>
+                            </button>
+                            <button mat-menu-item (click)="openUpdateDialog(item)">
                                 <mat-icon class="icon-size-6" svgIcon="mdi:square-edit-outline"></mat-icon>
                                 <span class="text-lg">Edit</span>
                             </button>

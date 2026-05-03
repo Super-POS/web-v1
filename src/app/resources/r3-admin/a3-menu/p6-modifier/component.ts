@@ -9,6 +9,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 
 import GlobalConstants from 'helper/shared/constants';
+import { HelperConfirmationConfig } from 'helper/services/confirmation/interface';
+import { HelperConfirmationService } from 'helper/services/confirmation/service';
 import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import { ModifierGroupRow, ModifierOptionRow } from './interface';
 import { ModifierAdminService } from './service';
@@ -37,6 +39,7 @@ export class AdminModifierComponent implements OnInit {
     private _dialog = inject(MatDialog);
     private _snack = inject(SnackbarService);
     private _ingredientService = inject(MenuIngredientService);
+    private _confirmation = inject(HelperConfirmationService);
 
     groups: ModifierGroupRow[] = [];
     ingredients: IngredientItem[] = [];
@@ -90,17 +93,33 @@ export class AdminModifierComponent implements OnInit {
     }
 
     deleteGroup(g: ModifierGroupRow): void {
-        if (!confirm(`Delete group "${g.name}"?`)) {
-            return;
-        }
-        this._service.deleteGroup(g.id).subscribe({
-            next: (r) => {
-                this._snack.openSnackBar(r.message, GlobalConstants.success);
-                this.load();
+        const config: HelperConfirmationConfig = {
+            title: `Delete group <strong>${g.name}</strong>`,
+            message: 'All options in this group will be removed. <span class="font-medium">This action cannot be undone.</span>',
+            icon: {
+                show: true,
+                name: 'heroicons_outline:exclamation-triangle',
+                color: 'warn',
             },
-            error: (err: HttpErrorResponse) => {
-                this._snack.openSnackBar(err?.error?.message ?? GlobalConstants.genericError, GlobalConstants.error);
+            actions: {
+                confirm: { show: true, label: 'Delete', color: 'warn' },
+                cancel: { show: true, label: 'Cancel' },
             },
+            dismissible: true,
+        };
+        this._confirmation.open(config).afterClosed().subscribe((result: string | undefined) => {
+            if (result !== 'confirmed') {
+                return;
+            }
+            this._service.deleteGroup(g.id).subscribe({
+                next: (r) => {
+                    this._snack.openSnackBar(r.message, GlobalConstants.success);
+                    this.load();
+                },
+                error: (err: HttpErrorResponse) => {
+                    this._snack.openSnackBar(err?.error?.message ?? GlobalConstants.genericError, GlobalConstants.error);
+                },
+            });
         });
     }
 
@@ -116,17 +135,33 @@ export class AdminModifierComponent implements OnInit {
     }
 
     deleteOption(g: ModifierGroupRow, o: ModifierOptionRow): void {
-        if (!confirm(`Delete option "${o.label}"?`)) {
-            return;
-        }
-        this._service.deleteOption(o.id).subscribe({
-            next: (r) => {
-                this._snack.openSnackBar(r.message, GlobalConstants.success);
-                this.load();
+        const config: HelperConfirmationConfig = {
+            title: `Delete option <strong>${o.label}</strong>`,
+            message: `Remove this option from group <strong>${g.name}</strong>? <span class="font-medium">This action cannot be undone.</span>`,
+            icon: {
+                show: true,
+                name: 'heroicons_outline:exclamation-triangle',
+                color: 'warn',
             },
-            error: (err: HttpErrorResponse) => {
-                this._snack.openSnackBar(err?.error?.message ?? GlobalConstants.genericError, GlobalConstants.error);
+            actions: {
+                confirm: { show: true, label: 'Delete', color: 'warn' },
+                cancel: { show: true, label: 'Cancel' },
             },
+            dismissible: true,
+        };
+        this._confirmation.open(config).afterClosed().subscribe((result: string | undefined) => {
+            if (result !== 'confirmed') {
+                return;
+            }
+            this._service.deleteOption(o.id).subscribe({
+                next: (r) => {
+                    this._snack.openSnackBar(r.message, GlobalConstants.success);
+                    this.load();
+                },
+                error: (err: HttpErrorResponse) => {
+                    this._snack.openSnackBar(err?.error?.message ?? GlobalConstants.genericError, GlobalConstants.error);
+                },
+            });
         });
     }
 
