@@ -108,8 +108,8 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
     private _barayWaitSub: Subscription | null = null;
 
     cashExchangeRate = 4100;
-    cashReceivedKhrAmount = 0;
-    cashReceivedUsdAmount = 0;
+    cashReceivedKhrAmount: number | null = null;
+    cashReceivedUsdAmount: number | null = null;
     cashNote = '';
     isLoadingCashDrawer = false;
     cashDrawer: CashDrawer | null = null;
@@ -161,11 +161,11 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
     }
 
     get cashReceivedUsdTotal(): number {
-        return Number(this.cashReceivedUsdAmount || 0);
+        return Number(this.cashReceivedUsdAmount ?? 0);
     }
 
     get cashReceivedKhrTotal(): number {
-        return Number(this.cashReceivedKhrAmount || 0);
+        return Number(this.cashReceivedKhrAmount ?? 0);
     }
 
     get cashReceivedTotalInKhr(): number {
@@ -371,8 +371,8 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
                 }).subscribe({
                     next: (res) => {
                         this.isCalculatingChange = false;
-                        this.cashReceivedKhrAmount = 0;
-                        this.cashReceivedUsdAmount = 0;
+                        this.cashReceivedKhrAmount = null;
+                        this.cashReceivedUsdAmount = null;
                         this.cashNote = '';
                         this.cashChangePreview = null;
                         this.cashPreviewBreakdownItems = [];
@@ -386,8 +386,8 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
                     },
                     error: (err: HttpErrorResponse) => {
                         this.isCalculatingChange = false;
-                        this.cashReceivedKhrAmount = 0;
-                        this.cashReceivedUsdAmount = 0;
+                        this.cashReceivedKhrAmount = null;
+                        this.cashReceivedUsdAmount = null;
                         this.cashNote = '';
                         this._snackBarService.openSnackBar(
                             err?.error?.message || 'Order placed but change calculation failed.',
