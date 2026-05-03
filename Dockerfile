@@ -33,8 +33,14 @@ COPY ./ /usr/app
 # Build
 RUN npm run build -- --configuration=production
 
-# Stage 2
-FROM nginx:1.27-alpine
+# Stage 2 — same image family as stage 1 (no nginx:* pull). Helpful when Docker Hub metadata for nginx fails on the host network.
+FROM node:18-alpine
 
-COPY --from=node /usr/app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+RUN npm install -g serve@14.2.4
+
+WORKDIR /srv
+COPY --from=node /usr/app/dist ./dist
+
+EXPOSE 80
+# -s: SPA fallback to index.html (same intent as nginx try_files)
+CMD ["serve", "-s", "dist", "-l", "80", "--no-clipboard"]
