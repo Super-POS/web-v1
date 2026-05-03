@@ -1,5 +1,5 @@
 # Stage 1
-FROM node:20-alpine AS node
+FROM node:18-alpine AS node
 
 # Build-time URLs (browser must reach host-mapped ports; see docker-compose build args)
 ARG API_BASE_URL
@@ -16,6 +16,9 @@ RUN apk add --no-cache python3 make g++ \
     && ln -sf python3 /usr/bin/python
 
 WORKDIR /usr/app
+
+RUN apk add --no-cache python3 make g++
+
 COPY ./package.json /usr/app/package.json
 COPY ./package-lock.json /usr/app/package-lock.json
 
@@ -31,6 +34,7 @@ COPY ./ /usr/app
 RUN npm run build -- --configuration=production
 
 # Stage 2
-FROM nginx:1.15.8-alpine
+FROM nginx:1.27-alpine
 
 COPY --from=node /usr/app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
