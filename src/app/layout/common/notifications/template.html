@@ -87,8 +87,11 @@
                 }
                 <!-- Title, description & time -->
                 <div class="flex flex-auto flex-col">
+                    @if (notification.order_number != null && notification.order_number !== undefined) {
+                    <div class="line-clamp-1 font-semibold">Order #{{ ('00' + notification.order_number).slice(-3) }}</div>
+                    }
                     @if (notification.receipt_number) {
-                    <div class="line-clamp-1 font-semibold">#{{notification.receipt_number}}</div>
+                    <div class="text-sm opacity-80 line-clamp-1">Receipt #{{notification.receipt_number}}</div>
                     }
                     @if (notification.cashier) {
                     <div class="line-clamp-2">

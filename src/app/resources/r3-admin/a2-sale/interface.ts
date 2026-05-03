@@ -13,6 +13,7 @@ export interface List {
 export interface Data {
     id: number,
     receipt_number: number,
+    order_number?: number | null,
     total_price: number,
     platform: string,
     status: string,

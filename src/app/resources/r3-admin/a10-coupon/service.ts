@@ -14,7 +14,13 @@ export class AdminCouponService {
         });
     }
 
-    create(body: { code: string; discount_percent: number; is_active?: boolean; note?: string | null }): Observable<{ data: AdminCouponRow; message: string }> {
+    create(body: {
+        code?: string;
+        auto_generate_code?: boolean;
+        discount_percent: number;
+        is_active?: boolean;
+        note?: string | null;
+    }): Observable<{ data: AdminCouponRow; message: string }> {
         return this.http.post<{ data: AdminCouponRow; message: string }>(`${env.API_BASE_URL}/admin/coupons`, body, {
             headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
         });

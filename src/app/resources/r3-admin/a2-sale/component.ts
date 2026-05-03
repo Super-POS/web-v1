@@ -66,6 +66,7 @@ export class SaleComponent implements OnInit {
     public displayedColumns : string[] = [
         'no',
         'receipt',
+        'order_no',
         'price',
         'status',
         'ordered_at',

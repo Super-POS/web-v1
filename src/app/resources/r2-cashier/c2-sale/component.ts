@@ -65,7 +65,7 @@ export class SaleComponent implements OnInit {
     ) { }
 
     // Component properties
-    displayedColumns: string[] = ['no', 'receipt', 'price', 'status', 'ordered_at', 'ordered_at_time', 'device', 'seller', 'action'];
+    displayedColumns: string[] = ['no', 'receipt', 'order_no', 'price', 'status', 'ordered_at', 'ordered_at_time', 'device', 'seller', 'action'];
     dataSource: MatTableDataSource<Data> = new MatTableDataSource<Data>([]);
 
     fileUrl: string = env.FILE_BASE_URL;

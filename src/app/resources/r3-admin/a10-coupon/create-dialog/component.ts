@@ -3,6 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, EventEmitter, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, UntypedFormGroup, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -22,6 +23,7 @@ import { AdminCouponService } from '../service';
         CommonModule,
         ReactiveFormsModule,
         MatButtonModule,
+        MatCheckboxModule,
         MatDialogModule,
         MatFormFieldModule,
         MatIconModule,
@@ -43,16 +45,31 @@ export class AdminCouponCreateDialogComponent implements OnInit {
 
     ngOnInit(): void {
         this.form = this._formBuilder.group({
+            generate_code: [false],
             code: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(64)]],
             discount_percent: [null, [Validators.required]],
             note: [''],
         });
+
+        this.form.get('generate_code')?.valueChanges.subscribe((gen: boolean) => {
+            const codeCtrl = this.form.get('code');
+            if (gen) {
+                codeCtrl?.clearValidators();
+                codeCtrl?.setValue('');
+                codeCtrl?.disable({ emitEvent: false });
+            } else {
+                codeCtrl?.enable({ emitEvent: false });
+                codeCtrl?.setValidators([Validators.required, Validators.minLength(2), Validators.maxLength(64)]);
+            }
+            codeCtrl?.updateValueAndValidity({ emitEvent: false });
+        });
     }
 
     submit(): void {
+        const generateCode = !!this.form.get('generate_code')?.value;
         const code = String(this.form.get('code')?.value ?? '').trim();
         const pct = Number(this.form.get('discount_percent')?.value);
-        if (!code || code.length < 2) {
+        if (!generateCode && (!code || code.length < 2)) {
             this._snackBarService.openSnackBar('Enter a coupon code (at least 2 characters).', GlobalConstants.error);
             return;
         }
@@ -64,7 +81,10 @@ export class AdminCouponCreateDialogComponent implements OnInit {
         this.isSaving = true;
         const noteRaw = String(this.form.get('note')?.value ?? '').trim();
         const note = noteRaw ? noteRaw : undefined;
-        this._service.create({ code, discount_percent: pct, is_active: true, note }).subscribe({
+        const payload = generateCode
+            ? { auto_generate_code: true as const, discount_percent: pct, is_active: true as const, note }
+            : { code, discount_percent: pct, is_active: true as const, note };
+        this._service.create(payload).subscribe({
             next: (response) => {
                 this.isSaving = false;
                 this._dialogRef.disableClose = false;

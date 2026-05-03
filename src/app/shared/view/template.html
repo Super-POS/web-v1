@@ -62,8 +62,22 @@
                 </div>
             </div>
 
+            <!-- Customer (Telegram / Mini App only) -->
+            <div *ngIf="showTelegramCustomer" class="flex justify-start items-center gap-2 p-1 w-full bg-gray-50 dark:bg-gray-800 h-[3rem]">
+                <div class="flex justify-start items-center gap-2 w-[150px]">
+                    <mat-icon class="icon-size-6 text-gray-500" svgIcon="mdi:account-outline"></mat-icon>
+                    <p class="text-lg md:text-xl leading-8">Customer</p>
+                </div>
+                <div class="flex justify-start items-center gap-2">
+                    <p class="text-lg md:text-xl leading-8">:</p>
+                    <p class="text-lg md:text-xl leading-8 pl-5 text-gray-600">{{ customerInvoiceLabel }}</p>
+                </div>
+            </div>
+
             <!-- Cashier By -->
-            <div class="flex justify-start items-center gap-2 p-1 w-full bg-gray-50 dark:bg-gray-800 h-[3rem]">
+            <div
+                class="flex justify-start items-center gap-2 p-1 w-full dark:bg-gray-800 h-[3rem]"
+                [class.bg-gray-50]="!showTelegramCustomer">
                 <div class="flex justify-start items-center gap-2 w-[150px]">
                     <mat-icon class="icon-size-6 text-gray-500" svgIcon="mdi:account-cash-outline"></mat-icon>
                     <p class="text-lg md:text-xl leading-8">Cashier</p>

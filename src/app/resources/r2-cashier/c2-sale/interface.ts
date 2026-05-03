@@ -15,6 +15,7 @@ export interface Data {
 
     id: number;
     receipt_number: number;
+    order_number?: number | null;
     total_price: number;
     coupon_code?: string | null;
     discount_percent?: number | null;
@@ -27,6 +28,16 @@ export interface Data {
     status?: string;
     payment_status?: 'paid' | 'cancelled' | 'pending';
     cashier: { id: number; name: string; avatar?: string };
+    /** Present for telegram / website orders when API includes customer */
+    customer?:
+        | {
+              id: number;
+              name: string;
+              telegram_first_name?: string | null;
+              telegram_last_name?: string | null;
+              telegram_username?: string | null;
+          }
+        | null;
     details: Detail[];
     orderDetails?: Detail[];
 }

@@ -10,9 +10,19 @@
 
     <div class="out-create-body px-4 pb-2">
         <form [formGroup]="form" class="out-create-content border-t pt-4">
+            <mat-checkbox formControlName="generate_code" color="primary" class="mb-3 block">
+                Generate random code
+            </mat-checkbox>
+
             <mat-form-field appearance="outline" class="w-full">
                 <mat-label>Coupon code</mat-label>
-                <input matInput formControlName="code" placeholder="e.g. SUMMER10" maxlength="64" class="uppercase" />
+                <input
+                    matInput
+                    formControlName="code"
+                    placeholder="{{ form.get('generate_code')?.value ? 'Assigned when you create' : 'e.g. SUMMER10' }}"
+                    maxlength="64"
+                    class="uppercase" />
+                <mat-hint *ngIf="form.get('generate_code')?.value">A unique code is created on the server when you save.</mat-hint>
                 <mat-error>Code must be at least 2 characters</mat-error>
             </mat-form-field>
 

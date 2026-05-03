@@ -32,6 +32,17 @@ export class IncomingWebOrdersService {
         );
     }
 
+    /**
+     * Web queue: preparing or ready → completed (one step).
+     */
+    finishWeb(orderId: number): Observable<{ data: IncomingWebsiteOrder; message: string }> {
+        return this.httpClient.patch<{ data: IncomingWebsiteOrder; message: string }>(
+            `${env.API_BASE_URL}/cashier/orders/${orderId}/finish-web`,
+            {},
+            { headers: this.headers() },
+        );
+    }
+
     /** deny — cancel order (allowed while awaiting_payment or pending, etc.). */
     deny(orderId: number): Observable<{ data: IncomingWebsiteOrder; message: string }> {
         return this.httpClient.patch<{ data: IncomingWebsiteOrder; message: string }>(

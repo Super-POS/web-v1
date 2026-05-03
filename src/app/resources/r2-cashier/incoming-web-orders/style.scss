@@ -4,4 +4,25 @@
             font-weight: 600;
         }
     }
+
+    /* Accept: distinct green vs Finish (primary / blue) */
+    .incoming-web-accept-btn.mat-mdc-unelevated-button {
+        background-color: #16a34a !important;
+        color: #fff !important;
+    }
+
+    .incoming-web-accept-btn.mat-mdc-unelevated-button:hover:not([disabled]) {
+        background-color: #15803d !important;
+    }
+
+    .incoming-web-accept-btn.mat-mdc-unelevated-button[disabled] {
+        background-color: rgba(0, 0, 0, 0.12) !important;
+        color: rgba(0, 0, 0, 0.38) !important;
+    }
+
+    :host-context(.dark) .incoming-web-accept-btn.mat-mdc-unelevated-button[disabled],
+    .dark .incoming-web-accept-btn.mat-mdc-unelevated-button[disabled] {
+        background-color: rgba(255, 255, 255, 0.12) !important;
+        color: rgba(255, 255, 255, 0.38) !important;
+    }
 }

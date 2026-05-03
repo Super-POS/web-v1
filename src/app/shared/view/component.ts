@@ -58,6 +58,37 @@ export class ViewDetailSaleComponent implements OnInit, OnDestroy {
         }
     }
 
+    /** Telegram Mini App (and legacy Mobile filter): show linked customer on invoice drawer. Walk-in: hidden. */
+    get showTelegramCustomer(): boolean {
+        if (!this.row) {
+            return false;
+        }
+        const ch = (this.row.channel ?? '').toString().toLowerCase();
+        const isTelegram =
+            ch === 'telegram' || this.row.platform === 'Telegram' || this.row.platform === 'Mobile';
+        return isTelegram && this.customerInvoiceLabel.length > 0;
+    }
+
+    get customerInvoiceLabel(): string {
+        const c = this.row?.customer;
+        if (!c) {
+            return '';
+        }
+        const name = (c.name ?? '').trim();
+        if (name) {
+            return name;
+        }
+        const fromTg = [c.telegram_first_name, c.telegram_last_name].filter(Boolean).join(' ').trim();
+        if (fromTg) {
+            return fromTg;
+        }
+        const u = (c.telegram_username ?? '').trim();
+        if (u) {
+            return u.startsWith('@') ? u : `@${u}`;
+        }
+        return '';
+    }
+
     // Method to calculate the total of the sale
     getTotal(): number {
         return this.dataSource.data.reduce((sum, item) => sum + (item.unit_price * item.qty), 0);
