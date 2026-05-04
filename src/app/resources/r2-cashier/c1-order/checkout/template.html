@@ -1,7 +1,7 @@
-<div class="checkout-section relative bg-slate-50 dark:bg-gray-900 mt-4 mx-4 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm overflow-hidden">
+<div class="checkout-section relative flex flex-col min-h-0 bg-slate-50 dark:bg-gray-900 mt-4 mx-4 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm overflow-hidden">
     <div *ngIf="isAwaitingBarayPayment"
         class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-        <div class="w-full rounded-2xl bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden" style="max-width: 480px;">
+        <div class="w-full rounded-2xl bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden max-w-[min(480px,100vw-2rem)]">
             <div class="flex items-center gap-2 px-5 py-3.5 border-b border-gray-100 dark:border-gray-700">
                 <mat-progress-spinner [diameter]="18" [mode]="'indeterminate'" class="shrink-0"></mat-progress-spinner>
                 <span class="font-semibold text-sm text-gray-800 dark:text-gray-100">Waiting for QR payment</span>
@@ -11,8 +11,7 @@
                 <iframe
                     *ngIf="barayPayUrl"
                     [src]="barayPayUrl"
-                    class="w-full rounded-lg border border-slate-200 dark:border-gray-700 block"
-                    style="height: calc(96vh - 130px);"
+                    class="w-full rounded-lg border border-slate-200 dark:border-gray-700 block baray-pay-frame"
                     frameborder="0"
                     scrolling="auto"
                     allow="payment">
@@ -62,8 +61,8 @@
         </div>
     </header>
 
-    <div class="checkout-body grid grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_460px] gap-5 p-5 overflow-y-auto">
-        <main class="space-y-5">
+    <div class="checkout-body grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_min(420px,42vw)] xl:grid-cols-[minmax(0,1fr)_460px] gap-5 p-5 overflow-y-auto min-h-0 flex-1 items-start">
+        <main class="space-y-5 min-w-0 w-full">
             <section class="rounded-2xl border border-slate-200 bg-white dark:bg-gray-800 dark:border-gray-700 shadow-sm overflow-hidden">
                 <div class="px-5 py-4 border-b border-slate-100 dark:border-gray-700 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -81,7 +80,7 @@
                 </div>
 
                 <div class="divide-y divide-slate-100 dark:divide-gray-700">
-                    <div *ngFor="let item of carts; trackBy: trackByLineKey" class="p-4 lg:p-5 flex gap-4 justify-between hover:bg-slate-50 dark:hover:bg-gray-900/40 transition-colors">
+                    <div *ngFor="let item of carts; trackBy: trackByLineKey" class="p-4 lg:p-5 flex flex-col sm:flex-row gap-4 sm:justify-between hover:bg-slate-50 dark:hover:bg-gray-900/40 transition-colors">
                         <div class="flex min-w-0 gap-4">
                             <div class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-gray-700 dark:bg-gray-900">
                                 <img
@@ -96,7 +95,7 @@
                                 <p *ngIf="item.line_note" class="text-xs text-slate-600 dark:text-slate-300 italic mt-1">{{ item.line_note }}</p>
                             </div>
                         </div>
-                        <div class="text-right shrink-0 pt-1">
+                        <div class="text-left sm:text-right shrink-0 pt-1 sm:pt-1">
                             <p class="inline-flex rounded-full bg-slate-100 dark:bg-gray-700 px-2 py-1 text-xs font-semibold text-slate-600 dark:text-slate-200">
                                 Qty {{ item.qty }}
                             </p>
@@ -108,7 +107,8 @@
             </section>
         </main>
 
-        <aside class="space-y-5 2xl:sticky 2xl:top-5 self-start">
+        <aside class="flex flex-col min-h-0 min-w-0 w-full gap-0 lg:sticky lg:top-4 lg:self-start">
+            <div class="space-y-5 min-w-0 flex-1 pb-2">
             <section class="rounded-2xl border border-slate-200 bg-white dark:bg-gray-800 dark:border-gray-700 shadow-sm overflow-hidden">
                 <div class="px-5 py-4 border-b border-slate-100 dark:border-gray-700">
                     <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Coupon</h2>
@@ -192,7 +192,7 @@
                 </div>
 
                 <div class="p-5 space-y-4">
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                 <mat-icon class="icon-size-4 shrink-0 text-blue-600 dark:text-blue-400" svgIcon="mdi:currency-rial"></mat-icon>
@@ -226,7 +226,7 @@
                             (ngModelChange)="onCashPaymentInputChange()" />
                     </div>
 
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <div class="rounded-xl border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800 p-3">
                             <p class="text-xs text-green-700 dark:text-green-300">Received</p>
                             <p class="text-sm font-bold text-green-900 dark:text-green-100 tabular-nums">${{ cashReceivedTotalInKhr | usdFromKhr:cashExchangeRate | number:'1.2-2' }}</p>
@@ -391,15 +391,19 @@
                 </div>
             </section>
 
-            <button *ngIf="!cashChangeResult"
-                type="button"
-                class="w-full text-white font-semibold p-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl transition-colors flex items-center justify-center gap-2 shadow-sm"
-                [disabled]="isOrderBeingMade || isCalculatingChange || carts.length === 0 || (paymentMethod === 'cash' && !canPlaceCashOrder)"
-                (click)="placeOrder()">
-                <mat-progress-spinner *ngIf="isOrderBeingMade || isCalculatingChange" [diameter]="18" [mode]="'indeterminate'"></mat-progress-spinner>
-                <mat-icon *ngIf="!isOrderBeingMade && !isCalculatingChange" class="icon-size-5" [svgIcon]="paymentMethod === 'cash' ? 'mdi:cash' : 'mdi:qrcode-scan'"></mat-icon>
-                {{ isCalculatingChange ? 'Calculating change...' : (isOrderBeingMade ? 'Placing order...' : 'Place Order') }}
-            </button>
+            </div>
+
+            <div *ngIf="!cashChangeResult"
+                class="sticky bottom-0 z-20 mt-auto w-full shrink-0 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-slate-50/95 dark:bg-gray-900/95 backdrop-blur-sm border-t border-slate-200/90 dark:border-gray-700 lg:relative lg:z-0 lg:pt-4 lg:pb-0 lg:bg-transparent lg:backdrop-blur-none lg:border-t-0">
+                <button type="button"
+                    class="w-full min-h-[52px] touch-manipulation text-white font-semibold text-base py-3.5 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl transition-colors flex items-center justify-center gap-2 shadow-md sm:shadow-sm"
+                    [disabled]="isOrderBeingMade || isCalculatingChange || carts.length === 0 || (paymentMethod === 'cash' && !canPlaceCashOrder)"
+                    (click)="placeOrder()">
+                    <mat-progress-spinner *ngIf="isOrderBeingMade || isCalculatingChange" [diameter]="18" [mode]="'indeterminate'"></mat-progress-spinner>
+                    <mat-icon *ngIf="!isOrderBeingMade && !isCalculatingChange" class="icon-size-5 shrink-0" [svgIcon]="paymentMethod === 'cash' ? 'mdi:cash' : 'mdi:qrcode-scan'"></mat-icon>
+                    <span class="text-center leading-snug">{{ isCalculatingChange ? 'Calculating change...' : (isOrderBeingMade ? 'Placing order...' : 'Place Order') }}</span>
+                </button>
+            </div>
         </aside>
     </div>
 </div>

@@ -1,30 +1,46 @@
 .pos-section {
     width: 100%;
-    height: calc(100vh - 4rem) !important; /* Full viewport height minus the header (4rem) */
+    min-height: calc(100vh - 4rem);
+    min-height: calc(100dvh - 4rem);
+    max-height: calc(100vh - 4rem);
+    max-height: calc(100dvh - 4rem);
     overflow: hidden;
+
     .pos-body,
     .no-data {
         width: 100%;
-        height: calc(100vh - 7.5rem); /* Full height minus the header (4rem) and other top space */
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: calc(100vh - 7.5rem);
+        max-height: calc(100dvh - 7.5rem);
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
 
         .pos-content {
             width: 100%;
-            height: auto; /* Match height with body */
+            height: auto;
             display: flex;
 
             .list-pos-left {
                 width: 100%;
-                min-width: 20rem;
-                height: 100%; /* Full available height for left content */
+                min-width: min(100%, 20rem);
+                height: 100%;
 
                 .container-tab-content {
-                    height: calc(100vh - 11rem); /* Account for header and other space (adjust if needed) */
-                    overflow: auto; /* Ensure content is scrollable */
+                    height: calc(100vh - 11rem);
+                    height: calc(100dvh - 11rem);
+                    max-height: calc(100dvh - 11rem);
+                    overflow: auto;
+                    -webkit-overflow-scrolling: touch;
                 }
             }
         }
     }
+}
+
+.baray-pay-frame {
+    height: min(85vh, calc(100dvh - 140px));
+    min-height: 220px;
 }
 
 .cart-sidebar {

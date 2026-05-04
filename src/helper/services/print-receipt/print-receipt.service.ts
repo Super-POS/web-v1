@@ -199,7 +199,30 @@ export class PrintReceiptService {
         return new Promise((resolve) => {
             const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
             const url = URL.createObjectURL(blob);
-            const iframe = document.createElement('iframe');
+            const coarsePointer = window.matchMedia?.('(pointer: coarse)')?.matches === true;
+            const narrowViewport = window.matchMedia?.('(max-width: 1023px)')?.matches === true;
+            const preferStandaloneWindow = coarsePointer || narrowViewport;
+
+            let iframe: HTMLIFrameElement | null = null;
+            let settled = false;
+            const finish = (): void => {
+                if (settled) {
+                    return;
+                }
+                settled = true;
+                URL.revokeObjectURL(url);
+                if (iframe?.parentNode) {
+                    document.body.removeChild(iframe);
+                }
+                resolve();
+            };
+
+            if (preferStandaloneWindow) {
+                this._printHtmlInStandaloneWindow(url, finish);
+                return;
+            }
+
+            iframe = document.createElement('iframe');
             const layoutWidthPx = Math.ceil(this._mmToCssPx(RECEIPT_PAGE_WIDTH_MM));
             const iframeLayoutHeight = Math.min(
                 Math.max(typeof window.innerHeight === 'number' ? window.innerHeight : 800, 400) * 2,
@@ -219,19 +242,6 @@ export class PrintReceiptService {
                 'pointer-events:none',
                 'z-index:-1',
             ].join(';');
-
-            let settled = false;
-            const finish = () => {
-                if (settled) {
-                    return;
-                }
-                settled = true;
-                URL.revokeObjectURL(url);
-                if (iframe.parentNode) {
-                    document.body.removeChild(iframe);
-                }
-                resolve();
-            };
 
             let fallbackTimer: number | undefined;
 
@@ -307,7 +317,7 @@ export class PrintReceiptService {
                             window.clearTimeout(fallbackTimer);
                         }
                         detachPrintListeners();
-                        if (iframe.parentNode) {
+                        if (iframe?.parentNode) {
                             document.body.removeChild(iframe);
                         }
                         this._printHtmlInStandaloneWindow(url, finish);
