@@ -201,14 +201,23 @@ export class PrintReceiptService {
             const url = URL.createObjectURL(blob);
             const iframe = document.createElement('iframe');
             const layoutWidthPx = Math.ceil(this._mmToCssPx(RECEIPT_PAGE_WIDTH_MM));
+            const iframeLayoutHeight = Math.min(
+                Math.max(typeof window.innerHeight === 'number' ? window.innerHeight : 800, 400) * 2,
+                16_000,
+            );
+            iframe.setAttribute('title', 'Receipt print');
             iframe.style.cssText = [
                 'position:fixed',
-                'top:-9999px',
-                'left:-9999px',
+                'top:0',
+                'left:0',
                 `width:${layoutWidthPx}px`,
-                'height:12000px',
+                `height:${iframeLayoutHeight}px`,
                 'border:none',
-                'visibility:hidden',
+                'margin:0',
+                'padding:0',
+                'opacity:0',
+                'pointer-events:none',
+                'z-index:-1',
             ].join(';');
 
             let settled = false;
@@ -228,41 +237,199 @@ export class PrintReceiptService {
 
             iframe.onload = () => {
                 const win = iframe.contentWindow;
-                const onAfterPrint = () => {
+                if (!win) {
+                    window.setTimeout(finish, 0);
+                    return;
+                }
+
+                let printDialogHandled = false;
+                const pm = win.matchMedia?.('print');
+                let sawPrintMediaMatch = false;
+
+                const detachPrintListeners = (): void => {
+                    win.removeEventListener('afterprint', onAfterPrint);
+                    if (!pm) {
+                        return;
+                    }
+                    if (typeof pm.removeEventListener === 'function') {
+                        pm.removeEventListener('change', onPrintMediaChange);
+                    } else {
+                        pm.removeListener(onPrintMediaChange);
+                    }
+                };
+
+                const onAfterPrint = (): void => {
+                    if (printDialogHandled) {
+                        return;
+                    }
+                    printDialogHandled = true;
                     if (fallbackTimer !== undefined) {
                         window.clearTimeout(fallbackTimer);
                     }
-                    win?.removeEventListener('afterprint', onAfterPrint);
+                    detachPrintListeners();
                     window.setTimeout(finish, 300);
                 };
-                win?.addEventListener('afterprint', onAfterPrint);
+
+                const onPrintMediaChange = (): void => {
+                    if (!pm) {
+                        return;
+                    }
+                    if (pm.matches) {
+                        sawPrintMediaMatch = true;
+                        return;
+                    }
+                    if (sawPrintMediaMatch) {
+                        onAfterPrint();
+                    }
+                };
+
+                win.addEventListener('afterprint', onAfterPrint);
+                if (pm) {
+                    if (typeof pm.addEventListener === 'function') {
+                        pm.addEventListener('change', onPrintMediaChange);
+                    } else {
+                        pm.addListener(onPrintMediaChange);
+                    }
+                }
+
                 fallbackTimer = window.setTimeout(() => {
-                    win?.removeEventListener('afterprint', onAfterPrint);
+                    detachPrintListeners();
                     finish();
                 }, 90_000);
 
-                const runPrint = () => {
+                const runPrint = (): void => {
                     try {
-                        win?.focus();
-                        win?.print();
+                        win.focus();
+                        void win.document.body?.offsetHeight;
+                        win.print();
                     } catch {
                         if (fallbackTimer !== undefined) {
                             window.clearTimeout(fallbackTimer);
                         }
-                        win?.removeEventListener('afterprint', onAfterPrint);
-                        window.open(url, '_blank');
-                        window.setTimeout(finish, 300);
+                        detachPrintListeners();
+                        if (iframe.parentNode) {
+                            document.body.removeChild(iframe);
+                        }
+                        this._printHtmlInStandaloneWindow(url, finish);
                     }
                 };
 
-                win?.requestAnimationFrame(() => {
-                    win?.requestAnimationFrame(runPrint);
-                });
+                void win.document.body?.offsetHeight;
+                window.setTimeout(runPrint, 0);
             };
 
             document.body.appendChild(iframe);
             iframe.src = url;
         });
+    }
+
+    /**
+     * Opens the slip in a new browser window and runs the system print dialog. Used when iframe
+     * print() fails. Keeps the blob URL valid until the print dialog closes, then revokes via onComplete.
+     */
+    private _printHtmlInStandaloneWindow(blobUrl: string, onComplete: () => void): void {
+        const popup = window.open(blobUrl, '_blank', 'noopener,noreferrer');
+        if (!popup) {
+            onComplete();
+            return;
+        }
+
+        let finished = false;
+        const done = (): void => {
+            if (finished) {
+                return;
+            }
+            finished = true;
+            try {
+                popup.close();
+            } catch {
+                /* no-op */
+            }
+            onComplete();
+        };
+
+        let fallbackTimer: number | undefined;
+        const clearFallback = (): void => {
+            if (fallbackTimer !== undefined) {
+                window.clearTimeout(fallbackTimer);
+                fallbackTimer = undefined;
+            }
+        };
+
+        const onAfterPrint = (): void => {
+            clearFallback();
+            popup.removeEventListener('afterprint', onAfterPrint);
+            detachPm();
+            window.setTimeout(done, 300);
+        };
+
+        const pm = popup.matchMedia?.('print');
+        let sawPrintMediaMatch = false;
+        const onPrintMediaChange = (): void => {
+            if (!pm) {
+                return;
+            }
+            if (pm.matches) {
+                sawPrintMediaMatch = true;
+                return;
+            }
+            if (sawPrintMediaMatch) {
+                clearFallback();
+                popup.removeEventListener('afterprint', onAfterPrint);
+                detachPm();
+                window.setTimeout(done, 300);
+            }
+        };
+
+        const detachPm = (): void => {
+            if (!pm) {
+                return;
+            }
+            if (typeof pm.removeEventListener === 'function') {
+                pm.removeEventListener('change', onPrintMediaChange);
+            } else {
+                pm.removeListener(onPrintMediaChange);
+            }
+        };
+
+        const attach = (): void => {
+            popup.addEventListener('afterprint', onAfterPrint);
+            if (pm) {
+                if (typeof pm.addEventListener === 'function') {
+                    pm.addEventListener('change', onPrintMediaChange);
+                } else {
+                    pm.addListener(onPrintMediaChange);
+                }
+            }
+            fallbackTimer = window.setTimeout(() => {
+                popup.removeEventListener('afterprint', onAfterPrint);
+                detachPm();
+                done();
+            }, 90_000);
+        };
+
+        const runPrint = (): void => {
+            try {
+                popup.focus();
+                void popup.document.body?.offsetHeight;
+                popup.print();
+            } catch {
+                clearFallback();
+                popup.removeEventListener('afterprint', onAfterPrint);
+                detachPm();
+                done();
+            }
+        };
+
+        if (popup.document?.readyState === 'complete') {
+            attach();
+            window.setTimeout(runPrint, 0);
+        } else {
+            popup.addEventListener('load', () => {
+                attach();
+                window.setTimeout(runPrint, 0);
+            });
+        }
     }
 
     private _buildSingleSlipDocument(order: PrintableOrder, kind: 'barista' | 'customer' | 'cashier'): string {
@@ -276,6 +443,7 @@ export class PrintReceiptService {
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&amp;display=swap" rel="stylesheet">
@@ -292,6 +460,7 @@ ${this._layoutStyles()}
     private _layoutStyles(): string {
         return `
   @page { size: ${RECEIPT_PAGE_WIDTH_MM}mm auto; margin: 0; }
+  html { color-scheme: only light; }
   html, body { height: auto; min-height: auto; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body.receipt-root {
@@ -306,6 +475,26 @@ ${this._layoutStyles()}
     color: #111;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    color-adjust: exact;
+  }
+  @media screen {
+    html { background: #e8e8e8; }
+    body.receipt-root {
+      width: min(${RECEIPT_PAGE_WIDTH_MM}mm, 100vw);
+      max-width: 100%;
+      margin: 12px auto;
+      min-height: auto;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+    }
+  }
+  @media print {
+    html { background: #fff; }
+    body.receipt-root {
+      width: ${RECEIPT_PAGE_WIDTH_MM}mm;
+      max-width: ${RECEIPT_PAGE_WIDTH_MM}mm;
+      margin: 0;
+      box-shadow: none;
+    }
   }
   .slip {
     padding: calc((4mm + 1mm * var(--dm))) calc(4mm * var(--dm)) calc(6mm + 1mm * var(--dm));
