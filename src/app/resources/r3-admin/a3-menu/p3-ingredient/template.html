@@ -96,6 +96,10 @@
                                 <mat-icon class="icon-size-6" svgIcon="heroicons_outline:plus-circle"></mat-icon>
                                 <span class="text-lg">Restock</span>
                             </button>
+                            <button mat-menu-item (click)="openWastageDialog(item)">
+                                <mat-icon class="icon-size-6 text-amber-500" svgIcon="heroicons_outline:trash"></mat-icon>
+                                <span class="text-lg text-amber-600">Wastage</span>
+                            </button>
                             <button mat-menu-item (click)="openUpdateDialog(item)">
                                 <mat-icon class="icon-size-6" svgIcon="mdi:square-edit-outline"></mat-icon>
                                 <span class="text-lg">Edit</span>

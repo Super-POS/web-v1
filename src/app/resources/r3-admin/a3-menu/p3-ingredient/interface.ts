@@ -30,3 +30,22 @@ export interface IngredientUpdatePayload {
 export interface IngredientRestockPayload {
     add: number;
 }
+
+export const WASTAGE_REASONS = [
+    'Cooking practice',
+    'Test drinks by staff',
+    'Expired food',
+    'Broken items',
+    'Spilled milk or coffee',
+    'Product samples',
+    'Kitchen mistakes',
+    'Other',
+] as const;
+
+export type WastageReason = (typeof WASTAGE_REASONS)[number];
+
+/** POST .../ingredients/:id/wastage — deducts from current quantity on the server. */
+export interface IngredientWastagePayload {
+    amount: number;
+    reason: string;
+}

@@ -1,0 +1,46 @@
+<div class="out-create-section md-form-field-appearance-outline">
+    <div mat-dialog-title class="min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pr-2.5">
+        <div class="flex flex-1 flex-col text-slate-500 gap-0.5">
+            <h1 class="text-2xl leading-tight">Record Wastage</h1>
+            <p class="text-sm font-normal text-slate-600 dark:text-slate-400">{{ data.name }}</p>
+        </div>
+        <div class="flex items-center cursor-pointer">
+            <mat-icon class="-mb-0.5" [svgIcon]="'heroicons_outline:x-mark'" (click)="closeDialog()"></mat-icon>
+        </div>
+    </div>
+
+    <div class="out-create-body px-4 pb-2">
+        <p class="text-sm text-slate-600 dark:text-slate-400 border-t pt-4 mb-3">
+            Current stock:
+            <span class="font-medium text-slate-800 dark:text-slate-200">{{ currentQty() }}</span>
+            <span *ngIf="data.unit" class="text-slate-500"> {{ data.unit }}</span>
+        </p>
+        <form [formGroup]="form" class="out-create-content space-y-2">
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Wastage reason</mat-label>
+                <mat-select formControlName="reason">
+                    <mat-option *ngFor="let r of wastageReasons" [value]="r">{{ r }}</mat-option>
+                </mat-select>
+                <mat-error>Please select a reason.</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Amount wasted</mat-label>
+                <input matInput type="number" formControlName="amount" min="0.0001" step="any" />
+                <mat-hint>This amount will be deducted from the current stock.</mat-hint>
+                <mat-error>Enter a valid amount greater than 0.</mat-error>
+            </mat-form-field>
+        </form>
+    </div>
+
+    <mat-dialog-actions>
+        <div class="w-full flex justify-end px-1 gap-2">
+            <button type="button" mat-stroked-button (click)="closeDialog()" [disabled]="isSaving">Cancel</button>
+            <button class="helpers-mat-button-md text-white bg-amber-600" mat-flat-button (click)="submit()"
+                [disabled]="isSaving || !form.valid">
+                <span *ngIf="!isSaving">Record wastage</span>
+                <mat-progress-spinner *ngIf="isSaving" [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>
+            </button>
+        </div>
+    </mat-dialog-actions>
+</div>

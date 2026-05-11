@@ -9,6 +9,7 @@ import {
     IngredientResponse,
     IngredientRestockPayload,
     IngredientUpdatePayload,
+    IngredientWastagePayload,
 } from './interface';
 
 @Injectable({
@@ -58,6 +59,14 @@ export class MenuIngredientService {
     restock(id: number, body: IngredientRestockPayload): Observable<{ data: IngredientItem; message: string }> {
         return this._httpClient.post<{ data: IngredientItem; message: string }>(
             `${env.API_BASE_URL}/admin/menu/ingredients/${id}/restock`,
+            body,
+            this._httpOptions
+        );
+    }
+
+    wastage(id: number, body: IngredientWastagePayload): Observable<{ data: IngredientItem; message: string }> {
+        return this._httpClient.post<{ data: IngredientItem; message: string }>(
+            `${env.API_BASE_URL}/admin/menu/ingredients/${id}/wastage`,
             body,
             this._httpOptions
         );

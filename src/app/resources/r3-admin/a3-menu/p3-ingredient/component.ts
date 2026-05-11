@@ -17,6 +17,7 @@ import { CreateDialogComponent } from './create-dialog/component';
 import { IngredientItem } from './interface';
 import { RestockDialogComponent } from './restock-dialog/component';
 import { UpdateDialogComponent } from './update-dialog/component';
+import { WastageDialogComponent } from './wastage-dialog/component';
 import { MenuIngredientService } from './service';
 
 @Component({
@@ -169,6 +170,23 @@ export class MenuIngredientComponent implements OnInit {
 
     openRestockDialog(item: IngredientItem): void {
         const dialogRef = this._matDialog.open(RestockDialogComponent, {
+            width: '440px',
+            maxWidth: '95vw',
+            autoFocus: false,
+            data: item,
+        });
+        dialogRef.componentInstance.resData.subscribe((res: IngredientItem) => {
+            const data = [...this.dataSource.data];
+            const idx = data.findIndex((r) => r.id === res.id);
+            if (idx >= 0) {
+                data[idx] = { ...data[idx], ...res };
+                this.dataSource.data = data;
+            }
+        });
+    }
+
+    openWastageDialog(item: IngredientItem): void {
+        const dialogRef = this._matDialog.open(WastageDialogComponent, {
             width: '440px',
             maxWidth: '95vw',
             autoFocus: false,
