@@ -211,11 +211,15 @@ export class MenuListComponent implements OnInit {
 
         this._service.getData(params).subscribe({
             next: (res: List) => {
-                this.dataSource.data = res.data;
+                this.dataSource.data = res.data.map(item => ({
+                    ...item,
+                    is_available: !!item.is_available,
+                }));
                 this.total = res.pagination.total;
                 this.limit = res.pagination.limit;
                 this.page = res.pagination.page;
                 this.isLoading = false;
+                this.cdr.detectChanges();
             },
             error: (err: HttpErrorResponse) => {
                 this.isLoading = false;
@@ -350,17 +354,22 @@ export class MenuListComponent implements OnInit {
         const dialogRef = this.matDialog.open(ViewDialogComponent, dialogConfig);
     }
 
-    toggleAvailability(row: Data): void {
-        const newValue = !row.is_available;
+    toggleAvailability(row: Data, event?: { checked: boolean }): void {
+        const newValue = event ? event.checked : !row.is_available;
         this._service.toggleAvailability(row.id, newValue).subscribe({
             next: (res) => {
-                row.is_available = res.data.is_available;
+                row.is_available = !!res.data.is_available;
+                // Trigger re-render of the table row
+                this.dataSource.data = [...this.dataSource.data];
                 this.snackBarService.openSnackBar(res.message, GlobalConstants.success);
+                this.cdr.detectChanges();
             },
             error: (err: HttpErrorResponse) => {
                 // revert optimistic toggle
                 row.is_available = !newValue;
+                this.dataSource.data = [...this.dataSource.data];
                 this.snackBarService.openSnackBar(err?.error?.message ?? GlobalConstants.genericError, GlobalConstants.error);
+                this.cdr.detectChanges();
             },
         });
     }
