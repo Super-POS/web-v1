@@ -125,8 +125,8 @@ export class MenuWastageComponent implements OnInit {
             const report: WastageReportData = {
                 type: 'Ingredient',
                 records: this.ingredientDataSource.data.map((r) => ({
-                    name: r.ingredient_name,
-                    unit: r.unit,
+                    name: r.ingredient?.name ?? r.ingredient_name ?? '',
+                    unit: r.ingredient?.unit ?? r.unit,
                     amount: r.quantity,
                     reason: r.reason,
                     created_at: r.created_at,
@@ -137,7 +137,7 @@ export class MenuWastageComponent implements OnInit {
             const report: WastageReportData = {
                 type: 'Recipe',
                 records: this.recipeDataSource.data.map((r) => ({
-                    name: r.menu_name,
+                    name: r.menu?.name ?? r.menu_name ?? '',
                     amount: r.quantity,
                     reason: r.reason,
                     created_at: r.created_at,

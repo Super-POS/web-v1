@@ -20,8 +20,11 @@ export interface IngredientOption {
 export interface IngredientWastageRecord {
     id: number;
     ingredient_id: number;
-    ingredient_name: string;
+    // flat (returned by some endpoints)
+    ingredient_name?: string;
     unit?: string;
+    // nested (returned by others)
+    ingredient?: { id: number; name: string; unit?: string };
     quantity: number;
     reason: string;
     note?: string;
@@ -52,7 +55,10 @@ export interface RecipeOption {
 export interface RecipeWastageRecord {
     id: number;
     menu_id: number;
-    menu_name: string;
+    // flat
+    menu_name?: string;
+    // nested
+    menu?: { id: number; name: string };
     quantity: number;
     reason: string;
     note?: string;

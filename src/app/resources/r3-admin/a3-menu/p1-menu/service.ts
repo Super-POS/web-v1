@@ -80,6 +80,15 @@ export class MenuService {
         return this.httpClient.delete<{ status_code: number, message: string }>(`${env.API_BASE_URL}/admin/menus/${id}`);
     }
 
+    // Toggle availability on/off
+    toggleAvailability(id: number, is_available: boolean): Observable<{ data: Data; message: string }> {
+        return this.httpClient.patch<{ data: Data; message: string }>(
+            `${env.API_BASE_URL}/admin/menus/${id}/availability`,
+            { is_available },
+            { headers: new HttpHeaders().set('Content-Type', 'application/json') }
+        );
+    }
+
     // Method to fetch product report
     getDataMenuReport(params = {}): Observable<any> {
         // const params = new HttpParams()

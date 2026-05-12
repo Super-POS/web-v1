@@ -16,6 +16,7 @@ export interface Data {
     image: string,
     unit_price: number,
     total_sale: number,
+    is_available?: boolean,
     created_at: Date,
     type: { id: number, name: string }
     creator?: { id: number, name: string, avatar: string }

@@ -15,6 +15,8 @@ import { MatPaginatorModule, PageEvent }                       from '@angular/ma
 import { MatSelectModule }                                     from '@angular/material/select';
 import { MatTableDataSource, MatTableModule }                  from '@angular/material/table';
 
+import { MatSlideToggleModule }                                    from '@angular/material/slide-toggle';
+
 // ================================================================>> Custom Library (Application-specific)
 import { env }                                                  from 'envs/env';
 import FileSaver                                                from 'file-saver';
@@ -53,6 +55,7 @@ import { resolveFileUrl } from 'helper/utils/resolve-file-url';
         MatPaginatorModule,
         MatMenuModule,
         MatBadgeModule,
+        MatSlideToggleModule,
     ]
 })
 
@@ -78,6 +81,7 @@ export class MenuListComponent implements OnInit {
         'total_sale_price',
         'created',
         'seller',
+        'availability',
         'action'
     ];
 
@@ -344,6 +348,21 @@ export class MenuListComponent implements OnInit {
         dialogConfig.enterAnimationDuration = '0s';
         dialogConfig.data = element
         const dialogRef = this.matDialog.open(ViewDialogComponent, dialogConfig);
+    }
+
+    toggleAvailability(row: Data): void {
+        const newValue = !row.is_available;
+        this._service.toggleAvailability(row.id, newValue).subscribe({
+            next: (res) => {
+                row.is_available = res.data.is_available;
+                this.snackBarService.openSnackBar(res.message, GlobalConstants.success);
+            },
+            error: (err: HttpErrorResponse) => {
+                // revert optimistic toggle
+                row.is_available = !newValue;
+                this.snackBarService.openSnackBar(err?.error?.message ?? GlobalConstants.genericError, GlobalConstants.error);
+            },
+        });
     }
 
     // Edit menu in dialog
