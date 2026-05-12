@@ -1,0 +1,166 @@
+<div class="list-sale-section w-full bg-white dark:bg-gray-800 mt-4 mx-4 rounded-tl-lg rounded-tr-lg">
+
+    <!-- Page header -->
+    <div class="bg-white min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5 dark:bg-gray-800">
+        <div class="flex flex-1 items-center font-medium">
+            <mat-icon class="text-gray-600 dark:text-white icon-size-5" [svgIcon]="'heroicons_outline:home'"></mat-icon>
+            <span class="text-lg text-gray-600 dark:text-white ml-1.5">Menu</span>
+            <mat-icon class="-mb-0.5" [svgIcon]="'mat_solid:chevron_right'"></mat-icon>
+            <span class="text-lg text-gray-600 dark:text-white -mb-0.5">Wastage</span>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <mat-tab-group animationDuration="200ms" (selectedTabChange)="onTabChange($event)">
+
+        <!-- ── Tab 1: Ingredient Wastage ──────────────────────────────────── -->
+        <mat-tab>
+            <ng-template mat-tab-label>
+                <mat-icon class="icon-size-4 mr-1.5" [svgIcon]="'heroicons_outline:beaker'"></mat-icon>
+                Ingredient Wastage
+            </ng-template>
+
+            <div class="p-4">
+                <!-- Toolbar -->
+                <div class="flex items-center justify-between mb-4">
+                    <p class="text-sm text-slate-500 dark:text-slate-400">
+                        Track ingredient deductions caused by practice, accidents, expiry, and more.
+                    </p>
+                    <div class="flex items-center gap-2">
+                        <button mat-stroked-button class="helpers-mat-button-sm" (click)="printCurrent()"
+                            [disabled]="ingredientLoading || ingredientDataSource.data.length === 0">
+                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:printer'"></mat-icon>
+                            Print
+                        </button>
+                        <button mat-flat-button class="helpers-mat-button-sm text-white bg-amber-600" (click)="openRecordIngredientDialog()">
+                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                            Record
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading -->
+                <div *ngIf="ingredientLoading" class="py-8 text-center text-slate-500 text-sm">Loading…</div>
+
+                <!-- Empty -->
+                <div *ngIf="!ingredientLoading && ingredientDataSource.data.length === 0"
+                    class="py-8 text-center text-slate-500 text-sm">No ingredient wastage records yet.
+                </div>
+
+                <!-- Table -->
+                <div *ngIf="!ingredientLoading && ingredientDataSource.data.length > 0" class="w-full overflow-x-auto">
+                    <table mat-table [dataSource]="ingredientDataSource" class="w-full min-w-full">
+
+                        <ng-container matColumnDef="no">
+                            <th mat-header-cell *matHeaderCellDef>No.</th>
+                            <td mat-cell *matCellDef="let item; let i = index">{{ i + 1 }}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="ingredient_name">
+                            <th mat-header-cell *matHeaderCellDef>Ingredient</th>
+                            <td mat-cell *matCellDef="let item">{{ item.ingredient_name }}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="unit">
+                            <th mat-header-cell *matHeaderCellDef>Unit</th>
+                            <td mat-cell *matCellDef="let item">{{ item.unit || '-' }}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="amount">
+                            <th mat-header-cell *matHeaderCellDef>Amount</th>
+                            <td mat-cell *matCellDef="let item" class="text-amber-600 dark:text-amber-400 font-medium">
+                                -{{ item.amount }}
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="reason">
+                            <th mat-header-cell *matHeaderCellDef>Reason</th>
+                            <td mat-cell *matCellDef="let item">{{ item.reason }}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="created_at">
+                            <th mat-header-cell *matHeaderCellDef>Date</th>
+                            <td mat-cell *matCellDef="let item">{{ item.created_at | date: 'dd-MMM-yyyy' }}</td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="ingredientColumns"></tr>
+                        <tr mat-row *matRowDef="let row; columns: ingredientColumns;"></tr>
+                    </table>
+                </div>
+            </div>
+        </mat-tab>
+
+        <!-- ── Tab 2: Recipe (RCP) Wastage ───────────────────────────────── -->
+        <mat-tab>
+            <ng-template mat-tab-label>
+                <mat-icon class="icon-size-4 mr-1.5" [svgIcon]="'heroicons_outline:book-open'"></mat-icon>
+                Recipe Wastage
+            </ng-template>
+
+            <div class="p-4">
+                <!-- Toolbar -->
+                <div class="flex items-center justify-between mb-4">
+                    <p class="text-sm text-slate-500 dark:text-slate-400">
+                        Track wasted recipes or finished products — test batches, failed preparations, and spoilage.
+                    </p>
+                    <div class="flex items-center gap-2">
+                        <button mat-stroked-button class="helpers-mat-button-sm" (click)="printCurrent()"
+                            [disabled]="recipeLoading || recipeDataSource.data.length === 0">
+                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:printer'"></mat-icon>
+                            Print
+                        </button>
+                        <button mat-flat-button class="helpers-mat-button-sm text-white bg-amber-600" (click)="openRecordRecipeDialog()">
+                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                            Record
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading -->
+                <div *ngIf="recipeLoading" class="py-8 text-center text-slate-500 text-sm">Loading…</div>
+
+                <!-- Empty -->
+                <div *ngIf="!recipeLoading && recipeDataSource.data.length === 0"
+                    class="py-8 text-center text-slate-500 text-sm">No recipe wastage records yet.
+                </div>
+
+                <!-- Table -->
+                <div *ngIf="!recipeLoading && recipeDataSource.data.length > 0" class="w-full overflow-x-auto">
+                    <table mat-table [dataSource]="recipeDataSource" class="w-full min-w-full">
+
+                        <ng-container matColumnDef="no">
+                            <th mat-header-cell *matHeaderCellDef>No.</th>
+                            <td mat-cell *matCellDef="let item; let i = index">{{ i + 1 }}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="recipe_name">
+                            <th mat-header-cell *matHeaderCellDef>Recipe / Product</th>
+                            <td mat-cell *matCellDef="let item">{{ item.recipe_name }}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="quantity">
+                            <th mat-header-cell *matHeaderCellDef>Qty</th>
+                            <td mat-cell *matCellDef="let item" class="text-amber-600 dark:text-amber-400 font-medium">
+                                -{{ item.quantity }}
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="reason">
+                            <th mat-header-cell *matHeaderCellDef>Reason</th>
+                            <td mat-cell *matCellDef="let item">{{ item.reason }}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="created_at">
+                            <th mat-header-cell *matHeaderCellDef>Date</th>
+                            <td mat-cell *matCellDef="let item">{{ item.created_at | date: 'dd-MMM-yyyy' }}</td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="recipeColumns"></tr>
+                        <tr mat-row *matRowDef="let row; columns: recipeColumns;"></tr>
+                    </table>
+                </div>
+            </div>
+        </mat-tab>
+
+    </mat-tab-group>
+</div>

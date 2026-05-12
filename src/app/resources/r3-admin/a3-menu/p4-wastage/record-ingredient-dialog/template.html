@@ -1,0 +1,89 @@
+<div class="out-create-section md-form-field-appearance-outline">
+    <div mat-dialog-title class="min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pr-2.5">
+        <div class="flex flex-1 flex-col text-slate-500 gap-0.5">
+            <h1 class="text-2xl leading-tight">Record Ingredient Wastage</h1>
+            <p class="text-sm font-normal text-slate-500 dark:text-slate-400">Deduct stock and log the reason.</p>
+        </div>
+        <div class="flex items-center cursor-pointer">
+            <mat-icon class="-mb-0.5" [svgIcon]="'heroicons_outline:x-mark'" (click)="closeDialog()"></mat-icon>
+        </div>
+    </div>
+
+    <div class="out-create-body px-4 pb-2">
+        <div *ngIf="isLoading" class="border-t pt-4 text-sm text-slate-500">Loading ingredients…</div>
+
+        <form *ngIf="!isLoading" [formGroup]="form" class="out-create-content space-y-3 border-t pt-4">
+
+            <!-- Searchable ingredient picker -->
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Ingredient</mat-label>
+                <mat-icon matPrefix class="icon-size-5 text-slate-400 mr-1" [svgIcon]="'heroicons_outline:magnifying-glass'"></mat-icon>
+                <input
+                    matInput
+                    type="text"
+                    placeholder="Type to search…"
+                    [formControl]="ingredientSearch"
+                    [matAutocomplete]="ingredientAuto"
+                    autocomplete="off"
+                />
+                <button *ngIf="selectedIngredientItem" matSuffix mat-icon-button type="button"
+                    class="!w-8 !h-8" (click)="clearIngredientSearch()">
+                    <mat-icon class="icon-size-4" [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+                </button>
+                <mat-hint *ngIf="selectedIngredientItem">
+                    Current stock: <strong>{{ selectedIngredientItem.quantity }}</strong>
+                    <span *ngIf="selectedIngredientItem.unit"> {{ selectedIngredientItem.unit }}</span>
+                </mat-hint>
+                <mat-error *ngIf="form.get('ingredient_id')?.touched && !selectedIngredientItem">Please select an ingredient.</mat-error>
+
+                <mat-autocomplete
+                    #ingredientAuto="matAutocomplete"
+                    [displayWith]="displayIngredientName"
+                    (optionSelected)="onIngredientSelected($event)">
+                    <mat-option *ngFor="let ing of filteredIngredients" [value]="ing">
+                        <div class="flex flex-col leading-tight py-0.5">
+                            <span class="font-medium">{{ ing.name }}</span>
+                            <span *ngIf="ing.unit" class="text-xs text-slate-400">
+                                Stock: {{ ing.quantity }} {{ ing.unit }}
+                            </span>
+                        </div>
+                    </mat-option>
+                    <mat-option *ngIf="filteredIngredients.length === 0" disabled>
+                        <span class="text-slate-400 text-sm">No ingredients match your search.</span>
+                    </mat-option>
+                </mat-autocomplete>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Wastage reason</mat-label>
+                <mat-select formControlName="reason">
+                    <mat-option *ngFor="let r of wastageReasons" [value]="r">{{ r }}</mat-option>
+                </mat-select>
+                <mat-error>Please select a reason.</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Quantity wasted</mat-label>
+                <input matInput type="number" formControlName="quantity" min="0.0001" step="any" />
+                <mat-hint>This amount will be deducted from current stock.</mat-hint>
+                <mat-error>Enter a valid quantity greater than 0.</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Note <span class="text-slate-400">(optional)</span></mat-label>
+                <textarea matInput formControlName="note" rows="2" placeholder="e.g. Found expired milk in fridge"></textarea>
+            </mat-form-field>
+        </form>
+    </div>
+
+    <mat-dialog-actions>
+        <div class="w-full flex justify-end px-1 gap-2">
+            <button type="button" mat-stroked-button (click)="closeDialog()" [disabled]="isSaving">Cancel</button>
+            <button class="helpers-mat-button-md text-white bg-amber-600" mat-flat-button (click)="submit()"
+                [disabled]="isSaving || isLoading || !form.valid || !selectedIngredientItem">
+                <span *ngIf="!isSaving">Record wastage</span>
+                <mat-progress-spinner *ngIf="isSaving" [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>
+            </button>
+        </div>
+    </mat-dialog-actions>
+</div>

@@ -53,6 +53,12 @@ const adminNavigation: HelperNavigationItem[] = [
                 link: '/admin/menu/ingredient',
             },
             {
+                id: 'menu.wastage',
+                title: 'Wastage',
+                type: 'basic',
+                link: '/admin/menu/wastage',
+            },
+            {
                 id: 'menu.modifier',
                 title: 'Options (Modifiers)',
                 type: 'basic',

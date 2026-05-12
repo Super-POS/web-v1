@@ -56,6 +56,20 @@ export interface PrintableDetail {
     detail_modifiers?: PrintableDetailModifier[];
 }
 
+export interface WastageReportRecord {
+    name: string;
+    unit?: string;
+    amount: number;
+    reason: string;
+    created_at: string;
+}
+
+export interface WastageReportData {
+    /** Display label shown in the slip header, e.g. "Ingredient" or "Recipe". */
+    type: string;
+    records: WastageReportRecord[];
+}
+
 /**
  * Roll width (mm) — match the print dialog / driver (e.g. 72 or 80). Receipt length follows the
  * order: `@page` uses this width and `auto` height so each slip grows with line items.
@@ -1100,6 +1114,105 @@ ${this._layoutStyles()}
         }
         const nm = (c.name ?? '').toString().trim();
         return nm ? nm : null;
+    }
+
+    // ── Wastage report ────────────────────────────────────────────────────────
+
+    /** Open the browser print dialog for a wastage report slip. */
+    printWastageReport(data: WastageReportData): void {
+        void this._printHtml(this._buildWastageReportDocument(data));
+    }
+
+    private _buildWastageReportDocument(data: WastageReportData): string {
+        const dm = 1;
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&amp;display=swap" rel="stylesheet">
+<style>
+${this._layoutStyles()}
+</style>
+</head>
+<body class="receipt-root" style="--dm:${dm}">
+  ${this._buildWastageSlip(data)}
+</body>
+</html>`;
+    }
+
+    private _buildWastageSlip(data: WastageReportData): string {
+        const printedAt = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Asia/Phnom_Penh',
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit',
+        }).format(new Date()).replace(',', '');
+
+        const rows = data.records.map((r, i) => {
+            const name = this._escapeHtml(r.name);
+            const unit = r.unit ? ` <span style="color:#555">${this._escapeHtml(r.unit)}</span>` : '';
+            const amount = `-${r.amount}${r.unit ? ' ' + this._escapeHtml(r.unit) : ''}`;
+            const reason = `<div style="font-size:calc(8px*var(--dm));color:#555;margin-top:1px">${this._escapeHtml(r.reason)}</div>`;
+            const dateStr = r.created_at
+                ? new Intl.DateTimeFormat('en-GB', {
+                    timeZone: 'Asia/Phnom_Penh',
+                    day: '2-digit', month: 'short', year: 'numeric',
+                }).format(new Date(r.created_at))
+                : '-';
+            return `<tr>
+                <td class="item-name" style="width:40%">
+                  <span style="font-weight:600">${i + 1}. ${name}</span>${unit}
+                  ${reason}
+                </td>
+                <td class="num" style="color:#b45309;font-weight:600">${this._escapeHtml(amount)}</td>
+                <td class="num">${this._escapeHtml(dateStr)}</td>
+            </tr>`;
+        }).join('');
+
+        const emptyRow = data.records.length === 0
+            ? `<tr><td colspan="3" style="text-align:center;color:#888;padding:8px 0">No records</td></tr>`
+            : '';
+
+        return `<div class="slip">
+  <div class="slip-inner">
+  <div class="logo-wrap">
+    <div class="logo-circle"><img src="${CLUB54_LOGO}" alt="Club 54"></div>
+  </div>
+  <div class="center shop-name">Club 54</div>
+  <div class="center tagline">Coffee &amp; Bakery Shop</div>
+  <div class="center address">Phnom Penh, Cambodia</div>
+  <div class="center address">Tel: 010542654</div>
+  <hr class="solid">
+
+  <div class="center" style="font-weight:700;font-size:calc(11px*var(--dm));text-transform:uppercase;letter-spacing:0.08em;margin:calc(5px*var(--dm)) 0 calc(3px*var(--dm))">
+    ${this._escapeHtml(data.type)} Wastage Report
+  </div>
+  <table class="meta">
+    <tr><td>Printed</td><td>${this._escapeHtml(printedAt)}</td></tr>
+    <tr><td>Records</td><td>${data.records.length}</td></tr>
+  </table>
+
+  <hr class="dash">
+
+  <table class="items">
+    <thead>
+      <tr>
+        <th style="text-align:left">Name</th>
+        <th class="r">Amount</th>
+        <th class="r">Date</th>
+      </tr>
+    </thead>
+    <tbody>${rows}${emptyRow}</tbody>
+  </table>
+
+  <div class="slip-tail">
+    <hr class="dash">
+    <div class="center footer">Club 54 &bull; Internal Record</div>
+  </div>
+  </div>
+</div>`;
     }
 
     /** Padded 001–100 for slips */
