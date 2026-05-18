@@ -7,7 +7,16 @@ import { Observable, catchError, tap, throwError } from 'rxjs';
 
 // ================================================================>> Custom Library
 import { env } from 'envs/env';
-import { BarayPaymentIntentResponse, CashierCouponOption, CheckoutDraft, IngredientStock, List, ResponseOrder } from './interface';
+import {
+    BakongPaymentIntentResponse,
+    BakongPaymentStateResponse,
+    BarayPaymentIntentResponse,
+    CashierCouponOption,
+    CheckoutDraft,
+    IngredientStock,
+    List,
+    ResponseOrder,
+} from './interface';
 @Injectable({
 
     providedIn: 'root',
@@ -144,6 +153,34 @@ export class OrderService {
                 Pragma: 'no-cache',
             }),
         });
+    }
+
+    /** After an order is created: Bakong KHQR string + md5 to poll (rendered as QR in the UI). */
+    createBakongPaymentIntent(orderId: number): Observable<BakongPaymentIntentResponse> {
+        return this.httpClient.post<BakongPaymentIntentResponse>(
+            `${env.API_BASE_URL}/cashier/ordering/bakong/payment-intent`,
+            { order_id: orderId },
+            { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) },
+        );
+    }
+
+    /**
+     * Bakong wait overlay: order row + latest `payment_transaction` (`bakong_transaction_status`).
+     * Cache-busting `t` query so polling never hits a stale browser cache.
+     */
+    getBakongPaymentState(id: number): Observable<BakongPaymentStateResponse> {
+        const params = new HttpParams().set('t', String(Date.now()));
+        return this.httpClient.get<BakongPaymentStateResponse>(
+            `${env.API_BASE_URL}/cashier/ordering/bakong/order/${id}/payment-state`,
+            {
+                params,
+                headers: new HttpHeaders({
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache',
+                    Pragma: 'no-cache',
+                }),
+            },
+        );
     }
 
     /** While awaiting Baray: cashier can give up; order must be in cancelable state (e.g. awaiting_payment). */

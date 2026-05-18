@@ -46,29 +46,33 @@ export class MenuService {
         return this.httpClient.get<List>(`${env.API_BASE_URL}/admin/menus`, { headers: this._httpOptions.headers, params });
     }
 
-    // CreateMenuDto requires recipes (empty array = no stock depletion per recipe)
     create(body: {
         code: string;
         name: string;
         type_id: number;
         image: string;
-        unit_price: number;
+        has_sizes?: boolean;
+        unit_price?: number;
         recipes?: { ingredient_id: number; quantity: number }[];
+        sizes?: { size: 'S' | 'M' | 'L'; price: number; recipes: { ingredient_id: number; quantity: number }[] }[];
     }): Observable<{ data: Data, message: string }> {
-        const payload = { ...body, recipes: body.recipes ?? [] };
+        const payload = body.has_sizes
+            ? { ...body }
+            : { ...body, recipes: body.recipes ?? [] };
         return this.httpClient.post<{ data: Data, message: string }>(`${env.API_BASE_URL}/admin/menus`, payload, {
             headers: new HttpHeaders().set('Content-Type', 'application/json')
         });
     }
 
-    // Method to update an existing product
     update(id: number, body: {
         code: string;
         name: string;
         type_id: number;
         image?: string;
-        unit_price: number;
+        has_sizes?: boolean;
+        unit_price?: number;
         recipes?: { ingredient_id: number; quantity: number }[];
+        sizes?: { size: 'S' | 'M' | 'L'; price: number; recipes: { ingredient_id: number; quantity: number }[] }[];
     }): Observable<{ data: Data, message: string }> {
         return this.httpClient.put<{ data: Data, message: string }>(`${env.API_BASE_URL}/admin/menus/${id}`, body, {
             headers: new HttpHeaders().set('Content-Type', 'application/json')
@@ -99,6 +103,11 @@ export class MenuService {
     //     const params = new HttpParams()
     //     return this.httpClient.get(`${env.API_BASE_URL}/share/report/product-excel`, { params});
     // }
+
+    // Fetch full menu details by ID for editing
+    getById(id: number): Observable<{ data: Data }> {
+        return this.httpClient.get<{ data: Data }>(`${env.API_BASE_URL}/admin/menus/${id}/detail`);
+    }
 
     // Method to fetch product by ID
     view(id: number): Observable<any> {

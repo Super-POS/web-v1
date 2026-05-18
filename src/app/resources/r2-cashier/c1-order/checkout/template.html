@@ -1,25 +1,59 @@
 <div class="checkout-section relative flex flex-col min-h-0 bg-slate-50 dark:bg-gray-900 mt-4 mx-4 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm overflow-hidden">
-    <div *ngIf="isAwaitingBarayPayment"
+    <!--
+        Baray iframe-based QR overlay disabled per merchant request — Bakong KHQR (below) handles
+        all QR-based payments now. Markup preserved in git history for reference.
+    -->
+
+    <div *ngIf="isAwaitingBakongPayment"
         class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-        <div class="w-full rounded-2xl bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden max-w-[min(480px,100vw-2rem)]">
+        <div class="w-full rounded-2xl bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden max-w-[min(420px,100vw-2rem)]">
             <div class="flex items-center gap-2 px-5 py-3.5 border-b border-gray-100 dark:border-gray-700">
                 <mat-progress-spinner [diameter]="18" [mode]="'indeterminate'" class="shrink-0"></mat-progress-spinner>
-                <span class="font-semibold text-sm text-gray-800 dark:text-gray-100">Waiting for QR payment</span>
+                <span class="font-semibold text-sm text-gray-800 dark:text-gray-100">Waiting for Bakong KHQR payment</span>
             </div>
 
-            <div class="px-4 pt-3 pb-2">
-                <iframe
-                    *ngIf="barayPayUrl"
-                    [src]="barayPayUrl"
-                    class="w-full rounded-lg border border-slate-200 dark:border-gray-700 block baray-pay-frame"
-                    frameborder="0"
-                    scrolling="auto"
-                    allow="payment">
-                </iframe>
+            <div class="px-5 pt-4 pb-2 text-center">
+                <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">Amount due</p>
+                <p class="mt-0.5 text-2xl font-bold text-slate-900 dark:text-white tabular-nums">
+                    ${{ bakongAmountKhr | usdFromKhr:cashExchangeRate | number:'1.2-2' }}
+                </p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 tabular-nums">{{ bakongAmountKhr | number:'1.0-0' }} ៛</p>
             </div>
 
-            <div class="px-5 pb-5 pt-1">
-                <button type="button" mat-flat-button (click)="cancelBarayWait()"
+            <div class="px-5 pt-1 pb-2">
+                <div class="rounded-xl border border-indigo-200 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-800 px-3 py-2.5 text-center">
+                    <p class="text-[10px] uppercase tracking-wider text-indigo-700/80 dark:text-indigo-300/80">Customer's banking app will show</p>
+                    <p class="mt-0.5 text-lg font-bold text-indigo-900 dark:text-indigo-100 tabular-nums">
+                        <span *ngIf="bakongQrCurrency === 'USD'">${{ bakongQrAmount | number:'1.2-2' }} USD</span>
+                        <span *ngIf="bakongQrCurrency === 'KHR'">{{ bakongQrAmount | number:'1.0-0' }} ៛ KHR</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="px-5 py-4 flex justify-center">
+                <div class="rounded-2xl border border-slate-200 dark:border-gray-700 bg-white p-3 shadow-sm">
+                    <qrcode *ngIf="bakongQrData"
+                        [qrdata]="bakongQrData"
+                        [width]="240"
+                        [margin]="2"
+                        [errorCorrectionLevel]="'M'"
+                        [elementType]="'svg'"
+                        cssClass="block">
+                    </qrcode>
+                </div>
+            </div>
+
+            <div class="px-5 pb-2 text-center">
+                <p class="text-sm text-slate-700 dark:text-slate-200 font-medium">
+                    Ask the customer to scan with any Bakong / KHQR-enabled app.
+                </p>
+                <p *ngIf="bakongExpiresAt" class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    QR expires at {{ bakongExpiresAt | date:'shortTime' }}
+                </p>
+            </div>
+
+            <div class="px-5 pb-5 pt-2">
+                <button type="button" mat-flat-button (click)="cancelBakongWait()"
                     class="!bg-red-600 !text-white w-full">
                     Cancel - customer did not pay
                 </button>
@@ -91,6 +125,7 @@
                             <div class="min-w-0 py-0.5">
                                 <p class="text-base font-semibold text-slate-900 dark:text-white truncate">{{ item.name }}</p>
                                 <p class="text-xs text-slate-500 dark:text-slate-300 mt-0.5">{{ item.type.name }} | {{ item.code }}</p>
+                                <p *ngIf="item.size" class="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-1">Size: {{ item.size }}</p>
                                 <p *ngIf="item.modifierSummary" class="text-xs text-slate-500 dark:text-slate-300 mt-2">{{ item.modifierSummary }}</p>
                                 <p *ngIf="item.line_note" class="text-xs text-slate-600 dark:text-slate-300 italic mt-1">{{ item.line_note }}</p>
                             </div>
@@ -133,20 +168,20 @@
                     <p class="text-sm text-slate-500 dark:text-slate-400">Select how the customer wants to pay.</p>
                 </div>
 
-                <div class="p-4 grid grid-cols-2 gap-3">
+                <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button type="button"
                         class="payment-method-card rounded-2xl border p-4 text-left transition-colors"
-                        [class.selected-qr]="paymentMethod === 'qr'"
-                        [class.border-slate-200]="paymentMethod !== 'qr'"
-                        (click)="selectPaymentMethod('qr')">
+                        [class.selected-bakong]="paymentMethod === 'bakong'"
+                        [class.border-slate-200]="paymentMethod !== 'bakong'"
+                        (click)="selectPaymentMethod('bakong')">
                         <div class="flex items-center justify-between">
-                            <div class="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                                <mat-icon class="icon-size-6 text-blue-600 dark:text-blue-300" [svgIcon]="'mdi:qrcode-scan'"></mat-icon>
+                            <div class="h-10 w-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center">
+                                <mat-icon class="icon-size-6 text-indigo-600 dark:text-indigo-300" [svgIcon]="'mdi:qrcode'"></mat-icon>
                             </div>
-                            <mat-icon *ngIf="paymentMethod === 'qr'" class="icon-size-5 text-blue-600" svgIcon="mdi:check-circle"></mat-icon>
+                            <mat-icon *ngIf="paymentMethod === 'bakong'" class="icon-size-5 text-indigo-600" svgIcon="mdi:check-circle"></mat-icon>
                         </div>
-                        <p class="mt-3 font-semibold text-slate-900 dark:text-white">Pay by QR</p>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">Baray payment link</p>
+                        <p class="mt-3 font-semibold text-slate-900 dark:text-white">Pay by BKHQR</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Bakong KHQR (any bank)</p>
                     </button>
 
                     <button type="button"
@@ -166,16 +201,16 @@
                 </div>
             </section>
 
-            <section *ngIf="paymentMethod === 'qr'"
-                class="rounded-2xl border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 shadow-sm overflow-hidden">
+            <section *ngIf="paymentMethod === 'bakong'"
+                class="rounded-2xl border border-indigo-200 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-800 shadow-sm overflow-hidden">
                 <div class="px-5 py-4">
                     <div class="flex items-start gap-3">
-                        <div class="h-10 w-10 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center border border-blue-100 dark:border-blue-800">
-                            <mat-icon class="icon-size-6 text-blue-600 dark:text-blue-300" svgIcon="mdi:qrcode-scan"></mat-icon>
+                        <div class="h-10 w-10 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center border border-indigo-100 dark:border-indigo-800">
+                            <mat-icon class="icon-size-6 text-indigo-600 dark:text-indigo-300" svgIcon="mdi:qrcode"></mat-icon>
                         </div>
                         <div>
-                            <h3 class="font-semibold text-blue-900 dark:text-blue-200">QR payment selected</h3>
-                            <p class="text-sm text-blue-700/80 dark:text-blue-300/80 mt-1">Click Place Order to create the receipt and open the Baray payment screen.</p>
+                            <h3 class="font-semibold text-indigo-900 dark:text-indigo-200">Bakong KHQR selected</h3>
+                            <p class="text-sm text-indigo-700/80 dark:text-indigo-300/80 mt-1">Click Place Order to generate a KHQR. The customer scans it with any Bakong-enabled banking app.</p>
                         </div>
                     </div>
                 </div>
@@ -400,7 +435,8 @@
                     [disabled]="isOrderBeingMade || isCalculatingChange || carts.length === 0 || (paymentMethod === 'cash' && !canPlaceCashOrder)"
                     (click)="placeOrder()">
                     <mat-progress-spinner *ngIf="isOrderBeingMade || isCalculatingChange" [diameter]="18" [mode]="'indeterminate'"></mat-progress-spinner>
-                    <mat-icon *ngIf="!isOrderBeingMade && !isCalculatingChange" class="icon-size-5 shrink-0" [svgIcon]="paymentMethod === 'cash' ? 'mdi:cash' : 'mdi:qrcode-scan'"></mat-icon>
+                    <mat-icon *ngIf="!isOrderBeingMade && !isCalculatingChange" class="icon-size-5 shrink-0"
+                        [svgIcon]="paymentMethod === 'cash' ? 'mdi:cash' : 'mdi:qrcode'"></mat-icon>
                     <span class="text-center leading-snug">{{ isCalculatingChange ? 'Calculating change...' : (isOrderBeingMade ? 'Placing order...' : 'Place Order') }}</span>
                 </button>
             </div>

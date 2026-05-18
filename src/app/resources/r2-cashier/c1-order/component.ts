@@ -3,17 +3,19 @@ import { DecimalPipe, NgForOf, NgIf }   from '@angular/common';
 import { HttpErrorResponse }            from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule }                  from '@angular/forms';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+// Baray-only sanitizer (kept for reversibility): import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 
 // ================================================================>> Third party Library
 import { MatButtonModule }              from '@angular/material/button';
 import { MatDialog, MatDialogConfig }   from '@angular/material/dialog';
+import { MatFormFieldModule }           from '@angular/material/form-field';
 import { MatIconModule }                from '@angular/material/icon';
 import { MatProgressSpinnerModule }     from '@angular/material/progress-spinner';
+import { MatSelectModule }              from '@angular/material/select';
 import { MatTabsModule }                from '@angular/material/tabs';
 
-import { Subject, takeUntil, take, Subscription }           from 'rxjs';
+import { Subject, take, takeUntil }     from 'rxjs';
 
 // ================================================================>> Custom Library
 import { UserService }      from 'app/core/user/service';
@@ -23,10 +25,12 @@ import { SnackbarService }  from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants      from 'helper/shared/constants';
 import { Data as OrderReceiptData } from '../c2-sale/interface';
 import { MenuItemComponent }    from './item/component';
-import { BarayPaidWatcherService } from './baray-paid-watcher.service';
+// Baray (disabled — Bakong KHQR + Cash are the only active payment flows now):
+// import { BarayPaidWatcherService } from './baray-paid-watcher.service';
 import { OrderService }     from './service';
 import { Data, MenuItem, MenuItemType, NormalizedModifierGroup, OrderCartLine } from './interface';
 import { ModifierPickDialogComponent, ModifierPickResult } from './modifier-dialog/component';
+import { SizePickDialogComponent, SizePickResult } from './size-dialog/component';
 import { ViewDetailSaleComponent } from 'app/shared/view/component';
 import { CashierCashDrawerService } from '../c3-cash-drawer/service';
 import { MakeChangeResponse } from '../c3-cash-drawer/interface';
@@ -78,6 +82,8 @@ CD_KHR.forEach(d => (CD_ALL_MAP[d.key] = { label: d.label, currency: 'KHR' }));
         NgIf,
         NgForOf,
         MatButtonModule,
+        MatFormFieldModule,
+        MatSelectModule,
         MatProgressSpinnerModule,
         UsdFromKhrPipe,
     ]
@@ -96,12 +102,12 @@ export class OrderComponent implements OnInit, OnDestroy {
     carts: OrderCartLine[] = [];
     user: User;
     isOrderBeingMade: boolean = false;
-    /** Full-screen wait showing inline Baray iframe until paid, timeout, or cashier cancels. */
-    isAwaitingBarayPayment: boolean = false;
-    barayPayUrl: SafeResourceUrl | null = null;
-    private _sanitizer = inject(DomSanitizer);
-    private _barayPendingOrderId: number | null = null;
-    private _barayWaitSub: Subscription | null = null;
+    /**
+     * Baray iframe-wait UI removed — kept here only as a no-op flag in case any legacy template
+     * still references `isAwaitingBarayPayment`. Bakong KHQR overlay lives in
+     * `checkout/template.html`.
+     */
+    readonly isAwaitingBarayPayment = false;
     canSubmit: boolean = false;
     totalPrice: number = 0;
     selectedTab: any;
@@ -186,7 +192,7 @@ export class OrderComponent implements OnInit, OnDestroy {
         private _userService: UserService,
         private _service: OrderService,
         private _snackBarService: SnackbarService,
-        private _barayPaid: BarayPaidWatcherService,
+        // private _barayPaid: BarayPaidWatcherService, // Baray flow disabled — Bakong only.
         private _cashDrawer: CashierCashDrawerService,
         private _printReceipt: PrintReceiptService,
         private _router: Router,
@@ -207,11 +213,12 @@ export class OrderComponent implements OnInit, OnDestroy {
         this._exchangeRateSetting.fetchCashier().subscribe({
             next: () => {
                 this.cashExchangeRate = this._exchangeRateSetting.khrPerUsd;
-                this._changeDetectorRef.markForCheck();
+                // Defer so menu cards do not trigger NG0100 when the rate arrives after first CD cycle.
+                setTimeout(() => this._changeDetectorRef.markForCheck());
             },
             error: () => {
                 this.cashExchangeRate = this._exchangeRateSetting.khrPerUsd;
-                this._changeDetectorRef.markForCheck();
+                setTimeout(() => this._changeDetectorRef.markForCheck());
             },
         });
 
@@ -326,21 +333,30 @@ export class OrderComponent implements OnInit, OnDestroy {
             .filter((g) => g.id != null)
             .sort((a, b) => a.sort_order - b.sort_order);
 
+        const rawSizes = (m['sizes'] as any[]) || [];
+        const sizes = rawSizes.map((s: any) => ({
+            id: Number(s.id),
+            size: s.size as 'S' | 'M' | 'L',
+            price: Number(s.price ?? 0),
+        }));
+
         return {
             id: m.id,
             name: String(m['name'] ?? ''),
             image: String(m['image'] ?? ''),
             unit_price: Number(m['unit_price'] ?? 0),
+            has_sizes: Boolean(m['has_sizes']),
+            sizes: sizes.length > 0 ? sizes : undefined,
             code: m.code,
             type,
             modifierGroups: groups.length > 0 ? groups : undefined,
         };
     }
 
-    private _lineKey(menuId: number, optionIds: number[], lineNote?: string): string {
+    private _lineKey(menuId: number, optionIds: number[], lineNote?: string, size?: 'S' | 'M' | 'L'): string {
         const sorted = [...optionIds].filter((n) => n > 0).sort((a, b) => a - b);
         const note = (lineNote || '').trim();
-        return `${menuId}|${sorted.join(',')}|${note}`;
+        return `${menuId}|${sorted.join(',')}|${note}|${size ?? ''}`;
     }
 
     private _unitPriceForOptions(menu: MenuItem, optionIds: number[]): number {
@@ -392,10 +408,13 @@ export class OrderComponent implements OnInit, OnDestroy {
         this.isCartSidebarOpen = false;
     }
 
-    // Function to handle tab selection
     selectTab(item: any): void {
         this.selectedTab = item;
-        this._changeDetectorRef.detectChanges(); // Trigger change detection manually
+        this._changeDetectorRef.detectChanges();
+    }
+
+    getDataById(id: number): Data | undefined {
+        return this.data.find(d => d.id === id);
     }
 
     get filteredSelectedTabProducts(): MenuItem[] {
@@ -415,11 +434,7 @@ export class OrderComponent implements OnInit, OnDestroy {
 
     // Function to handle the ngOnDestroy
     ngOnDestroy(): void {
-
-        this._endBarayWaitUi();
-        // Emit a value through the _unsubscribeAll subject to trigger the unsubscription
         this._unsubscribeAll.next(null);
-        // Complete the subject to release resources
         this._unsubscribeAll.complete();
     }
     // Function to clear the cart
@@ -458,6 +473,24 @@ export class OrderComponent implements OnInit, OnDestroy {
     // Function to add an item to the cart
     addToCart(incomingItem: MenuItem, qty = 0): void {
         const addQty = qty > 0 ? qty : 1;
+
+        if (incomingItem.has_sizes) {
+            this.matDialog
+                .open(SizePickDialogComponent, {
+                    data: { ...incomingItem, _khrPerUsd: this.cashExchangeRate },
+                    width: '100%',
+                    maxWidth: '400px',
+                    autoFocus: false,
+                })
+                .afterClosed()
+                .pipe(take(1), takeUntil(this._unsubscribeAll))
+                .subscribe((res: SizePickResult | undefined) => {
+                    if (!res) return;
+                    this._addLineWithSize(incomingItem, addQty, res.size, res.unit_price);
+                });
+            return;
+        }
+
         const hasModifiers = (incomingItem.modifierGroups?.length ?? 0) > 0;
 
         if (hasModifiers) {
@@ -475,9 +508,7 @@ export class OrderComponent implements OnInit, OnDestroy {
                 .afterClosed()
                 .pipe(take(1), takeUntil(this._unsubscribeAll))
                 .subscribe((res: ModifierPickResult | undefined) => {
-                    if (!res) {
-                        return;
-                    }
+                    if (!res) return;
                     const optionIds = res.modifier_option_ids || [];
                     const lineKey = this._lineKey(incomingItem.id, optionIds, res.line_note);
                     const line: OrderCartLine = {
@@ -515,6 +546,69 @@ export class OrderComponent implements OnInit, OnDestroy {
             modifierSummary: '',
         };
         this._mergeOrPushLine(newLine);
+        this.getTotalPrice();
+    }
+
+    private _addLineWithSize(item: MenuItem, qty: number, size: 'S' | 'M' | 'L', sizeBasePrice: number): void {
+        const hasModifiers = (item.modifierGroups?.length ?? 0) > 0;
+
+        if (hasModifiers) {
+            // Pass the size price as the base so modifier deltas are calculated on top of it
+            const itemWithSizePrice = { ...item, unit_price: sizeBasePrice };
+            this.matDialog
+                .open(ModifierPickDialogComponent, {
+                    data: {
+                        ...itemWithSizePrice,
+                        _qty: qty,
+                        _khrPerUsd: this.cashExchangeRate,
+                    } as MenuItem & { _qty: number; _khrPerUsd: number },
+                    width: '100%',
+                    maxWidth: '520px',
+                    autoFocus: false,
+                })
+                .afterClosed()
+                .pipe(take(1), takeUntil(this._unsubscribeAll))
+                .subscribe((res: ModifierPickResult | undefined) => {
+                    if (!res) return;
+                    const optionIds = res.modifier_option_ids || [];
+                    const lineKey = this._lineKey(item.id, optionIds, res.line_note, size);
+                    const line: OrderCartLine = {
+                        lineKey,
+                        id: item.id,
+                        name: item.name,
+                        qty,
+                        temp_qty: qty,
+                        unit_price: this._unitPriceForOptions(itemWithSizePrice, optionIds),
+                        image: item.image,
+                        code: item.code,
+                        type: item.type,
+                        modifier_option_ids: optionIds,
+                        line_note: res.line_note,
+                        modifierSummary: this._modifierSummary(item, optionIds),
+                        size,
+                    };
+                    this._mergeOrPushLine(line);
+                    this.getTotalPrice();
+                });
+            return;
+        }
+
+        const lineKey = this._lineKey(item.id, [], undefined, size);
+        const line: OrderCartLine = {
+            lineKey,
+            id: item.id,
+            name: item.name,
+            qty,
+            temp_qty: qty,
+            unit_price: sizeBasePrice,
+            image: item.image,
+            code: item.code,
+            type: item.type,
+            modifier_option_ids: [],
+            modifierSummary: '',
+            size,
+        };
+        this._mergeOrPushLine(line);
         this.getTotalPrice();
     }
 
@@ -601,42 +695,14 @@ export class OrderComponent implements OnInit, OnDestroy {
         this.matDialog.open(ViewDetailSaleComponent, dialogConfig);
     }
 
-    private _clearBarayWaitSub(): void {
-        this._barayWaitSub?.unsubscribe();
-        this._barayWaitSub = null;
-    }
-
-    /** Stop waiting for Baray without calling the API (natural completion). */
-    private _endBarayWaitUi(): void {
-        this.isAwaitingBarayPayment = false;
-        this.barayPayUrl = null;
-        this._barayPendingOrderId = null;
-        this._clearBarayWaitSub();
-    }
-
-    /** Cashier gives up: stop listening and cancel the order on the server. */
-    cancelBarayWait(): void {
-        if (this._barayPendingOrderId == null) {
-            this._endBarayWaitUi();
-            return;
-        }
-        const id = this._barayPendingOrderId;
-        this._endBarayWaitUi();
-        this._service.cancelOrder(id).subscribe({
-            next: () => {
-                this._snackBarService.openSnackBar(
-                    "Receipt cancelled — customer has not paid.",
-                    GlobalConstants.success,
-                );
-            },
-            error: (err: HttpErrorResponse) => {
-                this._snackBarService.openSnackBar(
-                    err?.error?.message || "Unable to cancel this order.",
-                    GlobalConstants.error,
-                );
-            },
-        });
-    }
+    /*
+     * Baray waiting-UI helpers disabled — the menu page no longer owns any payment flow.
+     * Payments are handled by the dedicated checkout component (Bakong KHQR + Cash).
+     *
+     * private _clearBarayWaitSub(): void { ... }
+     * private _endBarayWaitUi(): void   { ... }
+     * cancelBarayWait(): void           { ... }
+     */
 
     openCashPayment(): void {
         this.cashPaymentMode = true;
@@ -673,6 +739,7 @@ export class OrderComponent implements OnInit, OnDestroy {
                 qty: number;
                 modifier_option_ids: number[];
                 line_note?: string;
+                size?: 'S' | 'M' | 'L';
             } = {
                 menu_id: line.id,
                 qty: line.qty,
@@ -680,6 +747,9 @@ export class OrderComponent implements OnInit, OnDestroy {
             };
             if (line.line_note?.trim()) {
                 entry.line_note = line.line_note.trim().slice(0, 500);
+            }
+            if (line.size) {
+                entry.size = line.size;
             }
             return entry;
         });
@@ -750,125 +820,11 @@ export class OrderComponent implements OnInit, OnDestroy {
         });
     }
 
-    checkOut(): void {
-        const cartArray = this.carts.map((line) => {
-            const entry: {
-                menu_id: number;
-                qty: number;
-                modifier_option_ids: number[];
-                line_note?: string;
-            } = {
-                menu_id: line.id,
-                qty: line.qty,
-                modifier_option_ids: line.modifier_option_ids || [],
-            };
-            if (line.line_note?.trim()) {
-                entry.line_note = line.line_note.trim().slice(0, 500);
-            }
-            return entry;
-        });
-
-        const body = {
-            cart: JSON.stringify(cartArray),
-        };
-
-        // Set the flag to indicate that an order is being made
-        this.isOrderBeingMade = true;
-
-        // Make the API call to create an order using the order service
-        this._service.create(body).subscribe({
-
-            next: (response) => {
-
-                this.isOrderBeingMade = false;
-                this.carts = [];
-                this.totalPrice = 0;
-                this.canSubmit = false;
-                this.isCartSidebarOpen = false;
-                // Do not show “success” when the order is not paid yet — only after Baray pay link is ready.
-                const order = response.data;
-                if (order?.id != null) {
-                    this._service.createBarayPaymentIntent(order.id).subscribe({
-                        next: (baray) => {
-                            const payUrl = baray.data?.url?.trim();
-                            if (payUrl) {
-                                this._clearBarayWaitSub();
-                                this._barayPendingOrderId = order.id;
-                                this.barayPayUrl = this._sanitizer.bypassSecurityTrustResourceUrl(payUrl);
-                                this.isAwaitingBarayPayment = true;
-                                const cashierId = this.user?.id ?? order.cashier?.id ?? 0;
-                                this._barayWaitSub = this._barayPaid
-                                    .waitUntilSettled(order.id, cashierId)
-                                    .pipe(take(1), takeUntil(this._unsubscribeAll))
-                                    .subscribe((outcome) => {
-                                        this.isAwaitingBarayPayment = false;
-                                        this.barayPayUrl = null;
-                                        this._barayPendingOrderId = null;
-                                        this._barayWaitSub = null;
-                                        if (outcome === 'paid') {
-                                            this._snackBarService.openSnackBar(
-                                                "Baray: Payment completed — receipt " + String(order.receipt_number ?? "") + ".",
-                                                GlobalConstants.success,
-                                            );
-                                            this._service.getOrderViewForBaray(order.id).subscribe({
-                                                next: (v) => {
-                                                    const d: Record<string, unknown> = (v.data ||
-                                                        {}) as Record<string, unknown>;
-                                                    const details =
-                                                        (d['orderDetails'] as unknown[]) ||
-                                                        (d['details'] as unknown[]) ||
-                                                        [];
-                                                    this.openOrderDetailDrawer({
-                                                        ...order,
-                                                        ...d,
-                                                        details,
-                                                        orderDetails: details,
-                                                    } as OrderReceiptData);
-                                                },
-                                                error: () =>
-                                                    this.openOrderDetailDrawer({
-                                                        ...order,
-                                                        status: 'pending',
-                                                    } as OrderReceiptData),
-                                            });
-                                        } else if (outcome === 'cancelled') {
-                                            this._snackBarService.openSnackBar(
-                                                "Receipt " + String(order.receipt_number ?? "") + " — changed/cancelled",
-                                                GlobalConstants.error,
-                                            );
-                                        } else {
-                                            this._snackBarService.openSnackBar(
-                                                "Baray: Waiting timeout (5 minutes) — please verify payment manually.",
-                                                GlobalConstants.error,
-                                            );
-                                        }
-                                    });
-                            } else {
-                                this._snackBarService.openSnackBar(
-                                    "Baray: Payment link not available.",
-                                    GlobalConstants.error,
-                                );
-                            }
-                        },
-                        error: (err: HttpErrorResponse) => {
-                            this._snackBarService.openSnackBar(
-                                err?.error?.message || "Unable to start Baray payment.",
-                                GlobalConstants.error,
-                            );
-                        },
-                    });
-                } else {
-                    this._snackBarService.openSnackBar(response.message, GlobalConstants.success);
-                    this.openOrderDetailDrawer(order);
-                }
-            },
-
-            error: (err: HttpErrorResponse) => {
-
-                this.isOrderBeingMade = false;
-                this._snackBarService.openSnackBar(err?.error?.message || GlobalConstants.genericError, GlobalConstants.error);
-            }
-        });
-    }
-
+    /*
+     * Legacy direct Baray checkout from the menu page (`checkOut()`) is disabled. The cashier
+     * now always goes through `goToCheckout()` which routes to the dedicated checkout component
+     * where the customer pays via Bakong KHQR or Cash. The body of the old `checkOut()` —
+     * which called `OrderService.createBarayPaymentIntent` and ran the iframe overlay flow —
+     * is intentionally removed; re-enable it via git history if Baray is ever reinstated.
+     */
 }

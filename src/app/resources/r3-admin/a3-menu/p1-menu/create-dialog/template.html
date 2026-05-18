@@ -13,12 +13,9 @@
                 <div class="p-5">
                     <div class="w-full md:min-w-64 flex justify-center">
                         <div class="pr-0 md:pr-5 w-full max-w-50 min-h-50 overflow-hidden relative">
-                            <!-- Image Display -->
                             <img [src]="src" (click)="fileInput.click()"
                                 class="cursor-pointer rounded-full w-40 h-40 border-2 border-blue-200 object-cover"
                                 alt="Profile Picture" />
-
-                            <!-- Hidden File Input -->
                             <input type="file" #fileInput style="display: none;" (change)="onFileChange($event)"
                                 accept="image/*" />
                         </div>
@@ -50,12 +47,23 @@
                     </mat-select>
                     <mat-error>Please select menu type</mat-error>
                 </mat-form-field>
-                <mat-form-field appearance="outline" class="w-full">
+
+                <!-- Size toggle -->
+                <div class="flex items-center gap-3 py-2 mb-1">
+                    <mat-slide-toggle formControlName="has_sizes" color="primary">
+                        Has sizes (Small / Medium / Large)
+                    </mat-slide-toggle>
+                    <span class="text-xs text-slate-400">Each size has its own price and recipe</span>
+                </div>
+
+                <!-- Single price (shown when has_sizes = false) -->
+                <mat-form-field appearance="outline" class="w-full" *ngIf="!hasSizes">
                     <mat-label>Price (USD)</mat-label>
                     <input matInput type="number" step="0.01" formControlName="unit_price_usd" placeholder="Enter price in USD">
                     <mat-error>Please enter a valid USD price</mat-error>
                 </mat-form-field>
 
+                <!-- Modifiers section -->
                 <div class="w-full border-t border-slate-200 dark:border-slate-600 pt-4 mt-2" *ngIf="menuForm">
                     <div class="flex items-center justify-between gap-2 mb-3">
                         <span class="text-base font-medium text-slate-800 dark:text-slate-200">Modifiers for this menu</span>
@@ -84,7 +92,8 @@
                     </div>
                 </div>
 
-                <div class="w-full border-t border-slate-200 dark:border-slate-600 pt-4 mt-2" *ngIf="menuForm">
+                <!-- Single recipe (shown when has_sizes = false) -->
+                <div class="w-full border-t border-slate-200 dark:border-slate-600 pt-4 mt-2" *ngIf="menuForm && !hasSizes">
                     <div class="flex items-center justify-between gap-2 mb-3">
                         <span class="text-base font-medium text-slate-800 dark:text-slate-200">Recipe (per 1 cup)</span>
                         <button type="button" mat-stroked-button (click)="addRecipeRow()">
@@ -94,28 +103,93 @@
                     </div>
                     <p class="text-sm text-slate-500 mb-2" *ngIf="!ingredients.length">Loading ingredients...</p>
                     <div formArrayName="recipes">
-                    <ng-container *ngFor="let row of recipeRows.controls; let i = index">
-                        <div [formGroupName]="i" class="flex flex-wrap items-start gap-2 w-full mb-2">
-                            <mat-form-field appearance="outline" class="flex-1 min-w-[200px]">
-                                <mat-label>Ingredient</mat-label>
-                                <mat-select formControlName="ingredient_id">
-                                    <mat-option *ngFor="let ing of ingredients" [value]="ing.id">
-                                        {{ ing.name }}<ng-container *ngIf="ing.unit"> ({{ ing.unit }})</ng-container>
-                                    </mat-option>
-                                </mat-select>
-                            </mat-form-field>
-                            <mat-form-field appearance="outline" class="w-28 min-w-[7rem]">
-                                <mat-label>Amount</mat-label>
-                                <input matInput type="number" step="any" min="0" formControlName="quantity" />
-                            </mat-form-field>
-                            <button type="button" mat-icon-button (click)="removeRecipeRow(i)" [attr.aria-label]="'Remove'">
-                                <mat-icon [svgIcon]="'heroicons_outline:trash'"></mat-icon>
-                            </button>
-                        </div>
-                    </ng-container>
+                        <ng-container *ngFor="let row of recipeRows.controls; let i = index">
+                            <div [formGroupName]="i" class="flex flex-wrap items-start gap-2 w-full mb-2">
+                                <mat-form-field appearance="outline" class="flex-1 min-w-[200px]">
+                                    <mat-label>Ingredient</mat-label>
+                                    <mat-select formControlName="ingredient_id">
+                                        <mat-option *ngFor="let ing of ingredients" [value]="ing.id">
+                                            {{ ing.name }}<ng-container *ngIf="ing.unit"> ({{ ing.unit }})</ng-container>
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                                <mat-form-field appearance="outline" class="w-28 min-w-[7rem]">
+                                    <mat-label>Amount</mat-label>
+                                    <input matInput type="number" step="any" min="0" formControlName="quantity" />
+                                </mat-form-field>
+                                <button type="button" mat-icon-button (click)="removeRecipeRow(i)" [attr.aria-label]="'Remove'">
+                                    <mat-icon [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                                </button>
+                            </div>
+                        </ng-container>
                     </div>
                     <p class="text-xs text-slate-500" *ngIf="!recipeRows.length">Empty = no recipe (no ingredient stock deduction)</p>
                 </div>
+
+                <!-- Per-size sections (shown when has_sizes = true) -->
+                <div class="w-full border-t border-slate-200 dark:border-slate-600 pt-4 mt-2" *ngIf="menuForm && hasSizes" formArrayName="sizes">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="text-base font-medium text-slate-800 dark:text-slate-200">Sizes — price &amp; recipe per size</span>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-2" *ngIf="!ingredients.length">Loading ingredients...</p>
+
+                    <ng-container *ngFor="let sizeCtrl of sizeRows.controls; let si = index">
+                        <div [formGroupName]="si" class="mb-6 border border-slate-200 rounded-lg p-4">
+                            <!-- Size header -->
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#264497] text-white text-sm font-bold">
+                                    {{ SIZES[si] }}
+                                </span>
+                                <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                                    {{ SIZE_LABELS[SIZES[si]] }}
+                                </span>
+                            </div>
+
+                            <!-- Price for this size -->
+                            <mat-form-field appearance="outline" class="w-full">
+                                <mat-label>Price (USD) — {{ SIZE_LABELS[SIZES[si]] }}</mat-label>
+                                <input matInput type="number" step="0.01" formControlName="price_usd" placeholder="0.00">
+                                <mat-error>Please enter a valid price</mat-error>
+                            </mat-form-field>
+
+                            <!-- Recipe rows for this size -->
+                            <div class="mt-2">
+                                <div class="flex items-center justify-between gap-2 mb-2">
+                                    <span class="text-sm text-slate-600 dark:text-slate-300">Recipe for {{ SIZE_LABELS[SIZES[si]] }}</span>
+                                    <button type="button" mat-stroked-button (click)="addSizeRecipeRow(si)">
+                                        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                                        <span class="ml-1">Add ingredient</span>
+                                    </button>
+                                </div>
+                                <div formArrayName="recipes">
+                                    <ng-container *ngFor="let recipeRow of sizeRecipeRows(si).controls; let ri = index">
+                                        <div [formGroupName]="ri" class="flex flex-wrap items-start gap-2 w-full mb-2">
+                                            <mat-form-field appearance="outline" class="flex-1 min-w-[200px]">
+                                                <mat-label>Ingredient</mat-label>
+                                                <mat-select formControlName="ingredient_id">
+                                                    <mat-option *ngFor="let ing of ingredients" [value]="ing.id">
+                                                        {{ ing.name }}<ng-container *ngIf="ing.unit"> ({{ ing.unit }})</ng-container>
+                                                    </mat-option>
+                                                </mat-select>
+                                            </mat-form-field>
+                                            <mat-form-field appearance="outline" class="w-28 min-w-[7rem]">
+                                                <mat-label>Amount</mat-label>
+                                                <input matInput type="number" step="any" min="0" formControlName="quantity" />
+                                            </mat-form-field>
+                                            <button type="button" mat-icon-button (click)="removeSizeRecipeRow(si, ri)" [attr.aria-label]="'Remove'">
+                                                <mat-icon [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                                            </button>
+                                        </div>
+                                    </ng-container>
+                                </div>
+                                <p class="text-xs text-slate-500" *ngIf="sizeRecipeRows(si).length === 0">
+                                    Empty = no ingredient deduction for this size
+                                </p>
+                            </div>
+                        </div>
+                    </ng-container>
+                </div>
+
             </div>
         </form>
     </div>

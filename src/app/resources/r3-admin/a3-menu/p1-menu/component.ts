@@ -32,7 +32,6 @@ import { ExchangeRateSettingService } from 'helper/services/exchange-rate-settin
 import { Data, List } from './interface';
 import { FilterDialogComponent } from './filter-dialog/component';
 import { ViewDialogComponent } from './view-dialog/component';
-import { MenuFormDialogComponent } from './create-dialog/component';
 import { resolveFileUrl } from 'helper/utils/resolve-file-url';
 
 @Component({
@@ -156,8 +155,12 @@ export class MenuListComponent implements OnInit {
         return this._exchange.khrToUsd(row.unit_price);
     }
 
+    sizePriceUsd(priceKhr: number): number {
+        return this._exchange.khrToUsd(priceKhr);
+    }
+
     totalSaleRevenueUsd(row: Data): number {
-        return this._exchange.khrToUsd((Number(row.total_sale) || 0) * Number(row.unit_price));
+        return this._exchange.khrToUsd(Number(row.total_revenue) || 0);
     }
 
     saveExchangeRate(): void {
@@ -374,34 +377,9 @@ export class MenuListComponent implements OnInit {
         });
     }
 
-    // Edit menu in dialog
+    // Edit menu on a dedicated page
     update(row: Data): void {
-
-        const dialogConfig = new MatDialogConfig();
-        dialogConfig.data = {
-
-            title: 'Edit menu',
-            menu: row,
-            setup: this.setupData.productTypes
-        };
-
-        dialogConfig.autoFocus = false;
-        dialogConfig.position = { right: '0px' };
-        dialogConfig.height = '100dvh';
-        dialogConfig.width = '100dvw';
-        dialogConfig.maxWidth = '550px';
-        dialogConfig.panelClass = 'custom-mat-dialog-as-mat-drawer';
-        dialogConfig.enterAnimationDuration = '0s';
-        const dialogRef = this.matDialog.open(MenuFormDialogComponent, dialogConfig);
-
-        dialogRef.componentInstance.ResponseData.subscribe((rowResult: Data) => {
-
-            const index = this.dataSource.data.indexOf(row);
-            const data = this.dataSource.data;
-            data[index] = rowResult;
-            this.getData()
-            this.dataSource.data = data;
-        });
+        this.router.navigate(['/admin/menu/edit', row.id]);
     }
 
     // // Downloading a product report

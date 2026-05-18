@@ -1,5 +1,5 @@
 // ================================================================>> Core Library (Angular)
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, NgIf } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 // ================================================================>> Third-Party Libraries
@@ -18,7 +18,7 @@ import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
     templateUrl: './template.html',
     styleUrl: './style.scss',
     imports: [
-
+        NgIf,
         MatIconModule,
         DecimalPipe,
         UsdFromKhrPipe,
@@ -36,6 +36,13 @@ export class MenuItemComponent {
     // ===> Method to emit the data to the parent component
     onOutput() {
         this.result.emit(this.data);
+    }
+
+    /** KHR price for S / M / L (not array index — API order may vary). */
+    sizePrice(size: 'S' | 'M' | 'L'): number | null {
+        const row = this.data?.sizes?.find((s) => s.size === size);
+        const p = row?.price;
+        return p != null && Number.isFinite(Number(p)) ? Number(p) : null;
     }
 
 }

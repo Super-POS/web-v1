@@ -38,6 +38,10 @@ export default [
                 component       : MenuCreatePageComponent
             },
             {
+                path            : 'edit/:id',
+                component       : MenuCreatePageComponent
+            },
+            {
                 path            : 'category',
                 component       : MenuCategoryComponent
             },

@@ -50,12 +50,20 @@ export interface NormalizedModifierGroup {
     options: MenuModifierOption[];
 }
 
+export interface MenuSizeOption {
+    id: number;
+    size: 'S' | 'M' | 'L';
+    price: number;
+}
+
 /** One line item (menu) on the ordering screen */
 export interface MenuItem {
     id: number;
     name: string;
     image: string;
     unit_price: number;
+    has_sizes?: boolean;
+    sizes?: MenuSizeOption[];
     code: string;
     type: MenuItemType;
     /** When present, cashier may need to pick options before add-to-cart */
@@ -79,6 +87,7 @@ export interface OrderCartLine {
     line_note?: string;
     /** Human-readable, e.g. "Sugar: 50% · Ice: Regular" */
     modifierSummary: string;
+    size?: 'S' | 'M' | 'L';
 }
 
 export interface CheckoutDraft {
@@ -111,4 +120,31 @@ export interface BarayPaymentIntentResponse {
         payment_transaction_id: number;
     };
     message: string;
+}
+
+/** api-v1 POST /cashier/ordering/bakong/payment-intent — KHQR string + md5 to poll. */
+export interface BakongPaymentIntentResponse {
+    data: {
+        qr: string;
+        md5: string;
+        payment_transaction_id: number;
+        expires_at: string;
+        /** Amount actually encoded in the KHQR (in the configured QR currency). */
+        qr_amount: number;
+        /** Currency tag carried in the KHQR (USD or KHR). */
+        qr_currency: 'USD' | 'KHR';
+    };
+    message: string;
+}
+
+/** api-v1 GET /cashier/ordering/bakong/order/:id/payment-state */
+export interface BakongPaymentStateResponse {
+    data: {
+        order_id: number;
+        order_status: string;
+        /** `success` | `pending` | `failed` | `expired` | `null` (no transaction yet) */
+        bakong_transaction_status: string | null;
+        /** Latest `responseMessage` echoed from Bakong's `/v1/check_transaction_by_md5` poll. */
+        bakong_response_message: string | null;
+    };
 }

@@ -22,14 +22,15 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSelectModule } from '@angular/material/select';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { env } from 'envs/env';
 
 import { PortraitComponent } from 'helper/components/portrait/component';
 import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
-import { Subject } from 'rxjs';
-import { Data } from '../interface';
+import { Subject, takeUntil } from 'rxjs';
+import { Data, MenuSizeData } from '../interface';
 import { MenuService } from '../service';
 import { MenuIngredientService } from '../../p3-ingredient/service';
 import { IngredientItem } from '../../p3-ingredient/interface';
@@ -63,29 +64,25 @@ import { ExchangeRateSettingService } from 'helper/services/exchange-rate-settin
         MatRadioModule,
         MatDialogModule,
         MatCheckboxModule,
+        MatSlideToggleModule,
         PortraitComponent
     ]
 })
 export class MenuFormDialogComponent implements OnInit, OnDestroy {
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
-    // EventEmitter to emit response data after create or update operations
     ResponseData = new EventEmitter<Data>();
 
-    // Form related properties
     menuForm: UntypedFormGroup;
-
-    // Flag to indicate whether the form is currently being saved
     saving: boolean = false;
-
-    // Default image for the menu item
     src: string = 'icons/image.jpg';
-    /** Stock ingredients for recipe lines */
     ingredients: IngredientItem[] = [];
     modifierGroups: ModifierGroupRow[] = [];
     isLoadingModifiers = false;
 
-    // Constructor with dependency injection
+    readonly SIZE_LABELS: Record<string, string> = { S: 'Small (S)', M: 'Medium (M)', L: 'Large (L)' };
+    readonly SIZES = ['S', 'M', 'L'] as const;
+
     constructor(
         @Inject(MAT_DIALOG_DATA) public data: { title: string, menu: Data, setup: any },
         private dialogRef: MatDialogRef<MenuFormDialogComponent>,
@@ -97,17 +94,17 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
         private _exchange: ExchangeRateSettingService,
     ) { }
 
-    // ngOnInit method
     ngOnInit(): void {
         this.data.menu != null ? this.src = `${env.FILE_BASE_URL}${this.data.menu.image}` : '';
         this._ingredientService.getData().subscribe({
             next: (res) => (this.ingredients = res.data ?? []),
         });
         this.ngBuilderForm();
+        this._listenHasSizes();
         this._loadModifierData();
         this._exchange.fetchAdmin().subscribe({
             next: () => {
-                if (this.data?.menu?.unit_price != null && this.menuForm) {
+                if (this.data?.menu?.unit_price != null && this.menuForm && !this.hasSizes) {
                     this.menuForm.patchValue({
                         unit_price_usd: this._exchange.khrToUsd(this.data.menu.unit_price),
                     });
@@ -116,6 +113,12 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
             error: () => {},
         });
     }
+
+    get hasSizes(): boolean {
+        return !!this.menuForm?.get('has_sizes')?.value;
+    }
+
+    // ── Single-size recipe helpers ────────────────────────────────────────────
 
     get recipeRows(): FormArray {
         return this.menuForm?.get('recipes') as FormArray;
@@ -129,67 +132,165 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
         this.recipeRows.removeAt(index);
     }
 
-    private _recipeGroup(
-        r?: { ingredient_id: number; quantity: number },
-    ): UntypedFormGroup {
+    // ── Per-size helpers ──────────────────────────────────────────────────────
+
+    get sizeRows(): FormArray {
+        return this.menuForm?.get('sizes') as FormArray;
+    }
+
+    sizeRecipeRows(sizeIndex: number): FormArray {
+        return (this.sizeRows.at(sizeIndex) as UntypedFormGroup).get('recipes') as FormArray;
+    }
+
+    addSizeRecipeRow(sizeIndex: number): void {
+        this.sizeRecipeRows(sizeIndex).push(this._recipeGroup());
+    }
+
+    removeSizeRecipeRow(sizeIndex: number, rowIndex: number): void {
+        this.sizeRecipeRows(sizeIndex).removeAt(rowIndex);
+    }
+
+    // ── Form builders ─────────────────────────────────────────────────────────
+
+    private _recipeGroup(r?: { ingredient_id: number; quantity: number }): UntypedFormGroup {
         return this.formBuilder.group({
             ingredient_id: [r?.ingredient_id ?? null, Validators.required],
-            quantity: [
-                r?.quantity ?? null,
-                [Validators.required, Validators.min(0.0001)],
-            ],
+            quantity: [r?.quantity ?? null, [Validators.required, Validators.min(0.0001)]],
         });
     }
 
-    private _buildPayload(): {
-        code: string;
-        name: string;
-        type_id: number;
-        image?: string;
-        unit_price: number;
-        recipes: { ingredient_id: number; quantity: number }[];
-    } | null {
+    private _sizeGroup(sizeKey: 'S' | 'M' | 'L', existing?: MenuSizeData, requirePrice = true): UntypedFormGroup {
+        const priceUsd = existing?.price != null
+            ? ExchangeRateSettingService.khrToUsd(existing.price, ExchangeRateSettingService.FALLBACK_KHR_PER_USD)
+            : null;
+        const recipes = this.formBuilder.array(
+            (existing?.recipes ?? []).map((r) => this._recipeGroup(r))
+        );
+        return this.formBuilder.group({
+            size: [sizeKey],
+            price_usd: [priceUsd, requirePrice ? [Validators.required, Validators.min(0.01)] : []],
+            recipes,
+        });
+    }
+
+    private _listenHasSizes(): void {
+        this.menuForm.get('has_sizes')?.valueChanges
+            .pipe(takeUntil(this._unsubscribeAll))
+            .subscribe((enabled: boolean) => {
+                const priceCtrl = this.menuForm.get('unit_price_usd');
+                if (enabled) {
+                    priceCtrl?.clearValidators();
+                    priceCtrl?.setValue(null);
+                } else {
+                    priceCtrl?.setValidators([Validators.required, Validators.min(0.01)]);
+                }
+                priceCtrl?.updateValueAndValidity();
+
+                const sizesArray = this.menuForm.get('sizes') as FormArray;
+                sizesArray?.controls.forEach(ctrl => {
+                    const sizePriceCtrl = (ctrl as UntypedFormGroup).get('price_usd');
+                    if (enabled) {
+                        sizePriceCtrl?.setValidators([Validators.required, Validators.min(0.01)]);
+                    } else {
+                        sizePriceCtrl?.clearValidators();
+                    }
+                    sizePriceCtrl?.updateValueAndValidity();
+                });
+            });
+    }
+
+    ngBuilderForm(): void {
+        const menu = this.data?.menu;
+        const hasSizes = menu?.has_sizes ?? false;
+
+        const existingRecipes = !hasSizes ? (menu?.recipes ?? []) : [];
+        const recipeArray = this.formBuilder.array(
+            existingRecipes.map((r) => this._recipeGroup(r))
+        ) as FormArray;
+
+        const usdGuess = !hasSizes && menu?.unit_price != null
+            ? ExchangeRateSettingService.khrToUsd(menu.unit_price, ExchangeRateSettingService.FALLBACK_KHR_PER_USD)
+            : null;
+
+        const existingSizes = menu?.sizes ?? [];
+        const sizesArray = this.formBuilder.array(
+            this.SIZES.map((s) => {
+                const found = existingSizes.find((es) => es.size === s);
+                return this._sizeGroup(s, found, hasSizes);
+            })
+        );
+
+        this.menuForm = this.formBuilder.group({
+            code: [menu?.code || null, [Validators.required]],
+            name: [menu?.name || null, [Validators.required]],
+            type_id: [menu?.type?.id || null, [Validators.required]],
+            image: [null, menu == null ? Validators.required : []],
+            has_sizes: [hasSizes],
+            unit_price_usd: [
+                usdGuess,
+                hasSizes ? [] : [Validators.required, Validators.min(0.01)],
+            ],
+            recipes: recipeArray,
+            sizes: sizesArray,
+            modifier_items: [[]],
+        });
+    }
+
+    // ── Payload builder ───────────────────────────────────────────────────────
+
+    private _buildPayload(): any | null {
         const raw = this.menuForm.getRawValue();
-        const seen = new Set<number>();
-        const lines = (raw.recipes ?? [])
-            .filter(
-                (row: { ingredient_id: number | null; quantity: number | null }) =>
-                    row?.ingredient_id != null && Number(row.quantity) > 0,
-            )
-            .map((row: { ingredient_id: number; quantity: number }) => ({
-                ingredient_id: Number(row.ingredient_id),
-                quantity: Number(row.quantity),
-            }));
-        const recipes: { ingredient_id: number; quantity: number }[] = [];
-        for (const line of lines) {
-            if (seen.has(line.ingredient_id)) {
-                this.snackBarService.openSnackBar('Duplicate ingredient in recipe; keep one row per ingredient.', GlobalConstants.error);
-                return null;
-            }
-            seen.add(line.ingredient_id);
-            recipes.push(line);
-        }
-        const payload: {
-            code: string;
-            name: string;
-            type_id: number;
-            image?: string;
-            unit_price: number;
-            recipes: { ingredient_id: number; quantity: number }[];
-        } = {
+        const base = {
             code: String(raw.code ?? '').trim(),
             name: String(raw.name ?? '').trim(),
             type_id: Number(raw.type_id),
+            ...(raw.image ? { image: raw.image } : {}),
+        };
+
+        if (raw.has_sizes) {
+            const sizes = (raw.sizes as any[]).map((sg) => {
+                const seen = new Set<number>();
+                const recipes: { ingredient_id: number; quantity: number }[] = [];
+                for (const row of (sg.recipes ?? [])) {
+                    if (row?.ingredient_id == null || Number(row.quantity) <= 0) continue;
+                    const id = Number(row.ingredient_id);
+                    if (seen.has(id)) {
+                        this.snackBarService.openSnackBar(
+                            `Duplicate ingredient in ${this.SIZE_LABELS[sg.size]} recipe; keep one row per ingredient.`,
+                            GlobalConstants.error,
+                        );
+                        return null;
+                    }
+                    seen.add(id);
+                    recipes.push({ ingredient_id: id, quantity: Number(row.quantity) });
+                }
+                return { size: sg.size, price: this._exchange.usdToKhr(Number(sg.price_usd)), recipes };
+            });
+            if (sizes.some((s) => s === null)) return null;
+            return { ...base, has_sizes: true, sizes };
+        }
+
+        const seen = new Set<number>();
+        const recipes: { ingredient_id: number; quantity: number }[] = [];
+        for (const row of (raw.recipes ?? [])) {
+            if (row?.ingredient_id == null || Number(row.quantity) <= 0) continue;
+            const id = Number(row.ingredient_id);
+            if (seen.has(id)) {
+                this.snackBarService.openSnackBar('Duplicate ingredient in recipe; keep one row per ingredient.', GlobalConstants.error);
+                return null;
+            }
+            seen.add(id);
+            recipes.push({ ingredient_id: id, quantity: Number(row.quantity) });
+        }
+        return {
+            ...base,
+            has_sizes: false,
             unit_price: this._exchange.usdToKhr(Number(raw.unit_price_usd)),
             recipes,
         };
-
-        if (raw.image) {
-            payload.image = raw.image;
-        }
-
-        return payload;
     }
+
+    // ── Modifier helpers ──────────────────────────────────────────────────────
 
     private _loadModifierData(): void {
         this.isLoadingModifiers = true;
@@ -258,11 +359,7 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
         const current = [...this.selectedModifierItems];
         const idx = current.findIndex((x) => x.modifier_group_id === groupId);
         if (checked && idx === -1) {
-            current.push({
-                modifier_group_id: groupId,
-                sort_order: current.length,
-                is_required: false,
-            });
+            current.push({ modifier_group_id: groupId, sort_order: current.length, is_required: false });
         }
         if (!checked && idx >= 0) {
             current.splice(idx, 1);
@@ -274,9 +371,7 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
     onModifierRequiredChange(groupId: number, required: boolean): void {
         const current = [...this.selectedModifierItems];
         const idx = current.findIndex((x) => x.modifier_group_id === groupId);
-        if (idx < 0) {
-            return;
-        }
+        if (idx < 0) return;
         current[idx] = { ...current[idx], is_required: required };
         this.menuForm.get('modifier_items')?.setValue(current);
     }
@@ -285,9 +380,9 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
         return !!this.selectedModifierItems.find((x) => x.modifier_group_id === groupId)?.is_required;
     }
 
-    // srcChange method
+    // ── Image helpers ─────────────────────────────────────────────────────────
+
     srcChange(base64: string): void {
-        // Set the 'image' form control value with the provided base64 image data
         this.menuForm.get('image').setValue(base64);
     }
 
@@ -296,7 +391,7 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
         if (file && file.type.startsWith('image/')) {
             const reader = new FileReader();
             reader.onload = (e: any) => {
-                this.src = e.target.result; // Preview image
+                this.src = e.target.result;
                 this.menuForm.get('image')?.setValue(e.target.result);
             };
             reader.readAsDataURL(file);
@@ -305,47 +400,15 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
         }
     }
 
-    // ngBuilderForm method
-    ngBuilderForm(): void {
-        const existing = this.data?.menu?.recipes ?? [];
-        const recipeArray = this.formBuilder.array(
-            existing.length
-                ? existing.map((r) => this._recipeGroup(r))
-                : [],
-        ) as FormArray;
-        const usdGuess =
-            this.data?.menu?.unit_price != null
-                ? ExchangeRateSettingService.khrToUsd(
-                      this.data.menu.unit_price,
-                      ExchangeRateSettingService.FALLBACK_KHR_PER_USD,
-                  )
-                : null;
-        this.menuForm = this.formBuilder.group({
-            code: [this.data?.menu?.code || null, [Validators.required]],
-            name: [this.data?.menu?.name || null, [Validators.required]],
-            type_id: [this.data?.menu?.type?.id || null, [Validators.required]],
-            image: [null, this.data.menu == null ? Validators.required : []],
-            unit_price_usd: [
-                usdGuess,
-                [Validators.required, Validators.min(0.01)],
-            ],
-            recipes: recipeArray,
-            modifier_items: [[]],
-        });
-    }
+    // ── Submit ────────────────────────────────────────────────────────────────
 
-    // submit method
     submit() {
-        // If data.menu is null, call create(); otherwise, call update()
         this.data.menu == null ? this.create() : this.update();
     }
 
-    // create method
     create(): void {
         const body = this._buildPayload();
-        if (!body) {
-            return;
-        }
+        if (!body) return;
         if (!body.image) {
             this.snackBarService.openSnackBar('Please select an image file.', GlobalConstants.error);
             return;
@@ -353,31 +416,10 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
         this.dialogRef.disableClose = true;
         this.saving = true;
         this.menuService.create({ ...body, image: body.image }).subscribe({
-
             next: response => {
-                const modifierItems = this.selectedModifierItems;
-                this._modifierService.setMenuAssignments(response.data.id, modifierItems).subscribe({
+                this._modifierService.setMenuAssignments(response.data.id, this.selectedModifierItems).subscribe({
                     next: () => {
-                        const result: Data = {
-                            id: response.data.id,
-                            code: response.data.code,
-                            name: response.data.name,
-                            image: response.data.image,
-                            unit_price: response.data.unit_price,
-                            total_sale: response.data.total_sale,
-                            created_at: response.data.created_at,
-                            type: {
-                                id: response.data.type_id,
-                                name: this.data.setup.find(v => v.id === response.data.type_id)?.name || ''
-                            },
-                            creator: {
-                                id: response.data.creator.id,
-                                name: response.data.creator.name,
-                                avatar: response.data.creator.avatar || '',
-                            },
-                            recipes: (response.data as { recipes?: Data['recipes'] }).recipes,
-                        };
-                        this.ResponseData.emit(result);
+                        this.ResponseData.emit(this._toDataResult(response.data));
                         this.dialogRef.close();
                         this.saving = false;
                         this.snackBarService.openSnackBar(response.message, GlobalConstants.success);
@@ -392,63 +434,29 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
                     },
                 });
             },
-
             error: (err: HttpErrorResponse) => {
-
-                // Re-enable closing the dialog in case of an error
                 this.dialogRef.disableClose = false;
-
-                // Set saving to false to indicate that the create operation is completed (even if it failed)
                 this.saving = false;
-
-                // Extract error information from the response
                 const errors: { type: string, message: string }[] | undefined = err.error?.errors;
                 let message: string = err.error?.message ?? GlobalConstants.genericError;
-
-                // If there are field-specific errors, join them into a single message
                 if (errors && errors.length > 0) {
                     message = errors.map((obj) => obj.message).join(', ');
                 }
-
-                // Show an error message using the snackBarService
                 this.snackBarService.openSnackBar(message, GlobalConstants.error);
             }
         });
     }
 
-    // update method
     update(): void {
         const body = this._buildPayload();
-        if (!body) {
-            return;
-        }
+        if (!body) return;
         this.dialogRef.disableClose = true;
         this.saving = true;
         this.menuService.update(this.data.menu.id, body).subscribe({
-
             next: response => {
                 this._modifierService.setMenuAssignments(this.data.menu.id, this.selectedModifierItems).subscribe({
                     next: () => {
-                        const result: Data = {
-                            id: response.data.id,
-                            code: response.data.code,
-                            name: response.data.name,
-                            image: response.data.image,
-                            unit_price: response.data.unit_price,
-                            total_sale: response.data.total_sale,
-                            created_at: response.data.created_at,
-                            type: {
-                                id: response.data.type_id,
-                                name: this.data.setup.find(v => v.id === response.data.type_id)?.name || ''
-                            },
-                            creator: {
-                                id: response.data.creator.id,
-                                name: response.data.creator.name,
-                                avatar: response.data.creator.avatar || '',
-                            },
-                            recipes: (response.data as { recipes?: Data['recipes'] }).recipes,
-                        };
-                        this.ResponseData.emit(result);
+                        this.ResponseData.emit(this._toDataResult(response.data));
                         this.dialogRef.close();
                         this.saving = false;
                         this.snackBarService.openSnackBar(response.message, GlobalConstants.success);
@@ -463,28 +471,41 @@ export class MenuFormDialogComponent implements OnInit, OnDestroy {
                     },
                 });
             },
-
             error: (err: HttpErrorResponse) => {
-
-                // Re-enable closing the dialog in case of an error
                 this.dialogRef.disableClose = false;
-
-                // Set saving to false to indicate that the update operation is completed (even if it failed)
                 this.saving = false;
-
-                // Extract error information from the response
                 const errors: { type: string, message: string }[] | undefined = err.error?.errors;
                 let message: string = err.error?.message ?? GlobalConstants.genericError;
-
-                // If there are field-specific errors, join them into a single message
                 if (errors && errors.length > 0) {
                     message = errors.map((obj) => obj.message).join(', ');
                 }
-
-                // Show an error message using the snackBarService
                 this.snackBarService.openSnackBar(message, GlobalConstants.error);
             }
         });
+    }
+
+    private _toDataResult(d: any): Data {
+        return {
+            id: d.id,
+            code: d.code,
+            name: d.name,
+            image: d.image,
+            has_sizes: d.has_sizes,
+            unit_price: d.unit_price,
+            sizes: d.sizes,
+            total_sale: d.total_sale,
+            created_at: d.created_at,
+            type: {
+                id: d.type_id,
+                name: this.data.setup.find((v: any) => v.id === d.type_id)?.name || '',
+            },
+            creator: {
+                id: d.creator?.id,
+                name: d.creator?.name,
+                avatar: d.creator?.avatar || '',
+            },
+            recipes: d.recipes,
+        };
     }
 
     ngOnDestroy(): void {
