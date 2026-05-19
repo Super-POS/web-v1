@@ -91,7 +91,9 @@
                     "builder": "@angular-builders/custom-webpack:dev-server",
                     "options": {
                         "buildTarget": "CamCyber:build",
-                        "port": 4444
+                        "port": 4444,
+                        "host": "0.0.0.0",
+                        "allowedHosts": ["all"]
                     },
                     "configurations": {
                         "production": {
