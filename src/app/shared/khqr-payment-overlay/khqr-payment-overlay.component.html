@@ -1,0 +1,72 @@
+<div class="khqr-overlay fixed inset-0 flex flex-col items-center justify-center bg-slate-900/70 backdrop-blur-md px-4 py-6 overflow-y-auto"
+    [style.z-index]="overlayZIndex">
+
+    <div class="khqr-card relative w-full max-w-[min(380px,100vw-2rem)] rounded-[22px] bg-white shadow-[0_24px_48px_-12px_rgba(15,23,42,0.45)] overflow-hidden">
+
+        <div class="khqr-card__ribbon relative bg-[#E1232E] flex items-center justify-center px-5 pt-4 pb-7">
+            <img src="/payment/KHQR - asset/KHQR Logo.svg"
+                alt="KHQR"
+                class="khqr-card__wordmark h-7 select-none pointer-events-none"
+                draggable="false" />
+        </div>
+
+        <div class="khqr-card__body relative pt-3 px-5">
+            <div class="khqr-card__merchant text-center">
+                <p class="khqr-card__merchant-name text-[18px] font-bold leading-tight text-slate-900 truncate">
+                    {{ merchantName }}
+                </p>
+                <p *ngIf="merchantCity" class="mt-0.5 text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                    {{ merchantCity }}
+                </p>
+            </div>
+
+            <p class="khqr-card__amount mt-2 text-center text-[22px] font-bold text-slate-900 tabular-nums">
+                {{ displayAmount }}
+                <span class="khqr-card__currency text-[13px] font-semibold uppercase tracking-wider text-slate-500 align-baseline ml-1">
+                    {{ currency }}
+                </span>
+            </p>
+
+            <div class="khqr-card__sep mt-3 mb-4" aria-hidden="true"></div>
+
+            <div class="khqr-card__qr relative mx-auto flex items-center justify-center">
+                <qrcode *ngIf="qrData"
+                    [qrdata]="qrData"
+                    [width]="240"
+                    [margin]="1"
+                    [errorCorrectionLevel]="'H'"
+                    [elementType]="'svg'"
+                    cssClass="block">
+                </qrcode>
+                <div *ngIf="!qrData" class="w-[240px] h-[240px] flex items-center justify-center">
+                    <mat-progress-spinner [diameter]="32" [mode]="'indeterminate'"></mat-progress-spinner>
+                </div>
+                <div *ngIf="qrData" class="khqr-card__badge absolute" aria-hidden="true">
+                    <img src="/images/logo/Logo.png"
+                        alt=""
+                        class="khqr-card__badge-logo select-none pointer-events-none"
+                        draggable="false" />
+                </div>
+            </div>
+        </div>
+
+        <div class="khqr-card__footer mt-4 px-5 pt-4 pb-5 border-t border-slate-100 bg-slate-50/60">
+            <div class="flex items-center justify-center gap-2 text-slate-800">
+                <mat-progress-spinner [diameter]="16" [mode]="'indeterminate'" class="shrink-0"></mat-progress-spinner>
+                <span class="text-sm font-semibold">{{ generating ? 'Generating Bakong KHQR…' : 'Waiting for payment…' }}</span>
+            </div>
+
+            <p *ngIf="!generating" class="mt-1 text-center text-[11px] text-slate-500">
+                Ask the customer to scan with any Bakong-enabled banking app.
+            </p>
+
+            <button type="button" mat-flat-button (click)="onDismiss()"
+                class="!text-white w-full !mt-4"
+                [class.!bg-red-600]="dismissLabel === 'Cancel'"
+                [class.!bg-slate-600]="dismissLabel === 'Close'"
+                [disabled]="generating && !qrData">
+                {{ dismissLabel }}
+            </button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,88 @@
+/* NBC "KHQR Card Guideline" layout — shared by checkout + invoice pay-now. */
+
+.khqr-overlay {
+    overscroll-behavior: contain;
+}
+
+.khqr-card {
+    background: #ffffff;
+}
+
+.khqr-card__ribbon {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 18px), 0 100%);
+    min-height: 72px;
+}
+
+.khqr-card__wordmark {
+    width: auto;
+    max-width: 60%;
+}
+
+.khqr-card__merchant-name {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+    white-space: normal;
+}
+
+.khqr-card__sep {
+    height: 1px;
+    background-image: linear-gradient(
+        to right,
+        rgba(15, 23, 42, 0.35) 0,
+        rgba(15, 23, 42, 0.35) 6px,
+        transparent 6px,
+        transparent 12px
+    );
+    background-size: 12px 1px;
+    background-repeat: repeat-x;
+}
+
+.khqr-card__qr {
+    width: 240px;
+    height: 240px;
+}
+
+.khqr-card__qr ::ng-deep qrcode {
+    display: block;
+    line-height: 0;
+}
+
+.khqr-card__qr ::ng-deep svg {
+    width: 240px;
+    height: 240px;
+    display: block;
+}
+
+.khqr-card__badge {
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    background: #E1232E;
+    border: 3px solid #ffffff;
+    box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    overflow: hidden;
+}
+
+.khqr-card__badge-logo {
+    width: 76%;
+    height: 76%;
+    object-fit: contain;
+    display: block;
+}
+
+@media (max-height: 720px) {
+    .khqr-card__qr,
+    .khqr-card__qr ::ng-deep svg {
+        width: 210px;
+        height: 210px;
+    }
+}

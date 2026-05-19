@@ -68,14 +68,23 @@
 
                     <!-- Status Column -->
                     <ng-container matColumnDef="status">
-                        <th mat-header-cell *matHeaderCellDef class="min-w-28 text-center">Status</th>
+                        <th mat-header-cell *matHeaderCellDef class="min-w-32 text-center">Status</th>
                         <td mat-cell *matCellDef="let element" class="text-center">
                             <span
-                                class="text-l font-semibold"
+                                class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold uppercase tracking-wide"
+                                [class.bg-emerald-50]="element.payment_status === 'paid'"
                                 [class.text-emerald-700]="element.payment_status === 'paid'"
+                                [class.border-emerald-300]="element.payment_status === 'paid'"
+                                [class.bg-rose-50]="element.payment_status === 'cancelled'"
                                 [class.text-rose-700]="element.payment_status === 'cancelled'"
-                                [class.text-amber-700]="!element.payment_status || element.payment_status === 'pending'">
-                                {{ element.payment_status === 'cancelled' ? 'Cancel' : (element.payment_status === 'paid' ? 'Paid' : 'Waiting to pay') }}
+                                [class.border-rose-300]="element.payment_status === 'cancelled'"
+                                [class.bg-amber-50]="!element.payment_status || element.payment_status === 'pending'"
+                                [class.text-amber-700]="!element.payment_status || element.payment_status === 'pending'"
+                                [class.border-amber-300]="!element.payment_status || element.payment_status === 'pending'">
+                                <mat-icon class="icon-size-4 shrink-0"
+                                    [svgIcon]="element.payment_status === 'paid' ? 'mdi:check-decagram' : (element.payment_status === 'cancelled' ? 'mdi:close-octagon' : 'mdi:clock-alert-outline')">
+                                </mat-icon>
+                                {{ element.payment_status === 'cancelled' ? 'Cancelled' : (element.payment_status === 'paid' ? 'Paid' : 'Unpaid') }}
                             </span>
                         </td>
                     </ng-container>

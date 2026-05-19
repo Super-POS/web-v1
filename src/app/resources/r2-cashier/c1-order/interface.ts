@@ -133,6 +133,12 @@ export interface BakongPaymentIntentResponse {
         qr_amount: number;
         /** Currency tag carried in the KHQR (USD or KHR). */
         qr_currency: 'USD' | 'KHR';
+        /**
+         * Merchant identity encoded into the KHQR (Tag 59/60). Surfaced so the cashier
+         * checkout can render the official NBC "KHQR Card" layout above the QR.
+         */
+        merchant_name?: string;
+        merchant_city?: string;
     };
     message: string;
 }

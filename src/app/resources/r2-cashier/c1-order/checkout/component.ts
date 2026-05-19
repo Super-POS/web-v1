@@ -11,7 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { QRCodeComponent } from 'angularx-qrcode';
+import { KhqrPaymentOverlayComponent } from 'app/shared/khqr-payment-overlay/khqr-payment-overlay.component';
 
 import { Subject, Subscription, debounceTime, take, takeUntil } from 'rxjs';
 
@@ -100,7 +100,7 @@ function flatCount(obj: CashDrawer | null, key: keyof Denominations): number {
         MatProgressSpinnerModule,
         NgForOf,
         NgIf,
-        QRCodeComponent,
+        KhqrPaymentOverlayComponent,
         UsdFromKhrPipe,
     ],
 })
@@ -132,8 +132,28 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
     bakongQrAmount = 0;
     /** Currency tag carried in the KHQR — what the customer's banking app will display. */
     bakongQrCurrency: 'USD' | 'KHR' = 'KHR';
+    /**
+     * Merchant identity surfaced by the backend (Tag 59/60 of the EMV string). Used to render
+     * the official NBC "KHQR Card" layout — merchant name + city sit between the red ribbon
+     * header and the QR. We fall back to env defaults if the API doesn't include them.
+     */
+    bakongMerchantName = 'KHQR';
+    bakongMerchantCity = '';
+    /** Receipt # to print on the card so the cashier can match QR ↔ order in one glance. */
+    bakongReceiptNumber: string | null = null;
     private _bakongPendingOrderId: number | null = null;
     private _bakongWaitSub: Subscription | null = null;
+
+    /**
+     * After the QR wait overlay closes, we show a full-screen result card so the
+     * cashier *can't miss* whether the payment landed. Replaces a snackbar-only
+     * confirmation that was easy to overlook on a busy POS.
+     */
+    bakongResult: 'paid' | 'cancelled' | 'timeout' | null = null;
+    bakongResultAmountKhr = 0;
+    bakongResultReceiptNumber: string | number | null = null;
+    /** Held until the cashier dismisses the result card; then we open the receipt drawer. */
+    private _bakongResultPendingOrder: OrderReceiptData | null = null;
 
     cashExchangeRate = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
     cashReceivedKhrAmount: number | null = null;
@@ -383,6 +403,25 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
         this.cashChangeBreakdownItems = [];
         this.cashPendingOrder = null;
         if (order) {
+            // Tag as paid so the receipt drawer's payment badge renders correctly even
+            // though the create-order API echo doesn't include `payment_status`.
+            this.openOrderDetailDrawer({ ...order, payment_status: 'paid' } as OrderReceiptData);
+        }
+    }
+
+    /**
+     * Closes the Bakong result card. On a successful payment we then open the receipt
+     * drawer so the cashier sees the itemized invoice; on a cancel/timeout we just
+     * return to the empty checkout view.
+     */
+    dismissBakongResult(): void {
+        const wasPaid = this.bakongResult === 'paid';
+        const order = this._bakongResultPendingOrder;
+        this.bakongResult = null;
+        this.bakongResultAmountKhr = 0;
+        this.bakongResultReceiptNumber = null;
+        this._bakongResultPendingOrder = null;
+        if (wasPaid && order) {
             this.openOrderDetailDrawer(order);
         }
     }
@@ -553,7 +592,10 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
                             err?.error?.message || 'Order placed but change calculation failed.',
                             GlobalConstants.error,
                         );
-                        this.openOrderDetailDrawer(order);
+                        // Order was still placed successfully on the backend; the only thing
+                        // that failed is computing the change breakdown. Show the receipt
+                        // drawer flagged as paid so the cashier has visual confirmation.
+                        this.openOrderDetailDrawer({ ...order, payment_status: 'paid' } as OrderReceiptData);
                     },
                 });
             },
@@ -581,8 +623,26 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
         this.bakongAmountKhr = 0;
         this.bakongQrAmount = 0;
         this.bakongQrCurrency = 'KHR';
+        this.bakongReceiptNumber = null;
         this._bakongPendingOrderId = null;
         this._clearBakongWaitSub();
+    }
+
+    /**
+     * Formats the QR amount exactly the way the NBC KHQR Card guideline shows it on the
+     * physical card (and how customer wallets render it after scanning):
+     *   USD → "2.50 USD"   (two decimals, period separator)
+     *   KHR → "4,000 KHR"  (thousands grouping, no decimals)
+     */
+    get bakongDisplayAmount(): string {
+        const amount = Number(this.bakongQrAmount || 0);
+        if (this.bakongQrCurrency === 'USD') {
+            return amount.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            });
+        }
+        return Math.round(amount).toLocaleString('en-US');
     }
 
     /**
@@ -609,11 +669,22 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
                 next: (response) => {
                     this.isOrderBeingMade = false;
                     const order = response.data;
-                    this._service.clearCheckoutDraft();
-                    this.carts = [];
-                    this.totalPrice = 0;
+
+                    // IMPORTANT: do NOT clear the local cart / checkout draft here.
+                    // The order is created on the backend, but the customer hasn't paid yet —
+                    // they're about to scan the KHQR. If we clear the cart now, the cashier
+                    // sees an "empty" checkout page behind the QR overlay, and any close of
+                    // the overlay (cancel / timeout / page reload) lands them on a stale empty
+                    // state that ngOnInit then redirects away from. Per cashier request, we
+                    // keep the cart visible during scan + waiting, and only clear after the
+                    // payment is actually confirmed (`outcome === 'paid'` below).
 
                     if (order?.id == null) {
+                        // No order id means we can't poll/settle — treat as a finished flow
+                        // and dispose the cart as before so the cashier doesn't re-place it.
+                        this._service.clearCheckoutDraft();
+                        this.carts = [];
+                        this.totalPrice = 0;
                         this._snackBarService.openSnackBar(response.message, GlobalConstants.success);
                         this.openOrderDetailDrawer(order);
                         return;
@@ -636,6 +707,12 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
                             this.bakongAmountKhr = savedTotal;
                             this.bakongQrAmount = bakong.data?.qr_amount ?? savedTotal;
                             this.bakongQrCurrency = bakong.data?.qr_currency ?? 'KHR';
+                            // Backend (api-v1 bakong.service.ts) echoes the Tag 59/60 values from
+                            // the EMV string so the card UI shows the same identity the customer's
+                            // banking app will display after scanning.
+                            this.bakongMerchantName = bakong.data?.merchant_name?.trim() || 'KHQR';
+                            this.bakongMerchantCity = bakong.data?.merchant_city?.trim() || '';
+                            this.bakongReceiptNumber = order.receipt_number != null ? String(order.receipt_number) : null;
                             const expIso = bakong.data?.expires_at;
                             this.bakongExpiresAt = expIso ? new Date(expIso) : null;
                             this.isAwaitingBakongPayment = true;
@@ -649,16 +726,32 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
                                     this.bakongAmountKhr = 0;
                                     this.bakongQrAmount = 0;
                                     this.bakongQrCurrency = 'KHR';
+                                    this.bakongReceiptNumber = null;
                                     this._bakongPendingOrderId = null;
                                     this._bakongWaitSub = null;
 
+                                    this.bakongResultAmountKhr = savedTotal;
+                                    this.bakongResultReceiptNumber = order.receipt_number ?? null;
+
                                     if (outcome === 'paid') {
+                                        // Payment confirmed by Bakong (responseCode === 0).
+                                        // ONLY now do we tear down the cart + draft — during the
+                                        // earlier scan/wait phase the cashier's checkout stayed
+                                        // intact in case they needed to cancel and retry.
+                                        this._service.clearCheckoutDraft();
+                                        this.carts = [];
+                                        this.totalPrice = 0;
+
                                         this._snackBarService.openSnackBar(
                                             'Bakong: Payment completed - receipt ' +
                                                 String(order.receipt_number ?? '') +
                                                 '.',
                                             GlobalConstants.success,
                                         );
+                                        // Pre-fetch the freshly-paid order so the receipt drawer
+                                        // (opened from the result card) shows the same data the
+                                        // sales list would — and tag it `paid` so the new header
+                                        // badge renders correctly even if the API echo omits it.
                                         this._service.getOrderViewForBaray(order.id).subscribe({
                                             next: (v) => {
                                                 const d: Record<string, unknown> = (v.data || {}) as Record<string, unknown>;
@@ -666,18 +759,25 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
                                                     (d['orderDetails'] as unknown[]) ||
                                                     (d['details'] as unknown[]) ||
                                                     [];
-                                                this.openOrderDetailDrawer({
+                                                this._bakongResultPendingOrder = {
                                                     ...order,
                                                     ...d,
                                                     details,
                                                     orderDetails: details,
-                                                } as OrderReceiptData);
+                                                    payment_status: 'paid',
+                                                } as OrderReceiptData;
+                                                this.bakongResult = 'paid';
+                                                this._changeDetectorRef.detectChanges();
                                             },
-                                            error: () =>
-                                                this.openOrderDetailDrawer({
+                                            error: () => {
+                                                this._bakongResultPendingOrder = {
                                                     ...order,
                                                     status: 'pending',
-                                                } as OrderReceiptData),
+                                                    payment_status: 'paid',
+                                                } as OrderReceiptData;
+                                                this.bakongResult = 'paid';
+                                                this._changeDetectorRef.detectChanges();
+                                            },
                                         });
                                     } else if (outcome === 'cancelled') {
                                         this._snackBarService.openSnackBar(
@@ -686,11 +786,15 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
                                                 ' - changed/cancelled',
                                             GlobalConstants.error,
                                         );
+                                        this.bakongResult = 'cancelled';
+                                        this._changeDetectorRef.detectChanges();
                                     } else {
                                         this._snackBarService.openSnackBar(
                                             'Bakong: Waiting timeout - please verify payment manually.',
                                             GlobalConstants.error,
                                         );
+                                        this.bakongResult = 'timeout';
+                                        this._changeDetectorRef.detectChanges();
                                     }
                                 });
                         },
