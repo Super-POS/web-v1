@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, map, Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class HelperLoadingService {
@@ -38,7 +38,9 @@ export class HelperLoadingService {
      * Getter for progress
      */
     get progress$(): Observable<number> {
-        return this._progress$.asObservable();
+        return this._progress$.pipe(
+            map((v) => Math.max(0, Math.min(100, Number(v) || 0))),
+        );
     }
 
     /**

@@ -5,6 +5,7 @@ export interface Notification {
     order_number?: number | null,
     total_price: number,
     ordered_at?: Date,
-    cashier: { id: number, name: string, avatar: string },
+    /** Null when the cashier account was removed but the notification row remains. */
+    cashier?: { id: number, name: string, avatar: string } | null,
     read: boolean;
 }

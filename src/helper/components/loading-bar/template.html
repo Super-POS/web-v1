@@ -1,7 +1,9 @@
-@if (show) {
-    @if (mode === 'determinate') {
-        <mat-progress-bar mode="determinate" [value]="progress"></mat-progress-bar>
-    } @else {
-        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+@if (vm$ | async; as vm) {
+    @if (vm.show) {
+        @if (vm.mode === 'determinate') {
+            <mat-progress-bar mode="determinate" [value]="vm.progress"></mat-progress-bar>
+        } @else {
+            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        }
     }
 }
