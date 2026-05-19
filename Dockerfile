@@ -26,7 +26,7 @@ COPY ./package-lock.json /usr/app/package-lock.json
 ENV NODE_OPTIONS=--max_old_space_size=4096
 
 # Install Dependencies
-RUN npm install --legacy-peer-deps
+RUN npm ci --legacy-peer-deps
 
 COPY ./ /usr/app
 
