@@ -37,7 +37,8 @@
                             "quill-delta",
                             "moment",
                             "pdfjs-dist",
-                            "file-saver"
+                            "file-saver",
+                            "qrcode"
                         ],
                         "assets": [
                             {
