@@ -24,6 +24,7 @@ export interface Data {
 }
 
 export interface MenuItemType {
+    id?: number;
     name: string;
 }
 
@@ -105,6 +106,8 @@ export interface CashierCouponOption {
     code: string;
     discount_percent: number;
     assigned_user_ids?: number[];
+    menu_ids?: number[];
+    category_ids?: number[];
 }
 // Interface for the response of creating or updating a sales order
 export interface ResponseOrder {

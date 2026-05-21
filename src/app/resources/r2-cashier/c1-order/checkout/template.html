@@ -202,11 +202,19 @@
                         class="w-full rounded-xl border border-slate-300 bg-white py-2.5 px-3 text-sm font-medium text-slate-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
                         <option value="">No coupon</option>
                         <option *ngFor="let c of activeCoupons" [value]="c.code">
-                            {{ c.code }} ({{ c.discount_percent }}% off){{ (c.assigned_user_ids && c.assigned_user_ids.length > 0) ? ' · Restricted' : '' }}
+                            {{ c.code }} ({{ c.discount_percent }}% off)
+                            <ng-container *ngIf="(c.menu_ids && c.menu_ids.length > 0) || (c.category_ids && c.category_ids.length > 0)"> · Items only</ng-container>
+                            <ng-container *ngIf="c.assigned_user_ids && c.assigned_user_ids.length > 0"> · Restricted</ng-container>
                         </option>
                     </select>
                     <p *ngIf="discountAmountKhr > 0" class="text-sm font-semibold text-green-700 dark:text-green-400">
                         Discount: -${{ discountAmountKhr | usdFromKhr:cashExchangeRate | number:'1.2-2' }}
+                    </p>
+                    <p *ngIf="isRestrictedCoupon && discountAmountKhr > 0" class="text-xs text-purple-600 dark:text-purple-400">
+                        Applies to {{ eligibleItemCount }} eligible item(s) in cart only.
+                    </p>
+                    <p *ngIf="isRestrictedCoupon && discountAmountKhr === 0 && selectedCouponCode" class="text-xs text-amber-600 dark:text-amber-400">
+                        No eligible items in cart for this coupon.
                     </p>
                     <ng-container *ngIf="selectedCouponIsUserRestricted">
                         <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Customer ID</label>

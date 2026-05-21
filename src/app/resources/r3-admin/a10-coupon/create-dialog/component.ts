@@ -14,7 +14,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
-import { AdminCouponRow, CouponUserOption } from '../interface';
+import { AdminCouponRow, CouponCategoryOption, CouponMenuOption, CouponUserOption } from '../interface';
 import { AdminCouponService } from '../service';
 
 @Component({
@@ -41,10 +41,22 @@ export class AdminCouponCreateDialogComponent implements OnInit, OnDestroy {
     form: UntypedFormGroup;
     isSaving = false;
 
+    // User picker
     userSearch = new UntypedFormControl('');
     userSuggestions: CouponUserOption[] = [];
     isSearchingUsers = false;
     selectedUsers: CouponUserOption[] = [];
+
+    // Menu picker
+    menuSearch = new UntypedFormControl('');
+    menuSuggestions: CouponMenuOption[] = [];
+    isSearchingMenus = false;
+    selectedMenus: CouponMenuOption[] = [];
+
+    // Category picker
+    allCategories: CouponCategoryOption[] = [];
+    selectedCategories: CouponCategoryOption[] = [];
+    isLoadingCategories = false;
 
     private _destroy$ = new Subject<void>();
 
@@ -78,34 +90,59 @@ export class AdminCouponCreateDialogComponent implements OnInit, OnDestroy {
             codeCtrl?.updateValueAndValidity({ emitEvent: false });
         });
 
+        // User search
         this.userSearch.valueChanges.pipe(
-            debounceTime(300),
-            distinctUntilChanged(),
-            takeUntil(this._destroy$),
-        ).subscribe((q: string) => {
-            const query = (typeof q === 'string' ? q : '').trim();
-            if (!query) {
-                this.userSuggestions = [];
-                return;
-            }
-            this.isSearchingUsers = true;
-            this._service.searchUsers(query).subscribe({
-                next: (res) => {
-                    const ids = new Set(this.selectedUsers.map((u) => u.id));
-                    this.userSuggestions = (res.data ?? []).filter((u) => !ids.has(u.id));
-                    this.isSearchingUsers = false;
-                },
-                error: () => {
-                    this.userSuggestions = [];
-                    this.isSearchingUsers = false;
-                },
-            });
-        });
+            debounceTime(300), distinctUntilChanged(), takeUntil(this._destroy$),
+        ).subscribe((q: string) => this._searchUsers(q));
+
+        // Menu search
+        this.menuSearch.valueChanges.pipe(
+            debounceTime(300), distinctUntilChanged(), takeUntil(this._destroy$),
+        ).subscribe((q: string) => this._searchMenus(q));
+
+        // Load categories once
+        this._loadCategories();
     }
 
     ngOnDestroy(): void {
         this._destroy$.next();
         this._destroy$.complete();
+    }
+
+    private _searchUsers(q: string): void {
+        const query = (typeof q === 'string' ? q : '').trim();
+        if (!query) { this.userSuggestions = []; return; }
+        this.isSearchingUsers = true;
+        this._service.searchUsers(query).subscribe({
+            next: (res) => {
+                const ids = new Set(this.selectedUsers.map((u) => u.id));
+                this.userSuggestions = (res.data ?? []).filter((u) => !ids.has(u.id));
+                this.isSearchingUsers = false;
+            },
+            error: () => { this.userSuggestions = []; this.isSearchingUsers = false; },
+        });
+    }
+
+    private _searchMenus(q: string): void {
+        const query = (typeof q === 'string' ? q : '').trim();
+        if (!query) { this.menuSuggestions = []; return; }
+        this.isSearchingMenus = true;
+        this._service.searchMenus(query).subscribe({
+            next: (res) => {
+                const ids = new Set(this.selectedMenus.map((m) => m.id));
+                this.menuSuggestions = (res.data ?? []).filter((m) => !ids.has(m.id));
+                this.isSearchingMenus = false;
+            },
+            error: () => { this.menuSuggestions = []; this.isSearchingMenus = false; },
+        });
+    }
+
+    private _loadCategories(): void {
+        this.isLoadingCategories = true;
+        this._service.fetchCategories().subscribe({
+            next: (res) => { this.allCategories = res.data ?? []; this.isLoadingCategories = false; },
+            error: () => { this.allCategories = []; this.isLoadingCategories = false; },
+        });
     }
 
     onUserSelected(event: MatAutocompleteSelectedEvent): void {
@@ -117,13 +154,29 @@ export class AdminCouponCreateDialogComponent implements OnInit, OnDestroy {
         this.userSuggestions = [];
     }
 
-    removeUser(userId: number): void {
-        this.selectedUsers = this.selectedUsers.filter((u) => u.id !== userId);
+    onMenuSelected(event: MatAutocompleteSelectedEvent): void {
+        const menu = event.option.value as CouponMenuOption;
+        if (!this.selectedMenus.find((m) => m.id === menu.id)) {
+            this.selectedMenus = [...this.selectedMenus, menu];
+        }
+        this.menuSearch.setValue('', { emitEvent: false });
+        this.menuSuggestions = [];
     }
 
-    displayUserName(): string {
-        return '';
+    toggleCategory(cat: CouponCategoryOption): void {
+        const exists = this.selectedCategories.find((c) => c.id === cat.id);
+        this.selectedCategories = exists
+            ? this.selectedCategories.filter((c) => c.id !== cat.id)
+            : [...this.selectedCategories, cat];
     }
+
+    isCategorySelected(cat: CouponCategoryOption): boolean {
+        return this.selectedCategories.some((c) => c.id === cat.id);
+    }
+
+    removeUser(id: number): void { this.selectedUsers = this.selectedUsers.filter((u) => u.id !== id); }
+    removeMenu(id: number): void { this.selectedMenus = this.selectedMenus.filter((m) => m.id !== id); }
+    displayEmpty(): string { return ''; }
 
     submit(): void {
         const generateCode = !!this.form.get('generate_code')?.value;
@@ -140,21 +193,23 @@ export class AdminCouponCreateDialogComponent implements OnInit, OnDestroy {
         this._dialogRef.disableClose = true;
         this.isSaving = true;
         const noteRaw = String(this.form.get('note')?.value ?? '').trim();
-        const note = noteRaw ? noteRaw : undefined;
+        const note = noteRaw || undefined;
         const usageLimitRaw = this.form.get('usage_limit')?.value;
         const usage_limit = usageLimitRaw != null && usageLimitRaw !== '' ? Number(usageLimitRaw) : null;
         const expiresRaw = String(this.form.get('expires_at')?.value ?? '').trim();
         const expires_at = expiresRaw ? new Date(expiresRaw).toISOString() : null;
         const assigned_user_ids = this.selectedUsers.map((u) => u.id);
+        const menu_ids = this.selectedMenus.map((m) => m.id);
+        const category_ids = this.selectedCategories.map((c) => c.id);
         const payload = generateCode
-            ? { auto_generate_code: true as const, discount_percent: pct, is_active: true as const, note, usage_limit, expires_at, assigned_user_ids }
-            : { code, discount_percent: pct, is_active: true as const, note, usage_limit, expires_at, assigned_user_ids };
+            ? { auto_generate_code: true as const, discount_percent: pct, is_active: true as const, note, usage_limit, expires_at, assigned_user_ids, menu_ids, category_ids }
+            : { code, discount_percent: pct, is_active: true as const, note, usage_limit, expires_at, assigned_user_ids, menu_ids, category_ids };
         this._service.create(payload).subscribe({
-            next: (response) => {
+            next: (res) => {
                 this.isSaving = false;
                 this._dialogRef.disableClose = false;
-                this.resData.emit(response.data);
-                this._snackBar.openSnackBar(response.message || 'Saved.', GlobalConstants.success);
+                this.resData.emit(res.data);
+                this._snackBar.openSnackBar(res.message || 'Saved.', GlobalConstants.success);
                 this._dialogRef.close();
             },
             error: (err: HttpErrorResponse) => {
@@ -165,7 +220,5 @@ export class AdminCouponCreateDialogComponent implements OnInit, OnDestroy {
         });
     }
 
-    closeDialog(): void {
-        this._dialogRef.close();
-    }
+    closeDialog(): void { this._dialogRef.close(); }
 }

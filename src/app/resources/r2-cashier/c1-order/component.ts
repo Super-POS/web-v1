@@ -291,6 +291,10 @@ export class OrderComponent implements OnInit, OnDestroy {
             typeof typeSource === 'object' && typeSource !== null && 'name' in (typeSource as object)
                 ? (typeSource as MenuItemType)
                 : { name: String((typeSource as { name?: string } | undefined)?.name ?? 'Menu') };
+        // Also pick up a top-level type_id if the API includes it
+        if (type.id == null && m['type_id'] != null) {
+            type.id = Number(m['type_id']);
+        }
 
         const rawGroups = (m['modifierGroups'] as unknown[]) || [];
         const groups: NormalizedModifierGroup[] = (rawGroups as Record<string, unknown>[])

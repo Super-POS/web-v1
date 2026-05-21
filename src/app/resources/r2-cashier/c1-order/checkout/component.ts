@@ -368,6 +368,9 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
         this.onCashPaymentInputChange();
     }
 
+    eligibleItemCount = 0;
+    isRestrictedCoupon = false;
+
     private _syncTotalsFromCartAndCoupon(): void {
         const sub = this._calculateTotal();
         this.cartSubtotal = sub;
@@ -376,8 +379,30 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
         if (sel) {
             const c = this.activeCoupons.find((x) => x.code === sel);
             if (c) {
-                discount = Math.round((sub * Number(c.discount_percent)) / 100);
+                const menuIds = c.menu_ids ?? [];
+                const catIds = c.category_ids ?? [];
+                const hasRestriction = menuIds.length > 0 || catIds.length > 0;
+                this.isRestrictedCoupon = hasRestriction;
+                let eligibleSubtotal = sub;
+                if (hasRestriction) {
+                    const eligibleLines = this.carts.filter((l) =>
+                        menuIds.includes(l.id) || (l.type?.id != null && catIds.includes(l.type.id))
+                    );
+                    this.eligibleItemCount = eligibleLines.reduce((n, l) => n + l.qty, 0);
+                    eligibleSubtotal = eligibleLines.reduce((s, l) => s + l.unit_price * l.qty, 0);
+                } else {
+                    this.isRestrictedCoupon = false;
+                    this.eligibleItemCount = this.carts.reduce((n, l) => n + l.qty, 0);
+                }
+                discount = Math.round((eligibleSubtotal * Number(c.discount_percent)) / 100);
+                if (discount > sub) discount = sub;
+            } else {
+                this.isRestrictedCoupon = false;
+                this.eligibleItemCount = 0;
             }
+        } else {
+            this.isRestrictedCoupon = false;
+            this.eligibleItemCount = 0;
         }
         this.discountAmountKhr = discount;
         this.totalPrice = Math.max(0, sub - discount);

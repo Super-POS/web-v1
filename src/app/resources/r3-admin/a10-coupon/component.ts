@@ -34,7 +34,7 @@ import { AdminCouponUpdateDialogComponent } from './update-dialog/component';
     ],
 })
 export class AdminCouponComponent implements OnInit {
-    displayedColumns = ['code', 'discount_percent', 'usage', 'expires_at', 'assigned_user', 'note', 'is_active', 'actions'] as const;
+    displayedColumns = ['code', 'discount_percent', 'usage', 'expires_at', 'restrictions', 'assigned_user', 'note', 'is_active', 'actions'] as const;
     rows: AdminCouponRow[] = [];
     isLoading = false;
     today = new Date();
