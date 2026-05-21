@@ -1,89 +1,114 @@
 <div class="checkout-section relative flex flex-col min-h-0 bg-slate-50 dark:bg-gray-900 mt-4 mx-4 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm overflow-hidden">
-    <!--
-        Bakong payment RESULT overlay - shown after the QR-wait overlay resolves, so the
-        cashier gets unmistakable confirmation that the payment was received (or didn't).
-        Sits at z-[110] so it stacks above the waiting overlay during the brief transition.
-    -->
-    <div *ngIf="bakongResult"
+    <!-- Baray payment RESULT overlay -->
+    <div *ngIf="barayResult"
         class="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
         <div class="w-full max-w-[min(440px,100vw-2rem)] rounded-2xl bg-white dark:bg-gray-900 shadow-2xl overflow-hidden border-2"
-            [class.border-emerald-400]="bakongResult === 'paid'"
-            [class.border-rose-400]="bakongResult === 'cancelled'"
-            [class.border-amber-400]="bakongResult === 'timeout'">
+            [class.border-emerald-400]="barayResult === 'paid'"
+            [class.border-rose-400]="barayResult === 'cancelled'"
+            [class.border-amber-400]="barayResult === 'timeout'">
             <div class="px-6 pt-7 pb-4 text-center"
-                [class.bg-emerald-50]="bakongResult === 'paid'"
-                [class.bg-rose-50]="bakongResult === 'cancelled'"
-                [class.bg-amber-50]="bakongResult === 'timeout'">
+                [class.bg-emerald-50]="barayResult === 'paid'"
+                [class.bg-rose-50]="barayResult === 'cancelled'"
+                [class.bg-amber-50]="barayResult === 'timeout'">
                 <div class="mx-auto h-20 w-20 rounded-full flex items-center justify-center border-4"
-                    [class.bg-emerald-100]="bakongResult === 'paid'"
-                    [class.border-emerald-300]="bakongResult === 'paid'"
-                    [class.bg-rose-100]="bakongResult === 'cancelled'"
-                    [class.border-rose-300]="bakongResult === 'cancelled'"
-                    [class.bg-amber-100]="bakongResult === 'timeout'"
-                    [class.border-amber-300]="bakongResult === 'timeout'">
+                    [class.bg-emerald-100]="barayResult === 'paid'"
+                    [class.border-emerald-300]="barayResult === 'paid'"
+                    [class.bg-rose-100]="barayResult === 'cancelled'"
+                    [class.border-rose-300]="barayResult === 'cancelled'"
+                    [class.bg-amber-100]="barayResult === 'timeout'"
+                    [class.border-amber-300]="barayResult === 'timeout'">
                     <mat-icon class="icon-size-12"
-                        [class.text-emerald-600]="bakongResult === 'paid'"
-                        [class.text-rose-600]="bakongResult === 'cancelled'"
-                        [class.text-amber-600]="bakongResult === 'timeout'"
-                        [svgIcon]="bakongResult === 'paid' ? 'mdi:check-decagram' : (bakongResult === 'cancelled' ? 'mdi:close-octagon' : 'mdi:clock-alert-outline')">
+                        [class.text-emerald-600]="barayResult === 'paid'"
+                        [class.text-rose-600]="barayResult === 'cancelled'"
+                        [class.text-amber-600]="barayResult === 'timeout'"
+                        [svgIcon]="barayResult === 'paid' ? 'mdi:check-decagram' : (barayResult === 'cancelled' ? 'mdi:close-octagon' : 'mdi:clock-alert-outline')">
                     </mat-icon>
                 </div>
                 <p class="mt-3 text-xs uppercase tracking-widest font-semibold"
-                    [class.text-emerald-700]="bakongResult === 'paid'"
-                    [class.text-rose-700]="bakongResult === 'cancelled'"
-                    [class.text-amber-700]="bakongResult === 'timeout'">
-                    {{ bakongResult === 'paid' ? 'Payment received' : (bakongResult === 'cancelled' ? 'Payment cancelled' : 'Payment timed out') }}
+                    [class.text-emerald-700]="barayResult === 'paid'"
+                    [class.text-rose-700]="barayResult === 'cancelled'"
+                    [class.text-amber-700]="barayResult === 'timeout'">
+                    {{ barayResult === 'paid' ? 'Payment received' : (barayResult === 'cancelled' ? 'Payment cancelled' : 'Payment timed out') }}
                 </p>
                 <p class="mt-1 text-3xl font-extrabold uppercase"
-                    [class.text-emerald-800]="bakongResult === 'paid'"
-                    [class.text-rose-800]="bakongResult === 'cancelled'"
-                    [class.text-amber-800]="bakongResult === 'timeout'">
-                    {{ bakongResult === 'paid' ? 'Paid' : (bakongResult === 'cancelled' ? 'Cancelled' : 'Timeout') }}
-                    <span *ngIf="bakongResult === 'paid'" class="tabular-nums">
-                        ${{ bakongResultAmountKhr | usdFromKhr:cashExchangeRate | number:'1.2-2' }}
+                    [class.text-emerald-800]="barayResult === 'paid'"
+                    [class.text-rose-800]="barayResult === 'cancelled'"
+                    [class.text-amber-800]="barayResult === 'timeout'">
+                    {{ barayResult === 'paid' ? 'Paid' : (barayResult === 'cancelled' ? 'Cancelled' : 'Timeout') }}
+                    <span *ngIf="barayResult === 'paid'" class="tabular-nums">
+                        ${{ barayResultAmountKhr | usdFromKhr:cashExchangeRate | number:'1.2-2' }}
                     </span>
                 </p>
-                <p *ngIf="bakongResult === 'paid'" class="mt-0.5 text-sm text-emerald-700/90 tabular-nums">
-                    {{ bakongResultAmountKhr | number:'1.0-0' }} ៛
+                <p *ngIf="barayResult === 'paid'" class="mt-0.5 text-sm text-emerald-700/90 tabular-nums">
+                    {{ barayResultAmountKhr | number:'1.0-0' }} ៛
                 </p>
-                <p *ngIf="bakongResultReceiptNumber != null" class="mt-3 text-sm text-slate-600 dark:text-slate-300">
-                    Receipt <span class="font-bold">#{{ bakongResultReceiptNumber }}</span>
+                <p *ngIf="barayResultReceiptNumber != null" class="mt-3 text-sm text-slate-600 dark:text-slate-300">
+                    Receipt <span class="font-bold">#{{ barayResultReceiptNumber }}</span>
                 </p>
-                <p *ngIf="bakongResult === 'timeout'" class="mt-2 text-xs text-amber-800/80">
-                    The QR expired. Please verify the payment in Bakong before re-issuing the receipt.
+                <p *ngIf="barayResult === 'timeout'" class="mt-2 text-xs text-amber-800/80">
+                    The link expired. Please verify the payment in Baray before re-issuing the receipt.
                 </p>
-                <p *ngIf="bakongResult === 'cancelled'" class="mt-2 text-xs text-rose-800/80">
+                <p *ngIf="barayResult === 'cancelled'" class="mt-2 text-xs text-rose-800/80">
                     This order has been cancelled.
                 </p>
             </div>
             <div class="px-6 pb-6 pt-3 bg-white dark:bg-gray-900">
-                <button type="button" mat-flat-button (click)="dismissBakongResult()"
+                <button type="button" mat-flat-button (click)="dismissBarayResult()"
                     class="!w-full !text-white !font-semibold !py-3"
-                    [class.!bg-emerald-600]="bakongResult === 'paid'"
-                    [class.!bg-rose-600]="bakongResult === 'cancelled'"
-                    [class.!bg-amber-600]="bakongResult === 'timeout'">
-                    {{ bakongResult === 'paid' ? 'Open Receipt' : 'Done' }}
+                    [class.!bg-emerald-600]="barayResult === 'paid'"
+                    [class.!bg-rose-600]="barayResult === 'cancelled'"
+                    [class.!bg-amber-600]="barayResult === 'timeout'">
+                    {{ barayResult === 'paid' ? 'Open Receipt' : 'Done' }}
                 </button>
             </div>
         </div>
     </div>
 
-    <!--
-        Baray iframe-based QR overlay disabled per merchant request — Bakong KHQR (below) handles
-        all QR-based payments now. Markup preserved in git history for reference.
-    -->
-
-    <app-khqr-payment-overlay
-        *ngIf="isAwaitingBakongPayment"
-        [qrData]="bakongQrData"
-        [merchantName]="bakongMerchantName"
-        [merchantCity]="bakongMerchantCity"
-        [displayAmount]="bakongDisplayAmount"
-        [currency]="bakongQrCurrency"
-        dismissLabel="Cancel"
-        [overlayZIndex]="100"
-        (dismissed)="cancelBakongWait()">
-    </app-khqr-payment-overlay>
+    <!-- Baray payment waiting overlay -->
+    <div *ngIf="isAwaitingBarayPayment"
+        class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+        <div class="w-full max-w-[min(440px,100vw-2rem)] rounded-2xl bg-white dark:bg-gray-900 shadow-2xl overflow-hidden border border-blue-200 dark:border-blue-700">
+            <div class="bg-blue-600 px-6 py-4 text-white flex items-center gap-3">
+                <div class="h-10 w-10 rounded-xl bg-white/15 flex items-center justify-center border border-white/30">
+                    <mat-icon class="icon-size-6 text-white" svgIcon="mdi:bank-transfer"></mat-icon>
+                </div>
+                <div>
+                    <p class="font-semibold text-sm uppercase tracking-wider">Baray Payment</p>
+                    <p *ngIf="barayReceiptNumber" class="text-xs text-blue-100 tabular-nums">Receipt #{{ barayReceiptNumber }}</p>
+                </div>
+            </div>
+            <div class="px-6 py-5 space-y-4">
+                <div class="flex items-center gap-3 rounded-xl border border-blue-100 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 px-4 py-3">
+                    <mat-progress-spinner [diameter]="20" [mode]="'indeterminate'"></mat-progress-spinner>
+                    <p class="text-sm text-blue-800 dark:text-blue-200">Waiting for customer to complete payment…</p>
+                </div>
+                <div *ngIf="barayPayUrl" class="space-y-2">
+                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pay Link</p>
+                    <a [href]="barayPayUrl" target="_blank" rel="noopener"
+                        class="flex items-center justify-center gap-2 w-full rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2.5 px-4 transition-colors">
+                        <mat-icon class="icon-size-4 shrink-0" svgIcon="mdi:open-in-new"></mat-icon>
+                        Open Pay Link
+                    </a>
+                </div>
+                <div class="rounded-xl border border-slate-100 dark:border-gray-700 bg-slate-50 dark:bg-gray-800 p-4 text-center">
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Amount due</p>
+                    <p class="text-2xl font-bold text-slate-900 dark:text-white tabular-nums">
+                        ${{ barayAmountKhr | usdFromKhr:cashExchangeRate | number:'1.2-2' }}
+                    </p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 tabular-nums">{{ barayAmountKhr | number:'1.0-0' }} ៛</p>
+                </div>
+                <p *ngIf="barayExpiresAt" class="text-xs text-slate-400 dark:text-slate-500 text-center">
+                    Expires {{ barayExpiresAt | date:'shortTime' }}
+                </p>
+            </div>
+            <div class="px-6 pb-6">
+                <button type="button" mat-flat-button (click)="cancelBarayWait()"
+                    class="!w-full !bg-slate-100 dark:!bg-gray-700 !text-slate-700 dark:!text-slate-200 !font-semibold !py-3 hover:!bg-slate-200">
+                    Cancel Payment
+                </button>
+            </div>
+        </div>
+    </div>
 
     <header class="checkout-header bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-gray-800">
         <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between px-5 py-4">
@@ -195,17 +220,17 @@
                 <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button type="button"
                         class="payment-method-card rounded-2xl border p-4 text-left transition-colors"
-                        [class.selected-bakong]="paymentMethod === 'bakong'"
-                        [class.border-slate-200]="paymentMethod !== 'bakong'"
-                        (click)="selectPaymentMethod('bakong')">
+                        [class.selected-baray]="paymentMethod === 'baray'"
+                        [class.border-slate-200]="paymentMethod !== 'baray'"
+                        (click)="selectPaymentMethod('baray')">
                         <div class="flex items-center justify-between">
                             <div class="h-10 w-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center">
-                                <mat-icon class="icon-size-6 text-indigo-600 dark:text-indigo-300" [svgIcon]="'mdi:qrcode'"></mat-icon>
+                                <mat-icon class="icon-size-6 text-indigo-600 dark:text-indigo-300" [svgIcon]="'mdi:bank-transfer'"></mat-icon>
                             </div>
-                            <mat-icon *ngIf="paymentMethod === 'bakong'" class="icon-size-5 text-indigo-600" svgIcon="mdi:check-circle"></mat-icon>
+                            <mat-icon *ngIf="paymentMethod === 'baray'" class="icon-size-5 text-indigo-600" svgIcon="mdi:check-circle"></mat-icon>
                         </div>
-                        <p class="mt-3 font-semibold text-slate-900 dark:text-white">Pay by BKHQR</p>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">Bakong KHQR (any bank)</p>
+                        <p class="mt-3 font-semibold text-slate-900 dark:text-white">Baray</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Local bank pay link</p>
                     </button>
 
                     <button type="button"
@@ -225,16 +250,16 @@
                 </div>
             </section>
 
-            <section *ngIf="paymentMethod === 'bakong'"
+            <section *ngIf="paymentMethod === 'baray'"
                 class="rounded-2xl border border-indigo-200 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-800 shadow-sm overflow-hidden">
                 <div class="px-5 py-4">
                     <div class="flex items-start gap-3">
                         <div class="h-10 w-10 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center border border-indigo-100 dark:border-indigo-800">
-                            <mat-icon class="icon-size-6 text-indigo-600 dark:text-indigo-300" svgIcon="mdi:qrcode"></mat-icon>
+                            <mat-icon class="icon-size-6 text-indigo-600 dark:text-indigo-300" svgIcon="mdi:bank-transfer"></mat-icon>
                         </div>
                         <div>
-                            <h3 class="font-semibold text-indigo-900 dark:text-indigo-200">Bakong KHQR selected</h3>
-                            <p class="text-sm text-indigo-700/80 dark:text-indigo-300/80 mt-1">Click Place Order to generate a KHQR. The customer scans it with any Bakong-enabled banking app.</p>
+                            <h3 class="font-semibold text-indigo-900 dark:text-indigo-200">Baray selected</h3>
+                            <p class="text-sm text-indigo-700/80 dark:text-indigo-300/80 mt-1">Click Place Order to generate a Baray pay link. Open the link for the customer to complete payment via their bank.</p>
                         </div>
                     </div>
                 </div>
@@ -476,7 +501,7 @@
                     (click)="placeOrder()">
                     <mat-progress-spinner *ngIf="isOrderBeingMade || isCalculatingChange" [diameter]="18" [mode]="'indeterminate'"></mat-progress-spinner>
                     <mat-icon *ngIf="!isOrderBeingMade && !isCalculatingChange" class="icon-size-5 shrink-0"
-                        [svgIcon]="paymentMethod === 'cash' ? 'mdi:cash' : 'mdi:qrcode'"></mat-icon>
+                        [svgIcon]="paymentMethod === 'cash' ? 'mdi:cash' : 'mdi:bank-transfer'"></mat-icon>
                     <span class="text-center leading-snug">{{ isCalculatingChange ? 'Calculating change...' : (isOrderBeingMade ? 'Placing order...' : 'Place Order') }}</span>
                 </button>
             </div>

@@ -11,8 +11,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { KhqrPaymentOverlayComponent } from 'app/shared/khqr-payment-overlay/khqr-payment-overlay.component';
-
 import { Subject, Subscription, debounceTime, take, takeUntil } from 'rxjs';
 
 // ================================================================>> Custom Library
@@ -26,9 +24,7 @@ import { PrintableOrder, PrintReceiptService } from 'helper/services/print-recei
 import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
 import { env } from 'envs/env';
-import { BakongPaidWatcherService } from '../bakong-paid-watcher.service';
-// Baray (disabled — keep import path so re-enabling is a one-liner):
-// import { BarayPaidWatcherService } from '../baray-paid-watcher.service';
+import { BarayPaidWatcherService } from '../baray-paid-watcher.service';
 import { CashierCouponOption, OrderCartLine } from '../interface';
 import { OrderService } from '../service';
 import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
@@ -36,14 +32,10 @@ import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
 
 /**
  * Payment methods exposed by the cashier checkout.
- * `bakong` = Bakong KHQR per https://bakong.nbc.gov.kh/download/KHQR/integration/Bakong%20Open%20API%20Document.pdf
- *   (polled via `/cashier/ordering/bakong/order/:id/payment-state`).
- * `cash`   = manual cash drawer flow with change calculation.
- *
- * `qr` (Baray) was removed per merchant request; the API endpoints stay in `OrderService` so it
- * can be re-enabled without changes elsewhere.
+ * `baray` = Baray local-bank pay-link (URL polled via `/cashier/ordering/baray/order/:id/payment-state`).
+ * `cash`  = manual cash drawer flow with change calculation.
  */
-type PaymentMethod = 'cash' | 'bakong';
+type PaymentMethod = 'cash' | 'baray';
 
 interface DrawerDenomRow {
     label: string;
@@ -100,7 +92,6 @@ function flatCount(obj: CashDrawer | null, key: keyof Denominations): number {
         MatProgressSpinnerModule,
         NgForOf,
         NgIf,
-        KhqrPaymentOverlayComponent,
         UsdFromKhrPipe,
     ],
 })
@@ -117,43 +108,31 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
     discountAmountKhr = 0;
     activeCoupons: CashierCouponOption[] = [];
     selectedCouponCode = '';
-    paymentMethod: PaymentMethod = 'bakong';
+    paymentMethod: PaymentMethod = 'baray';
     isOrderBeingMade = false;
     isCalculatingChange = false;
     isPreviewingCashChange = false;
 
-    /** Bakong KHQR overlay: full-screen waiting state with QR + amount until paid / timeout / cashier cancels. */
-    isAwaitingBakongPayment = false;
-    bakongQrData: string | null = null;
-    bakongExpiresAt: Date | null = null;
-    /** Order total in KHR (the bank-of-record currency in this POS). */
-    bakongAmountKhr = 0;
-    /** Amount actually encoded in the KHQR (in `bakongQrCurrency`). */
-    bakongQrAmount = 0;
-    /** Currency tag carried in the KHQR — what the customer's banking app will display. */
-    bakongQrCurrency: 'USD' | 'KHR' = 'KHR';
-    /**
-     * Merchant identity surfaced by the backend (Tag 59/60 of the EMV string). Used to render
-     * the official NBC "KHQR Card" layout — merchant name + city sit between the red ribbon
-     * header and the QR. We fall back to env defaults if the API doesn't include them.
-     */
-    bakongMerchantName = 'KHQR';
-    bakongMerchantCity = '';
-    /** Receipt # to print on the card so the cashier can match QR ↔ order in one glance. */
-    bakongReceiptNumber: string | null = null;
-    private _bakongPendingOrderId: number | null = null;
-    private _bakongWaitSub: Subscription | null = null;
+    /** Baray waiting overlay: shown while polling for payment confirmation. */
+    isAwaitingBarayPayment = false;
+    barayPayUrl: string | null = null;
+    barayExpiresAt: Date | null = null;
+    /** Order total in KHR for display. */
+    barayAmountKhr = 0;
+    /** Receipt # shown in the overlay so the cashier can match order ↔ payment. */
+    barayReceiptNumber: string | null = null;
+    private _barayPendingOrderId: number | null = null;
+    private _barayWaitSub: Subscription | null = null;
 
     /**
-     * After the QR wait overlay closes, we show a full-screen result card so the
-     * cashier *can't miss* whether the payment landed. Replaces a snackbar-only
-     * confirmation that was easy to overlook on a busy POS.
+     * After the wait overlay closes, show a full-screen result card so the
+     * cashier can't miss whether the payment landed.
      */
-    bakongResult: 'paid' | 'cancelled' | 'timeout' | null = null;
-    bakongResultAmountKhr = 0;
-    bakongResultReceiptNumber: string | number | null = null;
+    barayResult: 'paid' | 'cancelled' | 'timeout' | null = null;
+    barayResultAmountKhr = 0;
+    barayResultReceiptNumber: string | number | null = null;
     /** Held until the cashier dismisses the result card; then we open the receipt drawer. */
-    private _bakongResultPendingOrder: OrderReceiptData | null = null;
+    private _barayResultPendingOrder: OrderReceiptData | null = null;
 
     cashExchangeRate = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
     cashReceivedKhrAmount: number | null = null;
@@ -179,7 +158,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
         private _userService: UserService,
         private _service: OrderService,
         private _snackBarService: SnackbarService,
-        private _bakongPaid: BakongPaidWatcherService,
+        private _barayPaid: BarayPaidWatcherService,
         private _cashDrawer: CashierCashDrawerService,
         private _printReceipt: PrintReceiptService,
     ) {
@@ -232,7 +211,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this._endBakongWaitUi();
+        this._endBarayWaitUi();
         this._unsubscribeAll.next(null);
         this._unsubscribeAll.complete();
     }
@@ -394,7 +373,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
             this._placeCashOrder();
             return;
         }
-        this._placeBakongOrder();
+        this._placeBarayOrder();
     }
 
     dismissChangeResult(): void {
@@ -409,31 +388,26 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
         }
     }
 
-    /**
-     * Closes the Bakong result card. On a successful payment we then open the receipt
-     * drawer so the cashier sees the itemized invoice; on a cancel/timeout we just
-     * return to the empty checkout view.
-     */
-    dismissBakongResult(): void {
-        const wasPaid = this.bakongResult === 'paid';
-        const order = this._bakongResultPendingOrder;
-        this.bakongResult = null;
-        this.bakongResultAmountKhr = 0;
-        this.bakongResultReceiptNumber = null;
-        this._bakongResultPendingOrder = null;
+    dismissBarayResult(): void {
+        const wasPaid = this.barayResult === 'paid';
+        const order = this._barayResultPendingOrder;
+        this.barayResult = null;
+        this.barayResultAmountKhr = 0;
+        this.barayResultReceiptNumber = null;
+        this._barayResultPendingOrder = null;
         if (wasPaid && order) {
             this.openOrderDetailDrawer(order);
         }
     }
 
-    cancelBakongWait(): void {
-        if (this._bakongPendingOrderId == null) {
-            this._endBakongWaitUi();
+    cancelBarayWait(): void {
+        if (this._barayPendingOrderId == null) {
+            this._endBarayWaitUi();
             return;
         }
 
-        const id = this._bakongPendingOrderId;
-        this._endBakongWaitUi();
+        const id = this._barayPendingOrderId;
+        this._endBarayWaitUi();
         this._service.cancelOrder(id).subscribe({
             next: () => {
                 this._snackBarService.openSnackBar(
@@ -606,54 +580,22 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
         });
     }
 
-    // Baray QR/iframe flow disabled — kept in `OrderService` for reversibility. Use Bakong KHQR instead.
-    // private _placeQrOrder(): void { ... }
-    // private _clearBarayWaitSub(): void { ... }
-    // private _endBarayWaitUi(): void { ... }
-
-    private _clearBakongWaitSub(): void {
-        this._bakongWaitSub?.unsubscribe();
-        this._bakongWaitSub = null;
+    private _clearBarayWaitSub(): void {
+        this._barayWaitSub?.unsubscribe();
+        this._barayWaitSub = null;
     }
 
-    private _endBakongWaitUi(): void {
-        this.isAwaitingBakongPayment = false;
-        this.bakongQrData = null;
-        this.bakongExpiresAt = null;
-        this.bakongAmountKhr = 0;
-        this.bakongQrAmount = 0;
-        this.bakongQrCurrency = 'KHR';
-        this.bakongReceiptNumber = null;
-        this._bakongPendingOrderId = null;
-        this._clearBakongWaitSub();
+    private _endBarayWaitUi(): void {
+        this.isAwaitingBarayPayment = false;
+        this.barayPayUrl = null;
+        this.barayExpiresAt = null;
+        this.barayAmountKhr = 0;
+        this.barayReceiptNumber = null;
+        this._barayPendingOrderId = null;
+        this._clearBarayWaitSub();
     }
 
-    /**
-     * Formats the QR amount exactly the way the NBC KHQR Card guideline shows it on the
-     * physical card (and how customer wallets render it after scanning):
-     *   USD → "2.50 USD"   (two decimals, period separator)
-     *   KHR → "4,000 KHR"  (thousands grouping, no decimals)
-     */
-    get bakongDisplayAmount(): string {
-        const amount = Number(this.bakongQrAmount || 0);
-        if (this.bakongQrCurrency === 'USD') {
-            return amount.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-            });
-        }
-        return Math.round(amount).toLocaleString('en-US');
-    }
-
-    /**
-     * Bakong KHQR checkout per the KHQR SDK + Open API docs:
-     *   1. Create the order on our backend (cashier-side).
-     *   2. Backend calls `BakongKHQR.generateIndividual` (npm `bakong-khqr`) → returns `qr` + `md5`.
-     *   3. Show the QR string in a `<qrcode>` overlay with the order total in KHR.
-     *   4. Poll `POST /v1/check_transaction_by_md5` via our backend until the response code is 0
-     *      (success) or the QR expires. See `bakong-paid-watcher.service.ts`.
-     */
-    private _placeBakongOrder(): void {
+    private _placeBarayOrder(): void {
         if (this.carts.length === 0) {
             return;
         }
@@ -663,6 +605,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
         this._service
             .create({
                 cart: JSON.stringify(this._buildCartPayload()),
+                deferred_telegram: true,
                 coupon_code: this.selectedCouponCode?.trim() || undefined,
             })
             .subscribe({
@@ -670,18 +613,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
                     this.isOrderBeingMade = false;
                     const order = response.data;
 
-                    // IMPORTANT: do NOT clear the local cart / checkout draft here.
-                    // The order is created on the backend, but the customer hasn't paid yet —
-                    // they're about to scan the KHQR. If we clear the cart now, the cashier
-                    // sees an "empty" checkout page behind the QR overlay, and any close of
-                    // the overlay (cancel / timeout / page reload) lands them on a stale empty
-                    // state that ngOnInit then redirects away from. Per cashier request, we
-                    // keep the cart visible during scan + waiting, and only clear after the
-                    // payment is actually confirmed (`outcome === 'paid'` below).
-
                     if (order?.id == null) {
-                        // No order id means we can't poll/settle — treat as a finished flow
-                        // and dispose the cart as before so the cashier doesn't re-place it.
                         this._service.clearCheckoutDraft();
                         this.carts = [];
                         this.totalPrice = 0;
@@ -690,68 +622,50 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
                         return;
                     }
 
-                    this._service.createBakongPaymentIntent(order.id).subscribe({
-                        next: (bakong) => {
-                            const qrData = bakong.data?.qr?.trim();
-                            if (!qrData) {
+                    this._service.createBarayPaymentIntent(order.id).subscribe({
+                        next: (baray) => {
+                            const payUrl = baray.data?.url?.trim();
+                            if (!payUrl) {
                                 this._snackBarService.openSnackBar(
-                                    'Bakong: KHQR data not available.',
+                                    'Baray: Pay link not available.',
                                     GlobalConstants.error,
                                 );
                                 return;
                             }
 
-                            this._clearBakongWaitSub();
-                            this._bakongPendingOrderId = order.id;
-                            this.bakongQrData = qrData;
-                            this.bakongAmountKhr = savedTotal;
-                            this.bakongQrAmount = bakong.data?.qr_amount ?? savedTotal;
-                            this.bakongQrCurrency = bakong.data?.qr_currency ?? 'KHR';
-                            // Backend (api-v1 bakong.service.ts) echoes the Tag 59/60 values from
-                            // the EMV string so the card UI shows the same identity the customer's
-                            // banking app will display after scanning.
-                            this.bakongMerchantName = bakong.data?.merchant_name?.trim() || 'KHQR';
-                            this.bakongMerchantCity = bakong.data?.merchant_city?.trim() || '';
-                            this.bakongReceiptNumber = order.receipt_number != null ? String(order.receipt_number) : null;
-                            const expIso = bakong.data?.expires_at;
-                            this.bakongExpiresAt = expIso ? new Date(expIso) : null;
-                            this.isAwaitingBakongPayment = true;
-                            this._bakongWaitSub = this._bakongPaid
+                            this._clearBarayWaitSub();
+                            this._barayPendingOrderId = order.id;
+                            this.barayPayUrl = payUrl;
+                            this.barayAmountKhr = savedTotal;
+                            this.barayReceiptNumber = order.receipt_number != null ? String(order.receipt_number) : null;
+                            const expIso = baray.data?.expires_at;
+                            this.barayExpiresAt = expIso ? new Date(expIso) : null;
+                            this.isAwaitingBarayPayment = true;
+
+                            this._barayWaitSub = this._barayPaid
                                 .waitUntilSettled(order.id)
                                 .pipe(take(1), takeUntil(this._unsubscribeAll))
                                 .subscribe((outcome) => {
-                                    this.isAwaitingBakongPayment = false;
-                                    this.bakongQrData = null;
-                                    this.bakongExpiresAt = null;
-                                    this.bakongAmountKhr = 0;
-                                    this.bakongQrAmount = 0;
-                                    this.bakongQrCurrency = 'KHR';
-                                    this.bakongReceiptNumber = null;
-                                    this._bakongPendingOrderId = null;
-                                    this._bakongWaitSub = null;
+                                    this.isAwaitingBarayPayment = false;
+                                    this.barayPayUrl = null;
+                                    this.barayExpiresAt = null;
+                                    this.barayAmountKhr = 0;
+                                    this.barayReceiptNumber = null;
+                                    this._barayPendingOrderId = null;
+                                    this._barayWaitSub = null;
 
-                                    this.bakongResultAmountKhr = savedTotal;
-                                    this.bakongResultReceiptNumber = order.receipt_number ?? null;
+                                    this.barayResultAmountKhr = savedTotal;
+                                    this.barayResultReceiptNumber = order.receipt_number ?? null;
 
                                     if (outcome === 'paid') {
-                                        // Payment confirmed by Bakong (responseCode === 0).
-                                        // ONLY now do we tear down the cart + draft — during the
-                                        // earlier scan/wait phase the cashier's checkout stayed
-                                        // intact in case they needed to cancel and retry.
                                         this._service.clearCheckoutDraft();
                                         this.carts = [];
                                         this.totalPrice = 0;
 
                                         this._snackBarService.openSnackBar(
-                                            'Bakong: Payment completed - receipt ' +
-                                                String(order.receipt_number ?? '') +
-                                                '.',
+                                            'Baray: Payment completed - receipt ' + String(order.receipt_number ?? '') + '.',
                                             GlobalConstants.success,
                                         );
-                                        // Pre-fetch the freshly-paid order so the receipt drawer
-                                        // (opened from the result card) shows the same data the
-                                        // sales list would — and tag it `paid` so the new header
-                                        // badge renders correctly even if the API echo omits it.
                                         this._service.getOrderViewForBaray(order.id).subscribe({
                                             next: (v) => {
                                                 const d: Record<string, unknown> = (v.data || {}) as Record<string, unknown>;
@@ -759,48 +673,46 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
                                                     (d['orderDetails'] as unknown[]) ||
                                                     (d['details'] as unknown[]) ||
                                                     [];
-                                                this._bakongResultPendingOrder = {
+                                                this._barayResultPendingOrder = {
                                                     ...order,
                                                     ...d,
                                                     details,
                                                     orderDetails: details,
                                                     payment_status: 'paid',
                                                 } as OrderReceiptData;
-                                                this.bakongResult = 'paid';
+                                                this.barayResult = 'paid';
                                                 this._changeDetectorRef.detectChanges();
                                             },
                                             error: () => {
-                                                this._bakongResultPendingOrder = {
+                                                this._barayResultPendingOrder = {
                                                     ...order,
                                                     status: 'pending',
                                                     payment_status: 'paid',
                                                 } as OrderReceiptData;
-                                                this.bakongResult = 'paid';
+                                                this.barayResult = 'paid';
                                                 this._changeDetectorRef.detectChanges();
                                             },
                                         });
                                     } else if (outcome === 'cancelled') {
                                         this._snackBarService.openSnackBar(
-                                            'Receipt ' +
-                                                String(order.receipt_number ?? '') +
-                                                ' - changed/cancelled',
+                                            'Receipt ' + String(order.receipt_number ?? '') + ' - changed/cancelled',
                                             GlobalConstants.error,
                                         );
-                                        this.bakongResult = 'cancelled';
+                                        this.barayResult = 'cancelled';
                                         this._changeDetectorRef.detectChanges();
                                     } else {
                                         this._snackBarService.openSnackBar(
-                                            'Bakong: Waiting timeout - please verify payment manually.',
+                                            'Baray: Waiting timeout - please verify payment manually.',
                                             GlobalConstants.error,
                                         );
-                                        this.bakongResult = 'timeout';
+                                        this.barayResult = 'timeout';
                                         this._changeDetectorRef.detectChanges();
                                     }
                                 });
                         },
                         error: (err: HttpErrorResponse) => {
                             this._snackBarService.openSnackBar(
-                                err?.error?.message || 'Unable to start Bakong payment.',
+                                err?.error?.message || 'Unable to start Baray payment.',
                                 GlobalConstants.error,
                             );
                         },
