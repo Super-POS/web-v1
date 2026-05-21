@@ -97,8 +97,10 @@ export class OrderService {
         /** Baray: delay Telegram + receipt until pay webhook. */
         deferred_telegram?: boolean;
         coupon_code?: string;
+        /** Required when the coupon has an assigned_user_id */
+        customer_id?: number | null;
     }): Observable<ResponseOrder> {
-        const { cart, channel = 'walk_in', deferred_telegram = true, coupon_code } = body;
+        const { cart, channel = 'walk_in', deferred_telegram = true, coupon_code, customer_id } = body;
 
         const requestBody: Record<string, unknown> = {
             cart,
@@ -106,6 +108,9 @@ export class OrderService {
         };
         if (coupon_code?.trim()) {
             requestBody['coupon_code'] = coupon_code.trim().toUpperCase();
+        }
+        if (customer_id != null) {
+            requestBody['customer_id'] = customer_id;
         }
         if (deferred_telegram) {
             requestBody['deferred_telegram'] = true;

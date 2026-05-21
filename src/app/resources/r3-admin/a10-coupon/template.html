@@ -46,6 +46,39 @@
                         <th mat-header-cell *matHeaderCellDef>Discount</th>
                         <td mat-cell *matCellDef="let r">{{ r.discount_percent | number:'1.0-2' }}%</td>
                     </ng-container>
+                    <ng-container matColumnDef="usage">
+                        <th mat-header-cell *matHeaderCellDef>Usage</th>
+                        <td mat-cell *matCellDef="let r">
+                            <span>{{ r.usage_count ?? 0 }}</span>
+                            <span *ngIf="r.usage_limit != null"> / {{ r.usage_limit }}</span>
+                            <span *ngIf="r.usage_limit == null"> / ∞</span>
+                        </td>
+                    </ng-container>
+                    <ng-container matColumnDef="expires_at">
+                        <th mat-header-cell *matHeaderCellDef>Expires</th>
+                        <td mat-cell *matCellDef="let r">
+                            <span *ngIf="r.expires_at" [class.text-red-500]="r.expires_at && (r.expires_at | date:'yyyy-MM-dd') < (today | date:'yyyy-MM-dd')">
+                                {{ r.expires_at | date:'dd MMM yyyy' }}
+                            </span>
+                            <span *ngIf="!r.expires_at" class="text-slate-400">—</span>
+                        </td>
+                    </ng-container>
+                    <ng-container matColumnDef="assigned_user">
+                        <th mat-header-cell *matHeaderCellDef>Assigned To</th>
+                        <td mat-cell *matCellDef="let r">
+                            <ng-container *ngIf="r.assigned_users && r.assigned_users.length > 0; else publicCoupon">
+                                <div class="flex flex-wrap gap-1">
+                                    <span *ngFor="let u of r.assigned_users"
+                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                        {{ u.name }}
+                                    </span>
+                                </div>
+                            </ng-container>
+                            <ng-template #publicCoupon>
+                                <span class="text-slate-400 text-sm">Public</span>
+                            </ng-template>
+                        </td>
+                    </ng-container>
                     <ng-container matColumnDef="note">
                         <th mat-header-cell *matHeaderCellDef>Note</th>
                         <td mat-cell *matCellDef="let r" class="max-w-md text-slate-600 dark:text-slate-400">{{ r.note || '—' }}</td>

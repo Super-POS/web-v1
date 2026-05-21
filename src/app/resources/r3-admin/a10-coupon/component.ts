@@ -1,4 +1,4 @@
-import { CommonModule, DecimalPipe } from '@angular/common';
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -24,6 +24,7 @@ import { AdminCouponUpdateDialogComponent } from './update-dialog/component';
     styleUrl: './style.scss',
     imports: [
         CommonModule,
+        DatePipe,
         DecimalPipe,
         MatButtonModule,
         MatIconModule,
@@ -33,9 +34,10 @@ import { AdminCouponUpdateDialogComponent } from './update-dialog/component';
     ],
 })
 export class AdminCouponComponent implements OnInit {
-    displayedColumns = ['code', 'discount_percent', 'note', 'is_active', 'actions'] as const;
+    displayedColumns = ['code', 'discount_percent', 'usage', 'expires_at', 'assigned_user', 'note', 'is_active', 'actions'] as const;
     rows: AdminCouponRow[] = [];
     isLoading = false;
+    today = new Date();
 
     constructor(
         private service: AdminCouponService,

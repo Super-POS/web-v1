@@ -108,6 +108,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
     discountAmountKhr = 0;
     activeCoupons: CashierCouponOption[] = [];
     selectedCouponCode = '';
+    customerId: number | null = null;
     paymentMethod: PaymentMethod = 'baray';
     isOrderBeingMade = false;
     isCalculatingChange = false;
@@ -190,6 +191,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
         });
 
         this.carts = draft.carts;
+        this.customerId = draft.customerId ?? null;
         this._syncTotalsFromCartAndCoupon();
         this._service.listActiveCoupons().subscribe({
             next: (res) => {
@@ -346,11 +348,22 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
             carts: this.carts,
             totalPrice: this._calculateTotal(),
             couponCode: this.selectedCouponCode?.trim() || null,
+            customerId: this.customerId,
         });
         this._router.navigate(['/cashier/order']);
     }
 
+    get selectedCouponIsUserRestricted(): boolean {
+        const sel = this.selectedCouponCode?.trim().toUpperCase();
+        if (!sel) return false;
+        const c = this.activeCoupons.find((x) => x.code === sel);
+        return (c?.assigned_user_ids?.length ?? 0) > 0;
+    }
+
     onCouponChange(): void {
+        if (!this.selectedCouponIsUserRestricted) {
+            this.customerId = null;
+        }
         this._syncTotalsFromCartAndCoupon();
         this.onCashPaymentInputChange();
     }
@@ -492,6 +505,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
                 cart: JSON.stringify(this._buildCartPayload()),
                 deferred_telegram: false,
                 coupon_code: this.selectedCouponCode?.trim() || undefined,
+                customer_id: this.customerId,
             })
             .subscribe({
             next: (response) => {
@@ -610,6 +624,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
                 cart: JSON.stringify(this._buildCartPayload()),
                 deferred_telegram: true,
                 coupon_code: this.selectedCouponCode?.trim() || undefined,
+                customer_id: this.customerId,
             })
             .subscribe({
                 next: (response) => {

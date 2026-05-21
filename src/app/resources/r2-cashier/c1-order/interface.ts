@@ -95,6 +95,8 @@ export interface CheckoutDraft {
     totalPrice: number;
     /** Uppercase coupon code when cashier applied one at checkout */
     couponCode?: string | null;
+    /** Customer ID required when the selected coupon is user-restricted */
+    customerId?: number | null;
 }
 
 /** GET /cashier/ordering/coupons */
@@ -102,6 +104,7 @@ export interface CashierCouponOption {
     id: number;
     code: string;
     discount_percent: number;
+    assigned_user_ids?: number[];
 }
 // Interface for the response of creating or updating a sales order
 export interface ResponseOrder {
