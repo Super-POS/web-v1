@@ -4,7 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-// Baray-only sanitizer (kept for reversibility): import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 // ================================================================>> Third party Library
 import { MatButtonModule } from '@angular/material/button';
@@ -116,6 +116,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
     /** Baray waiting overlay: shown while polling for payment confirmation. */
     isAwaitingBarayPayment = false;
     barayPayUrl: string | null = null;
+    safeBarayPayUrl: SafeResourceUrl | null = null;
     barayExpiresAt: Date | null = null;
     /** Order total in KHR for display. */
     barayAmountKhr = 0;
@@ -161,6 +162,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
         private _barayPaid: BarayPaidWatcherService,
         private _cashDrawer: CashierCashDrawerService,
         private _printReceipt: PrintReceiptService,
+        private _sanitizer: DomSanitizer,
     ) {
         this._userService.user$.pipe(takeUntil(this._unsubscribeAll)).subscribe((user: User) => {
             this.user = user;
@@ -588,6 +590,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
     private _endBarayWaitUi(): void {
         this.isAwaitingBarayPayment = false;
         this.barayPayUrl = null;
+        this.safeBarayPayUrl = null;
         this.barayExpiresAt = null;
         this.barayAmountKhr = 0;
         this.barayReceiptNumber = null;
@@ -636,6 +639,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
                             this._clearBarayWaitSub();
                             this._barayPendingOrderId = order.id;
                             this.barayPayUrl = payUrl;
+                            this.safeBarayPayUrl = this._sanitizer.bypassSecurityTrustResourceUrl(payUrl);
                             this.barayAmountKhr = savedTotal;
                             this.barayReceiptNumber = order.receipt_number != null ? String(order.receipt_number) : null;
                             const expIso = baray.data?.expires_at;
@@ -648,6 +652,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
                                 .subscribe((outcome) => {
                                     this.isAwaitingBarayPayment = false;
                                     this.barayPayUrl = null;
+                                    this.safeBarayPayUrl = null;
                                     this.barayExpiresAt = null;
                                     this.barayAmountKhr = 0;
                                     this.barayReceiptNumber = null;
