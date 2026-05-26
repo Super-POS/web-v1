@@ -1,0 +1,26 @@
+.room-bookings-filter-btn--active.mat-mdc-outlined-button {
+    background-color: #1e293b !important;
+    color: #fff !important;
+}
+
+.room-bookings-section {
+    .room-bookings-table {
+        th.mat-mdc-header-cell {
+            font-weight: 600;
+        }
+    }
+
+    .room-booking-confirm-btn.mat-mdc-unelevated-button {
+        background-color: #16a34a !important;
+        color: #fff !important;
+    }
+
+    .room-booking-confirm-btn.mat-mdc-unelevated-button:hover:not([disabled]) {
+        background-color: #15803d !important;
+    }
+
+    .room-booking-confirm-btn.mat-mdc-unelevated-button[disabled] {
+        background-color: rgba(0, 0, 0, 0.12) !important;
+        color: rgba(0, 0, 0, 0.38) !important;
+    }
+}

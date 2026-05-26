@@ -12,6 +12,9 @@ import { UserComponent }        from "./a4-user/u1-listing/component";
 import { AdminCashDrawerComponent } from "./a5-cash-drawer/component";
 import { AdminCouponComponent } from "./a10-coupon/component";
 import { AdminFinanceHubComponent } from "./a11-finance/component";
+import { MeetingRoomBookingsQueueComponent } from "app/shared/meeting-room-booking/meeting-room-bookings-queue.component";
+import { AdminMeetingRoomsComponent } from "./a14-meeting-rooms/component";
+import { AdminMeetingRoomFormPageComponent } from "./a14-meeting-rooms/room-form-page/component";
 
 export default [
     {
@@ -70,6 +73,27 @@ export default [
     {
         path                    : 'coupons',
         component               : AdminCouponComponent
+    },
+    {
+        path                    : 'meeting-rooms',
+        children                : [
+            {
+                path            : '',
+                component       : AdminMeetingRoomsComponent,
+            },
+            {
+                path            : 'create',
+                component       : AdminMeetingRoomFormPageComponent,
+            },
+            {
+                path            : 'edit/:id',
+                component       : AdminMeetingRoomFormPageComponent,
+            },
+        ],
+    },
+    {
+        path                    : 'room-bookings',
+        component               : MeetingRoomBookingsQueueComponent
     },
 
 ] as Routes;

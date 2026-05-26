@@ -81,6 +81,26 @@ const adminNavigation: HelperNavigationItem[] = [
         link: '/admin/coupons',
     },
     {
+        id: 'meeting-rooms',
+        title: 'Meeting rooms',
+        type: 'collapsable',
+        icon: 'mdi:door-open',
+        children: [
+            {
+                id: 'meeting-rooms.list',
+                title: 'Rooms',
+                type: 'basic',
+                link: '/admin/meeting-rooms',
+            },
+            {
+                id: 'meeting-rooms.bookings',
+                title: 'Bookings',
+                type: 'basic',
+                link: '/admin/room-bookings',
+            },
+        ],
+    },
+    {
         id: 'cash-drawer',
         title: 'Cash Drawer',
         type: 'basic',
@@ -110,6 +130,13 @@ const userNavigation: HelperNavigationItem[] = [
         type: 'basic',
         icon: 'mdi:web',
         link: '/cashier/incoming-web',
+    },
+    {
+        id: 'room-bookings',
+        title: 'Room bookings',
+        type: 'basic',
+        icon: 'mdi:door-open',
+        link: '/cashier/room-bookings',
     },
     {
         id: 'pos',
