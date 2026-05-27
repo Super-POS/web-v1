@@ -1,0 +1,114 @@
+<!-- Full-screen customer display — no navbar, no sidebar -->
+<div class="min-h-screen bg-slate-900 flex flex-col items-center justify-center select-none overflow-hidden">
+
+    <!-- ── IDLE SCREEN ─────────────────────────────────────── -->
+    <ng-container *ngIf="isIdle">
+        <div class="flex flex-col items-center gap-6 animate-fade-in">
+            <img src="/images/logo/Logo.png" alt="Logo"
+                class="h-24 w-24 rounded-2xl shadow-xl object-contain" />
+            <div class="text-center">
+                <p class="text-white text-3xl font-bold tracking-wide">Welcome</p>
+                <p class="mt-1 text-slate-400 text-base">Waiting for payment request…</p>
+            </div>
+        </div>
+    </ng-container>
+
+    <!-- ── QR SCREEN ───────────────────────────────────────── -->
+    <ng-container *ngIf="qrState as qs">
+
+        <!-- KHQR card -->
+        <div *ngIf="qs.type === 'khqr'"
+            class="w-full max-w-sm rounded-[22px] bg-white shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] overflow-hidden animate-fade-in">
+
+            <!-- Red ribbon -->
+            <div class="bg-[#E1232E] flex items-center justify-center px-5 pt-5 pb-8">
+                <img src="/payment/KHQR - asset/KHQR Logo.svg" alt="KHQR"
+                    class="h-8 pointer-events-none" draggable="false" />
+            </div>
+
+            <!-- Body -->
+            <div class="px-6 pt-4 pb-2">
+                <p class="text-center text-xl font-bold text-slate-900 truncate">
+                    {{ qs.merchantName || 'KHQR' }}
+                </p>
+                <p *ngIf="qs.merchantCity"
+                    class="mt-0.5 text-center text-xs uppercase tracking-widest text-slate-500">
+                    {{ qs.merchantCity }}
+                </p>
+
+                <p class="mt-3 text-center text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {{ qs.amount | number:'1.2-2' }}
+                    <span class="text-sm font-semibold text-slate-500 ml-1">{{ qs.currency }}</span>
+                </p>
+
+                <div class="my-4 border-t border-slate-100"></div>
+
+                <!-- QR -->
+                <div class="flex items-center justify-center relative">
+                    <qrcode [qrdata]="qs.qrString" [width]="260" [margin]="1"
+                        [errorCorrectionLevel]="'H'" [elementType]="'svg'"
+                        cssClass="block">
+                    </qrcode>
+                    <div class="absolute pointer-events-none">
+                        <img src="/images/logo/Logo.png" alt=""
+                            class="h-10 w-10 rounded-lg object-contain" draggable="false" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 text-center">
+                <p class="text-sm font-semibold text-slate-700">Scan with any Bakong-enabled app</p>
+                <p class="mt-1 text-xs text-slate-400 tabular-nums">
+                    Expires in <span class="font-bold text-slate-600">{{ formatCountdown(secondsLeft) }}</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Baray card -->
+        <div *ngIf="qs.type === 'baray'"
+            class="w-full max-w-sm rounded-[22px] bg-white shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] overflow-hidden animate-fade-in">
+
+            <!-- Blue ribbon -->
+            <div class="bg-blue-600 flex items-center gap-3 px-6 py-5">
+                <div class="h-11 w-11 rounded-xl bg-white/15 border border-white/30 flex items-center justify-center shrink-0">
+                    <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" stroke-width="2"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M3 10h18M7 15h1m4 0h1M3 6h18a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 011-1z" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-white font-semibold text-sm uppercase tracking-wider">Baray Payment</p>
+                    <p class="text-blue-100 text-xs">Scan QR to pay</p>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="px-6 pt-5 pb-2">
+                <p class="text-center text-3xl font-extrabold text-slate-900 tabular-nums">
+                    ${{ qs.amount | number:'1.2-2' }}
+                </p>
+
+                <div class="my-4 border-t border-slate-100"></div>
+
+                <div class="flex items-center justify-center">
+                    <qrcode [qrdata]="qs.qrString" [width]="260" [margin]="1"
+                        [errorCorrectionLevel]="'H'" [elementType]="'svg'"
+                        cssClass="block">
+                    </qrcode>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 text-center">
+                <p class="text-sm font-semibold text-slate-700">Scan to complete payment</p>
+                <p class="mt-1 text-xs text-slate-400 tabular-nums">
+                    Expires in <span class="font-bold text-slate-600">{{ formatCountdown(secondsLeft) }}</span>
+                </p>
+            </div>
+        </div>
+
+    </ng-container>
+
+</div>

@@ -1,0 +1,258 @@
+<div class="list-sale-section flex-1 min-w-0 bg-white dark:bg-gray-800 mt-4 mx-4 rounded-tl-lg rounded-tr-lg">
+
+    <!-- Breadcrumb / Header -->
+    <div class="bg-white min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5 dark:bg-gray-800 rounded-tl-lg rounded-tr-lg">
+        <div class="flex flex-1 items-center font-medium">
+            <div class="flex items-center">
+                <mat-icon class="text-gray-600 dark:text-white icon-size-5" [svgIcon]="'heroicons_outline:home'"></mat-icon>
+            </div>
+            <div class="flex items-center ml-1.5">
+                <span class="text-lg text-gray-600 dark:text-white -mb-0.5">ERP</span>
+            </div>
+            <div class="flex items-center">
+                <mat-icon class="-mb-0.5" [svgIcon]="'mat_solid:chevron_right'"></mat-icon>
+                <span class="text-lg text-gray-600 dark:text-white -mb-0.5">Recipe Costing</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button mat-icon-button type="button" (click)="load()" [disabled]="isLoading" class="text-slate-500">
+                <mat-icon class="icon-size-5" svgIcon="heroicons_outline:arrow-path"></mat-icon>
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading overlay -->
+    <ng-container *ngIf="isLoading">
+        <div class="flex items-center justify-center py-16">
+            <mat-progress-spinner [diameter]="40" [mode]="'indeterminate'"></mat-progress-spinner>
+        </div>
+    </ng-container>
+
+    <!-- Content -->
+    <div *ngIf="!isLoading" class="px-4 pb-4">
+
+        <!-- Summary Cards -->
+        <div *ngIf="summary" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+            <!-- Total Items -->
+            <div class="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3 flex flex-col gap-1">
+                <span class="text-xs text-blue-600 dark:text-blue-400 font-medium uppercase tracking-wide">Total Items</span>
+                <span class="text-2xl font-bold text-blue-800 dark:text-blue-200">{{ summary.total_items }}</span>
+            </div>
+            <!-- Avg Cost -->
+            <div class="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-3 flex flex-col gap-1">
+                <span class="text-xs text-purple-600 dark:text-purple-400 font-medium uppercase tracking-wide">Avg Cost</span>
+                <span class="text-2xl font-bold text-purple-800 dark:text-purple-200">${{ summary.avg_cost | number:'1.2-2' }}</span>
+            </div>
+            <!-- Avg Margin -->
+            <div class="bg-green-50 dark:bg-green-900/30 rounded-lg p-3 flex flex-col gap-1">
+                <span class="text-xs text-green-600 dark:text-green-400 font-medium uppercase tracking-wide">Avg Margin</span>
+                <span class="text-2xl font-bold text-green-800 dark:text-green-200">{{ summary.avg_margin_pct | number:'1.1-1' }}%</span>
+            </div>
+            <!-- Highest Margin -->
+            <div class="bg-emerald-50 dark:bg-emerald-900/30 rounded-lg p-3 flex flex-col gap-1">
+                <span class="text-xs text-emerald-600 dark:text-emerald-400 font-medium uppercase tracking-wide">Highest Margin</span>
+                <ng-container *ngIf="summary.highest_margin; else noHighest">
+                    <span class="text-sm font-bold text-emerald-800 dark:text-emerald-200 truncate">{{ summary.highest_margin.menu_name }}</span>
+                    <span class="text-lg font-semibold text-emerald-700 dark:text-emerald-300">{{ summary.highest_margin.margin_pct | number:'1.1-1' }}%</span>
+                </ng-container>
+                <ng-template #noHighest><span class="text-sm text-gray-400">—</span></ng-template>
+            </div>
+            <!-- Lowest Margin -->
+            <div class="bg-red-50 dark:bg-red-900/30 rounded-lg p-3 flex flex-col gap-1">
+                <span class="text-xs text-red-600 dark:text-red-400 font-medium uppercase tracking-wide">Lowest Margin</span>
+                <ng-container *ngIf="summary.lowest_margin; else noLowest">
+                    <span class="text-sm font-bold text-red-800 dark:text-red-200 truncate">{{ summary.lowest_margin.menu_name }}</span>
+                    <span class="text-lg font-semibold text-red-700 dark:text-red-300">{{ summary.lowest_margin.margin_pct | number:'1.1-1' }}%</span>
+                </ng-container>
+                <ng-template #noLowest><span class="text-sm text-gray-400">—</span></ng-template>
+            </div>
+        </div>
+
+        <!-- Two-column layout: table left, detail right -->
+        <div class="flex flex-col lg:flex-row gap-4">
+
+            <!-- LEFT: Menu table -->
+            <div class="flex-1 min-w-0">
+                <!-- Empty state -->
+                <div *ngIf="rows.length === 0" class="flex flex-col justify-center items-center py-12 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <mat-icon class="icon-size-16 text-gray-400" svgIcon="toc"></mat-icon>
+                    <span class="text-xl text-gray-500 dark:text-gray-400 mt-2">No recipe data</span>
+                    <span class="text-sm text-slate-400 mt-1">No costing records found.</span>
+                </div>
+
+                <div *ngIf="rows.length > 0" class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                    <table mat-table [dataSource]="rows" class="w-full">
+
+                        <!-- Menu Name -->
+                        <ng-container matColumnDef="menu_name">
+                            <th mat-header-cell *matHeaderCellDef class="whitespace-nowrap">Menu Item</th>
+                            <td mat-cell *matCellDef="let r" class="cursor-pointer" (click)="selectRow(r)">
+                                <div class="flex flex-col">
+                                    <span class="font-medium" [class.text-blue-600]="selectedItem?.menu_id === r.menu_id">{{ r.menu_name }}</span>
+                                    <span *ngIf="r.menu_code" class="text-xs text-slate-400">{{ r.menu_code }}</span>
+                                </div>
+                            </td>
+                        </ng-container>
+
+                        <!-- Has Sizes -->
+                        <ng-container matColumnDef="has_sizes">
+                            <th mat-header-cell *matHeaderCellDef>Sizes</th>
+                            <td mat-cell *matCellDef="let r" (click)="selectRow(r)" class="cursor-pointer">
+                                <span *ngIf="r.has_sizes"
+                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                    Yes
+                                </span>
+                                <span *ngIf="!r.has_sizes"
+                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                                    No
+                                </span>
+                            </td>
+                        </ng-container>
+
+                        <!-- Product Cost -->
+                        <ng-container matColumnDef="product_cost">
+                            <th mat-header-cell *matHeaderCellDef>Cost</th>
+                            <td mat-cell *matCellDef="let r" (click)="selectRow(r)" class="cursor-pointer">
+                                ${{ r.product_cost | number:'1.2-2' }}
+                            </td>
+                        </ng-container>
+
+                        <!-- Price -->
+                        <ng-container matColumnDef="price">
+                            <th mat-header-cell *matHeaderCellDef>Price</th>
+                            <td mat-cell *matCellDef="let r" (click)="selectRow(r)" class="cursor-pointer">
+                                <span *ngIf="r.price != null">${{ r.price | number:'1.2-2' }}</span>
+                                <span *ngIf="r.price == null" class="text-gray-400">—</span>
+                            </td>
+                        </ng-container>
+
+                        <!-- Margin % -->
+                        <ng-container matColumnDef="margin_pct">
+                            <th mat-header-cell *matHeaderCellDef>Margin %</th>
+                            <td mat-cell *matCellDef="let r" (click)="selectRow(r)" class="cursor-pointer">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                    [ngClass]="marginBadgeClass(r.margin_pct)">
+                                    {{ r.margin_pct | number:'1.1-1' }}%
+                                </span>
+                            </td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="displayedColumnsArr; sticky: true"></tr>
+                        <tr mat-row *matRowDef="let row; columns: displayedColumnsArr"
+                            class="hover:bg-blue-50 transition-colors cursor-pointer"
+                            [class.bg-blue-50]="selectedItem?.menu_id === row.menu_id"
+                            (click)="selectRow(row)"></tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- RIGHT: Detail panel -->
+            <div class="lg:w-96 flex-shrink-0">
+
+                <!-- Loading detail -->
+                <div *ngIf="isLoadingDetail" class="flex items-center justify-center py-16 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <mat-progress-spinner [diameter]="32" [mode]="'indeterminate'"></mat-progress-spinner>
+                </div>
+
+                <!-- Empty state for detail panel -->
+                <div *ngIf="!isLoadingDetail && !selectedItem"
+                    class="flex flex-col justify-center items-center py-12 bg-gray-50 dark:bg-gray-700 rounded-lg h-full min-h-40">
+                    <mat-icon class="icon-size-12 text-gray-300" svgIcon="heroicons_outline:cursor-arrow-rays"></mat-icon>
+                    <span class="text-sm text-gray-400 mt-2 text-center px-4">Click a row to view ingredient or size details</span>
+                </div>
+
+                <!-- Detail panel content -->
+                <div *ngIf="!isLoadingDetail && selectedItem"
+                    class="bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
+
+                    <!-- Panel header -->
+                    <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-600 flex items-center justify-between">
+                        <div class="flex flex-col">
+                            <span class="font-semibold text-gray-900 dark:text-white">{{ selectedItem.menu_name }}</span>
+                            <span *ngIf="selectedItem.menu_code" class="text-xs text-gray-400">{{ selectedItem.menu_code }}</span>
+                        </div>
+                        <button mat-icon-button type="button" (click)="selectedItem = null" class="text-gray-400">
+                            <mat-icon class="icon-size-4" svgIcon="heroicons_outline:x-mark"></mat-icon>
+                        </button>
+                    </div>
+
+                    <!-- Sizes table -->
+                    <div *ngIf="selectedItem.has_sizes" class="overflow-x-auto">
+                        <div *ngIf="!selectedItem.sizes?.length" class="px-4 py-6 text-sm text-gray-400 text-center">No size data available.</div>
+                        <table *ngIf="selectedItem.sizes?.length" mat-table [dataSource]="selectedItem.sizes" class="w-full">
+
+                            <ng-container matColumnDef="size">
+                                <th mat-header-cell *matHeaderCellDef>Size</th>
+                                <td mat-cell *matCellDef="let s" class="font-medium">{{ s.size }}</td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="price">
+                                <th mat-header-cell *matHeaderCellDef>Price</th>
+                                <td mat-cell *matCellDef="let s">${{ s.price | number:'1.2-2' }}</td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="product_cost">
+                                <th mat-header-cell *matHeaderCellDef>Cost</th>
+                                <td mat-cell *matCellDef="let s">${{ s.product_cost | number:'1.2-2' }}</td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="margin_pct">
+                                <th mat-header-cell *matHeaderCellDef>Margin %</th>
+                                <td mat-cell *matCellDef="let s">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                        [ngClass]="marginBadgeClass(s.margin_pct)">
+                                        {{ s.margin_pct | number:'1.1-1' }}%
+                                    </span>
+                                </td>
+                            </ng-container>
+
+                            <tr mat-header-row *matHeaderRowDef="sizeColumnsArr"></tr>
+                            <tr mat-row *matRowDef="let row; columns: sizeColumnsArr"></tr>
+                        </table>
+                    </div>
+
+                    <!-- Ingredients table -->
+                    <div *ngIf="!selectedItem.has_sizes" class="overflow-x-auto">
+                        <div *ngIf="!selectedItem.ingredients?.length" class="px-4 py-6 text-sm text-gray-400 text-center">No ingredient data available.</div>
+                        <table *ngIf="selectedItem.ingredients?.length" mat-table [dataSource]="selectedItem.ingredients" class="w-full">
+
+                            <ng-container matColumnDef="name">
+                                <th mat-header-cell *matHeaderCellDef>Ingredient</th>
+                                <td mat-cell *matCellDef="let i" class="font-medium">{{ i.name }}</td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="unit">
+                                <th mat-header-cell *matHeaderCellDef>Unit</th>
+                                <td mat-cell *matCellDef="let i">{{ i.unit }}</td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="quantity_used">
+                                <th mat-header-cell *matHeaderCellDef>Qty</th>
+                                <td mat-cell *matCellDef="let i">{{ i.quantity_used | number:'1.2-4' }}</td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="unit_cost">
+                                <th mat-header-cell *matHeaderCellDef>Unit Cost</th>
+                                <td mat-cell *matCellDef="let i">${{ i.unit_cost | number:'1.2-4' }}</td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="line_cost">
+                                <th mat-header-cell *matHeaderCellDef>Line Cost</th>
+                                <td mat-cell *matCellDef="let i" class="font-medium">${{ i.line_cost | number:'1.2-2' }}</td>
+                            </ng-container>
+
+                            <tr mat-header-row *matHeaderRowDef="ingredientColumnsArr"></tr>
+                            <tr mat-row *matRowDef="let row; columns: ingredientColumnsArr"></tr>
+                        </table>
+
+                        <!-- Total cost footer -->
+                        <div *ngIf="selectedItem.ingredients?.length" class="px-4 py-2 border-t border-gray-200 dark:border-gray-600 flex justify-between items-center">
+                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Total Cost</span>
+                            <span class="font-bold text-gray-900 dark:text-white">${{ selectedItem.product_cost | number:'1.2-2' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

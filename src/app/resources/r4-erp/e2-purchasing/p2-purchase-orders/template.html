@@ -1,0 +1,140 @@
+<div class="list-sale-section flex-1 min-w-0 bg-white dark:bg-gray-800 mt-4 mx-4 rounded-tl-lg rounded-tr-lg">
+    <div class="bg-white min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5 dark:bg-gray-800">
+        <div class="flex flex-1 items-center font-medium">
+            <div class="flex items-center">
+                <mat-icon class="text-gray-600 dark:text-white icon-size-5" [svgIcon]="'heroicons_outline:home'"></mat-icon>
+            </div>
+            <div class="flex items-center ml-1.5">
+                <span class="text-lg text-gray-600 dark:text-white -mb-0.5">ERP</span>
+            </div>
+            <div class="flex items-center">
+                <mat-icon class="-mb-0.5" [svgIcon]="'mat_solid:chevron_right'"></mat-icon>
+                <span class="text-lg text-gray-600 dark:text-white -mb-0.5">Purchasing</span>
+            </div>
+            <div class="flex items-center">
+                <mat-icon class="-mb-0.5" [svgIcon]="'mat_solid:chevron_right'"></mat-icon>
+                <span class="text-lg text-gray-600 dark:text-white -mb-0.5">Purchase Orders</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <mat-form-field appearance="outline" class="helpers-mat-form-field-sm w-40">
+                <mat-select [(ngModel)]="statusFilter" (selectionChange)="load()" placeholder="All Status">
+                    <mat-option value="">All Status</mat-option>
+                    <mat-option value="draft">Draft</mat-option>
+                    <mat-option value="ordered">Ordered</mat-option>
+                    <mat-option value="partial">Partial</mat-option>
+                    <mat-option value="received">Received</mat-option>
+                    <mat-option value="cancelled">Cancelled</mat-option>
+                </mat-select>
+            </mat-form-field>
+            <button class="helpers-mat-button-sm w-6" type="button" (click)="openCreateDialog()" mat-stroked-button>
+                <mat-icon class="icon-size-6 text-slate-500" svgIcon="heroicons_outline:plus"></mat-icon>
+            </button>
+        </div>
+    </div>
+
+    <div class="list-sale-body">
+        <ng-container *ngIf="isLoading">
+            <div class="px-4 py-6 text-slate-500">Getting data from API...</div>
+        </ng-container>
+
+        <div *ngIf="rows.length === 0 && !isLoading" class="no-data bg-white border-t dark:bg-gray-800">
+            <div class="flex flex-col justify-center items-center mb-4 py-12">
+                <mat-icon class="icon-size-24" svgIcon="toc"></mat-icon>
+                <span class="text-2xl -mt-3">No data</span>
+                <span class="text-sm text-slate-500 mt-2 px-6 text-center">Use the + button to create a purchase order.</span>
+            </div>
+        </div>
+
+        <div *ngIf="rows.length > 0 && !isLoading" class="list-sale-content px-4 pb-4 bg-white rounded-bl-xl rounded-br-xl dark:bg-gray-800">
+            <div class="list-sale-data overflow-x-auto">
+                <table mat-table [dataSource]="rows" class="w-full min-w-[640px]">
+                    <ng-container matColumnDef="po_number">
+                        <th mat-header-cell *matHeaderCellDef>PO #</th>
+                        <td mat-cell *matCellDef="let r">
+                            <span class="font-mono font-semibold">{{ r.po_number }}</span>
+                        </td>
+                    </ng-container>
+                    <ng-container matColumnDef="supplier">
+                        <th mat-header-cell *matHeaderCellDef>Supplier</th>
+                        <td mat-cell *matCellDef="let r">{{ r.supplier?.name || '—' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="order_date">
+                        <th mat-header-cell *matHeaderCellDef>Order Date</th>
+                        <td mat-cell *matCellDef="let r">{{ r.order_date | date:'dd MMM yyyy' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="expected_date">
+                        <th mat-header-cell *matHeaderCellDef>Expected Date</th>
+                        <td mat-cell *matCellDef="let r">
+                            <span *ngIf="r.expected_date">{{ r.expected_date | date:'dd MMM yyyy' }}</span>
+                            <span *ngIf="!r.expected_date" class="text-slate-400">—</span>
+                        </td>
+                    </ng-container>
+                    <ng-container matColumnDef="total_amount">
+                        <th mat-header-cell *matHeaderCellDef>Total</th>
+                        <td mat-cell *matCellDef="let r">$ {{ r.total_amount | number:'1.2-2' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="status">
+                        <th mat-header-cell *matHeaderCellDef>Status</th>
+                        <td mat-cell *matCellDef="let r">
+                            <span *ngIf="r.status === 'draft'"
+                                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                                Draft
+                            </span>
+                            <span *ngIf="r.status === 'ordered'"
+                                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                Ordered
+                            </span>
+                            <span *ngIf="r.status === 'partial'"
+                                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                Partial
+                            </span>
+                            <span *ngIf="r.status === 'received'"
+                                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                Received
+                            </span>
+                            <span *ngIf="r.status === 'cancelled'"
+                                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                Cancelled
+                            </span>
+                        </td>
+                    </ng-container>
+                    <ng-container matColumnDef="actions" stickyEnd>
+                        <th mat-header-cell *matHeaderCellDef>Action</th>
+                        <td mat-cell *matCellDef="let r">
+                            <button mat-icon-button type="button" [matMenuTriggerFor]="rowMenu" aria-label="Open row actions">
+                                <mat-icon class="icon-size-6" svgIcon="mat_outline:more_vert"></mat-icon>
+                            </button>
+                            <mat-menu #rowMenu="matMenu">
+                                <button mat-menu-item type="button" [matMenuTriggerFor]="statusMenu">
+                                    <mat-icon class="icon-size-6" svgIcon="heroicons_outline:arrow-path"></mat-icon>
+                                    <span class="text-lg">Update Status</span>
+                                </button>
+                                <mat-menu #statusMenu="matMenu">
+                                    <button mat-menu-item type="button" (click)="updateStatus(r, 'ordered')">
+                                        <span class="text-lg">Mark as Ordered</span>
+                                    </button>
+                                    <button mat-menu-item type="button" (click)="updateStatus(r, 'received')">
+                                        <span class="text-lg">Mark as Received</span>
+                                    </button>
+                                    <button mat-menu-item type="button" (click)="updateStatus(r, 'cancelled')">
+                                        <span class="text-lg text-red-500">Cancel Order</span>
+                                    </button>
+                                </mat-menu>
+                                <button mat-menu-item type="button"
+                                    *ngIf="r.status !== 'received' && r.status !== 'cancelled'"
+                                    (click)="openReceiveDialog(r)">
+                                    <mat-icon class="icon-size-6" svgIcon="heroicons_outline:inbox-arrow-down"></mat-icon>
+                                    <span class="text-lg">Receive Goods</span>
+                                </button>
+                            </mat-menu>
+                        </td>
+                    </ng-container>
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

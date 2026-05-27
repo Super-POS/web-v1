@@ -22,12 +22,22 @@ export class NavigationService {
             roleName === 'Cashier' ||
             roleSlug === 'cashier';
 
+        const isSuperUser =
+            roleName === RoleEnum.SUPER_USER ||
+            roleName === 'Super User' ||
+            roleSlug === 'super-user' ||
+            roleSlug === 'super_user';
+
         if (isAdmin) {
             this._navigation.next(navigationData.admin);
             return;
         }
         if (isCashier) {
             this._navigation.next(navigationData.user);
+            return;
+        }
+        if (isSuperUser) {
+            this._navigation.next(navigationData.superuser);
             return;
         }
         this._navigation.next([]);

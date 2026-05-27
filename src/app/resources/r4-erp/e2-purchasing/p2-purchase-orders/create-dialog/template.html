@@ -1,0 +1,111 @@
+<div class="out-create-section md-form-field-appearance-outline">
+    <div mat-dialog-title class="min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pr-2.5">
+        <div class="flex flex-1 items-center text-slate-500">
+            <h1 class="text-3xl">Create Purchase Order</h1>
+        </div>
+        <div class="flex items-center cursor-pointer">
+            <mat-icon class="-mb-0.5" [svgIcon]="'heroicons_outline:x-mark'" (click)="closeDialog()"></mat-icon>
+        </div>
+    </div>
+
+    <div class="out-create-body px-4 pb-2">
+        <form [formGroup]="form" class="out-create-content border-t pt-4 space-y-1">
+
+            <!-- ── Main Fields ── -->
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Supplier ID</mat-label>
+                <input matInput type="number" formControlName="supplier_id" placeholder="Supplier ID" />
+                <mat-error>Supplier is required</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Order Date</mat-label>
+                <input matInput type="date" formControlName="order_date" />
+                <mat-error>Order date is required</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Expected Delivery Date (optional)</mat-label>
+                <input matInput type="date" formControlName="expected_date" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Notes (optional)</mat-label>
+                <textarea matInput formControlName="notes" rows="2" placeholder="Any notes about this order"></textarea>
+            </mat-form-field>
+
+            <!-- ── Items ── -->
+            <div class="pt-2">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Order Items</p>
+                    <button type="button" mat-stroked-button class="helpers-mat-button-sm" (click)="addItem()">
+                        <mat-icon class="icon-size-5" svgIcon="heroicons_outline:plus"></mat-icon>
+                        <span class="ml-1 text-sm">Add Item</span>
+                    </button>
+                </div>
+
+                <div formArrayName="items">
+                    <div *ngFor="let item of itemsArray.controls; let i = index" [formGroupName]="i"
+                        class="border rounded-lg p-3 mb-3 bg-slate-50 dark:bg-gray-700 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-slate-500">Item {{ i + 1 }}</span>
+                            <button type="button" mat-icon-button (click)="removeItem(i)"
+                                *ngIf="itemsArray.length > 1"
+                                class="text-red-400 w-6 h-6">
+                                <mat-icon class="icon-size-4" svgIcon="heroicons_outline:trash"></mat-icon>
+                            </button>
+                        </div>
+
+                        <mat-form-field appearance="outline" class="w-full">
+                            <mat-label>Item Name</mat-label>
+                            <input matInput formControlName="item_name" placeholder="e.g. Flour" />
+                            <mat-error>Item name is required</mat-error>
+                        </mat-form-field>
+
+                        <div class="grid grid-cols-3 gap-2">
+                            <mat-form-field appearance="outline" class="col-span-1">
+                                <mat-label>Qty</mat-label>
+                                <input matInput type="number" formControlName="quantity" min="0.001" step="0.001" />
+                                <mat-error>Required</mat-error>
+                            </mat-form-field>
+                            <mat-form-field appearance="outline" class="col-span-1">
+                                <mat-label>Unit</mat-label>
+                                <input matInput formControlName="unit" placeholder="kg" />
+                                <mat-error>Required</mat-error>
+                            </mat-form-field>
+                            <mat-form-field appearance="outline" class="col-span-1">
+                                <mat-label>Unit Cost</mat-label>
+                                <input matInput type="number" formControlName="unit_cost" min="0" step="0.01" />
+                                <mat-error>Required</mat-error>
+                            </mat-form-field>
+                        </div>
+
+                        <div class="text-right text-sm text-slate-600 dark:text-slate-300">
+                            Subtotal: $
+                            <strong>{{
+                                ((item.get('quantity')?.value || 0) * (item.get('unit_cost')?.value || 0)) | number:'1.2-2'
+                            }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-3 pt-3 border-t flex justify-end">
+                    <span class="text-base font-semibold text-slate-700 dark:text-slate-200">
+                        Total: $ {{ totalAmount | number:'1.2-2' }}
+                    </span>
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+    <mat-dialog-actions>
+        <div class="w-full flex justify-end px-1">
+            <button class="helpers-mat-button-md text-white bg-[#102d71]" mat-flat-button type="button"
+                (click)="submit()" [disabled]="isSaving || !form.valid">
+                <span *ngIf="!isSaving">Create Order</span>
+                <mat-progress-spinner *ngIf="isSaving" [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>
+            </button>
+        </div>
+    </mat-dialog-actions>
+</div>

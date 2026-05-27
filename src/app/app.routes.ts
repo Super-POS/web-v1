@@ -5,18 +5,37 @@ import { NoAuthGuard } from 'app/core/auth/guards/noAuth';
 import { LayoutComponent } from 'app/layout/component';
 import { RoleEnum } from '../helper/enums/role.enum';
 import { initialDataResolver } from './app.resolver';
+import { AuthService } from './core/auth/service';
 import { roleResolver } from './core/auth/resolvers/role';
+import { UserPayload } from 'helper/interfaces/payload.interface';
+import jwt_decode from 'jwt-decode';
 
 @Injectable({
     providedIn: 'root'
 })
 export class RedirectGuard implements CanActivate {
-    constructor(private router: Router) { }
+    constructor(private router: Router, private auth: AuthService) { }
 
     canActivate(): boolean {
-
-        this.router.navigate(['/admin/dashboard']);
-
+        try {
+            const token = this.auth.accessToken;
+            if (token) {
+                const payload: UserPayload = jwt_decode(token);
+                const role = payload.user.roles.find(r => r.is_default);
+                const slug = role?.slug?.toLowerCase();
+                if (slug === 'super-user' || slug === 'super_user') {
+                    this.router.navigate(['/erp/analytics']);
+                } else if (slug === 'cashier') {
+                    this.router.navigate(['/cashier/order']);
+                } else {
+                    this.router.navigate(['/admin/dashboard']);
+                }
+            } else {
+                this.router.navigate(['/admin/dashboard']);
+            }
+        } catch {
+            this.router.navigate(['/admin/dashboard']);
+        }
         return false;
     }
 }
@@ -30,6 +49,12 @@ export const appRoutes: Route[] = [
         path: 'redirect',
         canActivate: [RedirectGuard],
         component: LayoutComponent
+    },
+
+    // Customer display — no auth, open on second device
+    {
+        path: 'customer-display',
+        loadChildren: () => import('app/resources/customer-display/routes')
     },
 
     // Auth routes for guests
@@ -58,6 +83,15 @@ export const appRoutes: Route[] = [
                     role: roleResolver([RoleEnum.ADMIN])
                 },
                 loadChildren: () => import('app/resources/r3-admin/admin.routes')
+            },
+
+            // ERP — Super User
+            {
+                path: 'erp',
+                resolve: {
+                    role: roleResolver([RoleEnum.SUPER_USER])
+                },
+                loadChildren: () => import('app/resources/r4-erp/erp.routes')
             },
 
             // Role user

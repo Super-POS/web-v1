@@ -1,0 +1,63 @@
+<div class="out-create-section md-form-field-appearance-outline">
+    <div mat-dialog-title class="min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pr-2.5">
+        <div class="flex flex-1 items-center text-slate-500">
+            <h1 class="text-3xl">Request Leave</h1>
+        </div>
+        <div class="flex items-center cursor-pointer">
+            <mat-icon class="-mb-0.5" [svgIcon]="'heroicons_outline:x-mark'" (click)="closeDialog()"></mat-icon>
+        </div>
+    </div>
+
+    <div class="out-create-body px-4 pb-2">
+        <form [formGroup]="form" class="out-create-content border-t pt-4 space-y-1">
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Employee ID</mat-label>
+                <input matInput type="number" formControlName="employee_id" placeholder="Employee ID" />
+                <mat-error>Employee ID is required</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Leave Type</mat-label>
+                <mat-select formControlName="type">
+                    <mat-option *ngFor="let t of leaveTypes" [value]="t.value">{{ t.label }}</mat-option>
+                </mat-select>
+                <mat-error>Leave type is required</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Start Date</mat-label>
+                <input matInput type="date" formControlName="start_date" />
+                <mat-error>Start date is required</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>End Date</mat-label>
+                <input matInput type="date" formControlName="end_date" />
+                <mat-error>End date is required</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Number of Days</mat-label>
+                <input matInput type="number" formControlName="days" min="1" step="1" placeholder="1" />
+                <mat-error>Days must be at least 1</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Reason (optional)</mat-label>
+                <textarea matInput formControlName="reason" rows="3" placeholder="Reason for leave..."></textarea>
+            </mat-form-field>
+
+        </form>
+    </div>
+
+    <mat-dialog-actions>
+        <div class="w-full flex justify-end px-1">
+            <button class="helpers-mat-button-md text-white bg-[#102d71]" mat-flat-button type="button"
+                (click)="submit()" [disabled]="isSaving">
+                <span *ngIf="!isSaving">Submit</span>
+                <mat-progress-spinner *ngIf="isSaving" [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>
+            </button>
+        </div>
+    </mat-dialog-actions>
+</div>

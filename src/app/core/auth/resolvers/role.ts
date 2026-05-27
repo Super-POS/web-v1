@@ -19,21 +19,22 @@ export const roleResolver = (allowedRoles: string[]) => {
         const slug = role.slug?.toLowerCase();
         const wantsAdmin = allowedRoles.includes(RoleEnum.ADMIN);
         const wantsCashier = allowedRoles.includes(RoleEnum.CASHIER);
+        const wantsSuperUser = allowedRoles.includes(RoleEnum.SUPER_USER);
+        const isSuperUserSlug = slug === 'super-user' || slug === 'super_user';
         const isValidRole =
             allowedRoles.includes(role.name) ||
             (wantsAdmin && slug === 'admin') ||
-            (wantsCashier && slug === 'cashier');
+            (wantsCashier && slug === 'cashier') ||
+            (wantsSuperUser && isSuperUserSlug);
         if (!isValidRole) {
-            switch (slug) {
-                case 'admin':
-                    router.navigateByUrl('/admin/dashboard');
-                    break;
-                case 'cashier':
-                    router.navigateByUrl('/cashier/order');
-                    break;
-                default:
-                    router.navigateByUrl('');
-                    break;
+            if (slug === 'admin') {
+                router.navigateByUrl('/admin/dashboard');
+            } else if (slug === 'cashier') {
+                router.navigateByUrl('/cashier/order');
+            } else if (isSuperUserSlug) {
+                router.navigateByUrl('/erp/analytics');
+            } else {
+                router.navigateByUrl('');
             }
             return of(false);
         }

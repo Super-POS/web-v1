@@ -168,7 +168,110 @@ const userNavigation: HelperNavigationItem[] = [
     },
 ];
 
+const superUserNavigation: HelperNavigationItem[] = [
+    {
+        id: 'erp.analytics',
+        title: 'Dashboard',
+        type: 'basic',
+        icon: 'mdi:view-dashboard-outline',
+        link: '/erp/analytics',
+    },
+    {
+        id: 'erp.payroll',
+        title: 'Payroll',
+        type: 'collapsable',
+        icon: 'mdi:account-cash-outline',
+        children: [
+            {
+                id: 'erp.payroll.employees',
+                title: 'Employees',
+                type: 'basic',
+                link: '/erp/payroll/employees',
+            },
+            {
+                id: 'erp.payroll.attendance',
+                title: 'Attendance',
+                type: 'basic',
+                link: '/erp/payroll/attendance',
+            },
+            {
+                id: 'erp.payroll.leaves',
+                title: 'Leaves',
+                type: 'basic',
+                link: '/erp/payroll/leaves',
+            },
+            {
+                id: 'erp.payroll.payrolls',
+                title: 'Payroll Periods',
+                type: 'basic',
+                link: '/erp/payroll/payrolls',
+            },
+        ],
+    },
+    {
+        id: 'erp.purchasing',
+        title: 'Purchasing',
+        type: 'collapsable',
+        icon: 'mdi:truck-delivery-outline',
+        children: [
+            {
+                id: 'erp.purchasing.suppliers',
+                title: 'Suppliers',
+                type: 'basic',
+                link: '/erp/purchasing/suppliers',
+            },
+            {
+                id: 'erp.purchasing.orders',
+                title: 'Purchase Orders',
+                type: 'basic',
+                link: '/erp/purchasing/purchase-orders',
+            },
+        ],
+    },
+    {
+        id: 'erp.pl',
+        title: 'Profit & Loss',
+        type: 'collapsable',
+        icon: 'mdi:chart-line',
+        children: [
+            {
+                id: 'erp.pl.report',
+                title: 'P&L Report',
+                type: 'basic',
+                link: '/erp/pl/report',
+            },
+            {
+                id: 'erp.pl.expenses',
+                title: 'Expenses',
+                type: 'basic',
+                link: '/erp/pl/expenses',
+            },
+            {
+                id: 'erp.pl.categories',
+                title: 'Expense Categories',
+                type: 'basic',
+                link: '/erp/pl/categories',
+            },
+        ],
+    },
+    {
+        id: 'erp.recipe-costing',
+        title: 'Recipe Costing',
+        type: 'basic',
+        icon: 'mdi:flask-outline',
+        link: '/erp/recipe-costing',
+    },
+    {
+        id: 'account',
+        title: 'Account',
+        type: 'basic',
+        icon: 'mdi:account-circle-outline',
+        link: '/profile',
+    },
+];
+
 export const navigationData = {
     admin: adminNavigation,
-    user: userNavigation
+    user: userNavigation,
+    superuser: superUserNavigation,
 }

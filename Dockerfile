@@ -23,7 +23,7 @@ COPY ./package.json /usr/app/package.json
 COPY ./package-lock.json /usr/app/package-lock.json
 
 # Increase Node heap memory limit for install and build
-ENV NODE_OPTIONS=--max_old_space_size=4096
+ENV NODE_OPTIONS=--max_old_space_size=1536
 
 # Install Dependencies
 RUN npm ci --legacy-peer-deps
