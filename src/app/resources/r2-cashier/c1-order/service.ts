@@ -15,6 +15,7 @@ import {
     CheckoutDraft,
     IngredientStock,
     List,
+    QrTablePayResponse,
     ResponseOrder,
 } from './interface';
 @Injectable({
@@ -185,6 +186,15 @@ export class OrderService {
                     Pragma: 'no-cache',
                 }),
             },
+        );
+    }
+
+    /** Cashier confirms customer scanned a bank QR on the table; records SUCCESS payment instantly. */
+    payQrTable(orderId: number, bankName: string): Observable<QrTablePayResponse> {
+        return this.httpClient.post<QrTablePayResponse>(
+            `${env.API_BASE_URL}/cashier/ordering/qr-table/pay`,
+            { order_id: orderId, bank_name: bankName },
+            { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) },
         );
     }
 

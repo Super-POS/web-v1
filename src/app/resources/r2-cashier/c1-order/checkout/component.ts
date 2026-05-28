@@ -32,10 +32,11 @@ import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
 
 /**
  * Payment methods exposed by the cashier checkout.
- * `baray` = Baray local-bank pay-link (URL polled via `/cashier/ordering/baray/order/:id/payment-state`).
- * `cash`  = manual cash drawer flow with change calculation.
+ * `baray`     = Baray local-bank pay-link (URL polled via `/cashier/ordering/baray/order/:id/payment-state`).
+ * `cash`      = manual cash drawer flow with change calculation.
+ * `qr_table`  = cashier confirms customer scanned a bank QR on the table (ABA, ACLEDA, Wing, …).
  */
-type PaymentMethod = 'cash' | 'baray';
+type PaymentMethod = 'cash' | 'baray' | 'qr_table';
 
 interface DrawerDenomRow {
     label: string;
@@ -110,6 +111,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
     selectedCouponCode = '';
     customerId: number | null = null;
     paymentMethod: PaymentMethod = 'baray';
+    qrTableBankName = 'ABA';
     isOrderBeingMade = false;
     isCalculatingChange = false;
     isPreviewingCashChange = false;
@@ -413,6 +415,10 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
             this._placeCashOrder();
             return;
         }
+        if (this.paymentMethod === 'qr_table') {
+            this._placeQrTableOrder();
+            return;
+        }
         this._placeBarayOrder();
     }
 
@@ -619,6 +625,52 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
                 this._snackBarService.openSnackBar(err?.error?.message || GlobalConstants.genericError, GlobalConstants.error);
             },
         });
+    }
+
+    private _placeQrTableOrder(): void {
+        if (this.carts.length === 0) return;
+
+        const bankName = this.qrTableBankName;
+        this.isOrderBeingMade = true;
+        this._service
+            .create({
+                cart: JSON.stringify(this._buildCartPayload()),
+                deferred_telegram: false,
+                coupon_code: this.selectedCouponCode?.trim() || undefined,
+                customer_id: this.customerId,
+            })
+            .subscribe({
+                next: (response) => {
+                    const order = response.data;
+                    this._service.payQrTable(order.id, bankName).subscribe({
+                        next: () => {
+                            this.isOrderBeingMade = false;
+                            this._service.clearCheckoutDraft();
+                            this.carts = [];
+                            this.totalPrice = 0;
+                            this._snackBarService.openSnackBar(
+                                `QR Table payment recorded — ${bankName}.`,
+                                GlobalConstants.success,
+                            );
+                            this.openOrderDetailDrawer({ ...order, payment_status: 'paid' } as OrderReceiptData);
+                            this._changeDetectorRef.detectChanges();
+                        },
+                        error: (err: HttpErrorResponse) => {
+                            this.isOrderBeingMade = false;
+                            this._snackBarService.openSnackBar(
+                                err?.error?.message || 'Order placed but payment recording failed — verify manually.',
+                                GlobalConstants.error,
+                            );
+                            this.openOrderDetailDrawer(order);
+                            this._changeDetectorRef.detectChanges();
+                        },
+                    });
+                },
+                error: (err: HttpErrorResponse) => {
+                    this.isOrderBeingMade = false;
+                    this._snackBarService.openSnackBar(err?.error?.message || GlobalConstants.genericError, GlobalConstants.error);
+                },
+            });
     }
 
     private _clearBarayWaitSub(): void {

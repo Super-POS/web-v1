@@ -149,6 +149,15 @@ export interface BakongPaymentIntentResponse {
     message: string;
 }
 
+/** api-v1 POST /cashier/ordering/qr-table/pay — manual bank QR confirmation. */
+export interface QrTablePayResponse {
+    data: {
+        id: number;
+        note: string;
+    };
+    message: string;
+}
+
 /** api-v1 GET /cashier/ordering/bakong/order/:id/payment-state */
 export interface BakongPaymentStateResponse {
     data: {
