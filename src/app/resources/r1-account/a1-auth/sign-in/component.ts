@@ -87,10 +87,10 @@ export class AuthSignInComponent implements OnInit {
      * On init
      */
     ngOnInit(): void {
-        // Create the form
+        // Create the form — phone (0XXXXXXXX) or email
         this.signInForm = this._formBuilder.group({
-            username                            : ['', [Validators.required, Validators.pattern('^0[0-9]{8,9}$')]],
-            password                            : ['', Validators.required]
+            username: ['', [Validators.required, Validators.pattern(/^(0[0-9]{8,9}|[\w.-]+@[\w.-]+\.\w+)$/)]],
+            password: ['', Validators.required],
         });
         this.startImageSlider();
     }
@@ -150,6 +150,17 @@ export class AuthSignInComponent implements OnInit {
         });
     }
 
+    /** One-click login for staff demo accounts (seed data). */
+    quickLogin(role: 'admin' | 'cashier'): void {
+        const accounts = {
+            admin:   { username: '0889566929', password: '123456' },
+            cashier: { username: '0889566930', password: '123456' },
+        };
+        const creds = accounts[role];
+        this.signInForm.patchValue(creds);
+        this.signIn();
+    }
+
     /**
      * Sign in
     */
@@ -157,6 +168,7 @@ export class AuthSignInComponent implements OnInit {
     signIn(): void {
         // Return if the form is invalid
         if (this.signInForm.invalid) {
+            this.signInForm.markAllAsTouched();
             return;
         }
 
@@ -168,26 +180,17 @@ export class AuthSignInComponent implements OnInit {
 
         // Sign in
         this._authService.signIn(this.signInForm.value).subscribe({
-            next: res => {
-                // Navigate to the redirect url
+            next: () => {
                 this._router.navigateByUrl('');
             },
             error: err => {
-                // Re-enable the form
                 this.signInForm.enable();
 
-                // Reset the form
-                this.signInNgForm.resetForm();
-
-                // Set the alert
-                this.alert = {
-                    type                        : 'error',
-                    message                     : err.error?.message || 'Wrong Phone numeber or password',
-                };
-
-                // Show the alert
-                this.showAlert                  = true;
-            }
+                const message = err.error?.message || 'Wrong phone/email or password';
+                this.alert = { type: 'error', message };
+                this.showAlert = true;
+                this._snackbarService.openSnackBar(message, GlobalConstants.error);
+            },
         });
     }
 

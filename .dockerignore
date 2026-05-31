@@ -3,3 +3,10 @@ dist
 .angular
 npm-debug.log
 .env
+.git
+.gitignore
+.cursor
+.idea
+.vscode
+coverage
+*.log

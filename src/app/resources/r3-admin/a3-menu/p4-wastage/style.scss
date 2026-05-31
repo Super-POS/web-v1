@@ -1,0 +1,63 @@
+:host {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+:host ::ng-deep .wastage-list-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+    height: calc(100dvh - 4.25rem) !important;
+    overflow: hidden;
+
+    .wastage-list-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        width: 100%;
+        height: auto !important;
+        max-height: none;
+        overflow-x: hidden;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .wastage-tab-group {
+        width: 100%;
+        min-width: 0;
+        flex: 1 1 auto;
+        min-height: 0;
+
+        .mat-mdc-tab-header {
+            flex-shrink: 0;
+        }
+
+        .mat-mdc-tab-body-wrapper {
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+    }
+
+    .wastage-tab-panel {
+        padding-top: 1rem;
+    }
+
+    .wastage-list-table,
+    .wastage-list-table .wastage-list-table__scroll {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+}
+
+.wastage-table {
+    width: 100%;
+
+    th.mat-mdc-header-cell {
+        font-weight: 600;
+    }
+}

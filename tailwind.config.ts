@@ -12,7 +12,7 @@ const generatePalette = require(
  * Tailwind-like color palettes automatically
  */
 const customPalettes = {
-    brand: generatePalette('#0284c7'),
+    brand: generatePalette('#264497'),
 };
 
 /**
@@ -22,8 +22,8 @@ const themes = {
     // Default theme is required for theming system to work correctly!
     default: {
         primary: {
-            ...colors.sky,
-            DEFAULT: colors.sky[600],
+            ...customPalettes.brand,
+            DEFAULT: customPalettes.brand[500],
         },
         accent: {
             ...colors.zinc,
@@ -100,6 +100,10 @@ const config = {
             },
             colors: {
                 gray: colors.slate,
+                pos: {
+                    brand: '#264497',
+                    'brand-dark': '#102d71',
+                },
             },
             flex: {
                 0: '0 0 auto',

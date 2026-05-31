@@ -1,27 +1,19 @@
-<div class="list-sale-section bg-white dark:bg-gray-800 mt-4 mx-4 rounded-tl-lg rounded-tr-lg">
-    <div class="bg-white min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5 dark:bg-gray-800">
-        <div class="flex flex-1 items-center font-medium">
-            <mat-icon class="icon-size-5 -mt-0.5" matPrefix [svgIcon]="'heroicons_outline:home'"></mat-icon>
-            <span class="ml-1.5 text-lg text-gray-600 -mb-0.5">Sales</span>
-        </div>
-        <div class="flex items-center gap-2">
-            <div
-                class="flex items-center min-w-[26ch] max-w-[26ch] h-10 border border-slate-300  dark:bg-gray-800 rounded-[0.65rem] overflow-hidden">
-                <button class="min-w-10 max-w-10 h-full pt-1.5 hover:opacity-[0.96] transition-all" (click)="getData()">
-                    <mat-icon class="icon-size-6 text-slate-500"
-                        svgIcon="heroicons_outline:magnifying-glass"></mat-icon>
+<pos-list-page >
+    <pos-breadcrumb posBreadcrumb [segments]="['Cashier', 'Sales']" />
+    <ng-container posActions>
+        <div class="shared-input-filter">
+                <button type="button" class="pos-toolbar-icon-btn" (click)="getData()" aria-label="Search">
+                    <mat-icon class="icon-size-6 text-slate-500" svgIcon="heroicons_outline:magnifying-glass"></mat-icon>
                 </button>
-                <input placeholder="Search" class="w-full px-3 h-10" (keyup.enter)="getData()" [(ngModel)]="key">
-                <button class="helpers-mat-button-sm active:animate-pulse px-2 rounded-full" mat-button
-                    (click)="openFilterDialog()">
+                <input placeholder="Search" class="w-full px-3 h-10 bg-transparent border-0 outline-none" (keyup.enter)="getData()" [(ngModel)]="key" />
+                <button type="button" class="helpers-mat-button-sm active:animate-pulse px-2 rounded-full" mat-button
+                    (click)="openFilterDialog()" aria-label="Open filter">
                     <mat-icon class="icon-size-6" svgIcon="mdi:filter-variant"></mat-icon>
                 </button>
             </div>
-        </div>
-    </div>
+    </ng-container>
 
-    <div class="list-sale-body">
-        <!-- Show 'No Data' message if the data source is empty -->
+<!-- Show 'No Data' message if the data source is empty -->
         <div *ngIf="dataSource.data.length === 0 && !isLoading"
             class="no-data bg-white border-t dark:hover:bg-gray-800">
             <div class="flex flex-col justify-center items-center mb-4">
@@ -170,5 +162,4 @@
                 [pageSize]="limit" (page)="onPageChanged($event)">
             </mat-paginator>
         </div>
-    </div>
-</div>
+</pos-list-page>

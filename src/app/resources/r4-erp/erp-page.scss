@@ -1,0 +1,54 @@
+:host {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+:host ::ng-deep .erp-list-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+    height: calc(100dvh - 4.25rem) !important;
+    overflow: hidden;
+
+    .erp-list-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        width: 100%;
+        height: auto !important;
+        max-height: none;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    .erp-list-table,
+    .erp-list-table .erp-list-table__scroll {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    .erp-list-paginator {
+        flex-shrink: 0;
+        margin-top: 0.75rem;
+        padding-bottom: 0.25rem;
+        width: 100%;
+    }
+}
+
+::ng-deep .erp-list-paginator .mat-mdc-paginator-container {
+    .mdc-icon-button {
+        @apply dark:bg-gray-700 #{'!important'};
+    }
+}
+
+.erp-table {
+    width: 100%;
+
+    th.mat-mdc-header-cell {
+        font-weight: 600;
+    }
+}

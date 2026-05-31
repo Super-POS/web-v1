@@ -33,7 +33,7 @@ body helper-splash-screen .spinner {
 body helper-splash-screen .spinner > div {
     width: 12px;
     height: 12px;
-    background-color: #0284c7;
+    background-color: #264497;
     border-radius: 100%;
     box-shadow: 0 0 12px rgba(14, 165, 233, 0.45);
     display: inline-block;

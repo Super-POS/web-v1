@@ -1,31 +1,44 @@
-.list-sale-section {
+:host {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+:host ::ng-deep .coupon-list-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
     width: 100%;
     height: calc(100dvh - 4.25rem) !important;
     overflow: hidden;
-    z-index: 1;
 
-    .list-sale-body,
-    .no-data {
+    .coupon-list-body {
+        flex: 1 1 auto;
+        min-height: 0;
         width: 100%;
-        height: calc(100dvh - 7.75rem);
-        overflow: hidden;
+        height: auto !important;
+        max-height: none;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
 
-        .list-sale-content {
-            width: 100%;
-            margin-bottom: 0.25rem;
-            height: calc(100dvh - 11rem);
-            overflow: hidden;
-        }
+    .coupon-list-table,
+    .coupon-list-table .coupon-list-table__scroll {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
     }
 }
 
-.list-sale-data {
-    width: 100%;
-    max-height: calc(100dvh - 12rem);
-    overflow: auto;
-}
-
 .coupon-table {
+    width: 100%;
+
+    th.mat-mdc-header-cell {
+        font-weight: 600;
+    }
+
     th.mat-mdc-header-cell,
     td.mat-mdc-cell {
         padding: 12px 8px;

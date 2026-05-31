@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
@@ -38,20 +39,25 @@ import { List, ResponseUser, User } from '../interface';
 import { UserService } from '../service';
 import { ViewUserComponent } from '../u2-view/component';
 import { SkeletonComponent } from './skeleton';
+import { FormsModule } from '@angular/forms';
+import { PosBreadcrumbComponent, PosListPageComponent } from 'app/shared/list-page';
+import { resolveFileUrl } from 'helper/utils/resolve-file-url';
+
 @Component({
     selector: 'shared-list-user',
     standalone: true,
     templateUrl: './template.html',
     styleUrls: ['./style.scss'],
     imports: [
+        PosListPageComponent,
+        PosBreadcrumbComponent,
+        FormsModule,
         MatTableModule,
         CommonModule,
         MatIconModule,
-        RouterLink,
         MatButtonModule,
         MatPaginatorModule,
-        MatIconModule,
-        RouterLink,
+        MatProgressSpinnerModule,
         MatTooltipModule,
         CapitalizePipe,
         MatMenuModule,
@@ -75,9 +81,10 @@ export class UserComponent implements OnInit, OnDestroy {
     dataSource: MatTableDataSource<User> = new MatTableDataSource<User>([]);
     fileUrl: string = env.FILE_BASE_URL;
     link: string = undefined;
-    total: number = 10;
-    limit: number = 10;
+    total: number = 0;
+    limit: number = 15;
     page: number = 1;
+    readonly pageSizeOptions: number[] = [15, 30, 50, 100];
     key: string = '';
     isLoading: boolean = false;
     roles: { id: number; name: string }[] = [];
@@ -107,10 +114,18 @@ export class UserComponent implements OnInit, OnDestroy {
         });
     }
 
+    mediaUrl(path: string | null | undefined): string {
+        return resolveFileUrl(this.fileUrl, path);
+    }
+
+    rowNumber(index: number): number {
+        return (this.page - 1) * this.limit + index + 1;
+    }
+
     getData(
-        _page: number = 1,
-        _page_size: number = 10,
-        filter_data: { timeType?: string; platform?: string; type?: number; startDate?: string; endDate?: string } = {}
+        _page: number = this.page,
+        _page_size: number = this.limit,
+        filter_data: { timeType?: string; platform?: string; type?: number; startDate?: string; endDate?: string } = this.filter_data ?? {},
     ): void {
         const params: {
             page: number;
@@ -162,7 +177,8 @@ export class UserComponent implements OnInit, OnDestroy {
             if (result) {
                 this.filter_data = result;
                 this.cdr.detectChanges();
-                this.getData(1, 10, this.filter_data);
+                this.page = 1;
+                this.getData(1, this.limit, this.filter_data);
             }
         });
     }
@@ -218,7 +234,7 @@ export class UserComponent implements OnInit, OnDestroy {
         if (event && event.pageSize) {
             this.limit = event.pageSize;
             this.page = event.pageIndex + 1;
-            this.getData(this.page, this.limit);
+            this.getData(this.page, this.limit, this.filter_data);
         }
     }
 

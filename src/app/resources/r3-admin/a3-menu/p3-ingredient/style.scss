@@ -1,0 +1,56 @@
+:host {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* Override global list-page fixed heights that clip search + paginator */
+:host ::ng-deep .ingredient-list-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: calc(100dvh - 4.25rem) !important;
+    overflow: hidden;
+
+    .ingredient-list-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        height: auto !important;
+        max-height: none;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    .ingredient-list-table,
+    .ingredient-list-table .ingredient-list-table__scroll {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    .list-ingredient-paginator {
+        flex-shrink: 0;
+        margin-top: 0.75rem;
+        padding-bottom: 0.25rem;
+    }
+}
+
+.ingredient-table {
+    width: 100%;
+
+    th.mat-mdc-header-cell {
+        font-weight: 600;
+    }
+}
+
+.list-ingredient-paginator {
+    width: 100%;
+}
+
+::ng-deep .list-ingredient-paginator .mat-mdc-paginator-container {
+    .mdc-icon-button {
+        @apply dark:bg-gray-700 #{'!important'};
+    }
+}

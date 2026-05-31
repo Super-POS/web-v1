@@ -1,39 +1,59 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTableModule } from '@angular/material/table';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
 import { forkJoin } from 'rxjs';
-import { ErpIngredientCost, ErpRecipeCostItem, ErpRecipeSummary, ErpSizeCost } from './interface';
+import { ErpRecipeCostItem, ErpRecipeSummary } from './interface';
 import { ErpRecipeCostingService } from './service';
+import { PosBreadcrumbComponent, PosListPageComponent } from 'app/shared/list-page';
 
 @Component({
     selector: 'erp-recipe-costing',
     standalone: true,
     templateUrl: './template.html',
+    styleUrl: '../erp-page.scss',
     imports: [
+        PosListPageComponent,
+        PosBreadcrumbComponent,
         CommonModule,
         MatIconModule,
         MatButtonModule,
+        MatFormFieldModule,
+        MatInputModule,
         MatProgressSpinnerModule,
         MatTableModule,
+        MatPaginatorModule,
     ],
 })
 export class ErpRecipeCostingComponent implements OnInit {
+    @ViewChild(MatPaginator) set matPaginator(paginator: MatPaginator | undefined) {
+        if (paginator) {
+            this.dataSource.paginator = paginator;
+        }
+    }
+
     displayedColumns = ['menu_name', 'has_sizes', 'product_cost', 'price', 'margin_pct'] as const;
     sizeColumns      = ['size', 'price', 'product_cost', 'margin_pct'] as const;
     ingredientColumns = ['name', 'unit', 'quantity_used', 'unit_cost', 'line_cost'] as const;
 
+    dataSource = new MatTableDataSource<ErpRecipeCostItem>([]);
     summary: ErpRecipeSummary | null = null;
-    rows: ErpRecipeCostItem[]        = [];
     selectedItem: ErpRecipeCostItem | null = null;
 
+    searchText = '';
     isLoading       = false;
     isLoadingDetail = false;
+
+    readonly pageSizeOptions = [15, 30, 50, 100];
+    readonly defaultPageSize = 15;
 
     constructor(
         private service: ErpRecipeCostingService,
@@ -42,7 +62,20 @@ export class ErpRecipeCostingComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
+        this.dataSource.filterPredicate = (data: ErpRecipeCostItem, filter: string) => {
+            if (!filter) { return true; }
+            const name = (data.menu_name || '').toLowerCase();
+            const code = (data.menu_code || '').toLowerCase();
+            return name.includes(filter) || code.includes(filter);
+        };
         this.load();
+    }
+
+    onSearchInput(event: Event): void {
+        const value = (event.target as HTMLInputElement).value;
+        this.searchText = value;
+        this.dataSource.filter = value.trim().toLowerCase();
+        this.dataSource.paginator?.firstPage();
     }
 
     load(): void {
@@ -52,8 +85,9 @@ export class ErpRecipeCostingComponent implements OnInit {
             items:   this.service.listAll(),
         }).subscribe({
             next: ({ summary, items }) => {
-                this.summary   = summary.data;
-                this.rows      = items.data || [];
+                this.summary = summary.data;
+                this.dataSource.data = items.data || [];
+                this._syncTableFilter();
                 this.isLoading = false;
                 this.cdr.markForCheck();
             },
@@ -66,38 +100,29 @@ export class ErpRecipeCostingComponent implements OnInit {
     }
 
     selectRow(row: ErpRecipeCostItem): void {
-        // Toggle off if clicking the already-selected row
-        if (this.selectedItem?.menu_id === row.menu_id) {
+        if (this.selectedItem?.menu_id === row.menu_id && !this.isLoadingDetail) {
             this.selectedItem = null;
             this.cdr.markForCheck();
             return;
         }
 
-        // If detail data (sizes or ingredients) already present, use it directly
         if (row.has_sizes && row.sizes?.length) {
             this.selectedItem = row;
             this.cdr.markForCheck();
             return;
         }
-        if (!row.has_sizes && row.ingredients?.length) {
-            this.selectedItem = row;
-            this.cdr.markForCheck();
-            return;
-        }
 
-        // Fetch detail from API
         this.isLoadingDetail = true;
-        this.selectedItem    = null;
+        this.selectedItem    = row;
         this.service.getDetail(row.menu_id).subscribe({
             next: (res) => {
                 this.selectedItem    = res.data;
                 this.isLoadingDetail = false;
-                // Patch the row in the table so next click is instant
-                const idx = this.rows.findIndex((r) => r.menu_id === row.menu_id);
+                const idx = this.dataSource.data.findIndex((r) => r.menu_id === row.menu_id);
                 if (idx >= 0) {
-                    const next = [...this.rows];
+                    const next = [...this.dataSource.data];
                     next[idx]  = res.data;
-                    this.rows  = next;
+                    this.dataSource.data = next;
                 }
                 this.cdr.markForCheck();
             },
@@ -124,4 +149,8 @@ export class ErpRecipeCostingComponent implements OnInit {
     get sizeColumnsArr(): string[] { return [...this.sizeColumns]; }
     get ingredientColumnsArr(): string[] { return [...this.ingredientColumns]; }
     get displayedColumnsArr(): string[] { return [...this.displayedColumns]; }
+
+    private _syncTableFilter(): void {
+        this.dataSource.filter = this.searchText.trim().toLowerCase();
+    }
 }

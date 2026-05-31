@@ -20,6 +20,7 @@
                     <div class="w-full px-4 py-3 flex gap-1.5 mt-1">
                         <mat-icon *ngIf="item?.slug === 'cashier'" svgIcon="mdi:account-cash-outline" />
                         <mat-icon *ngIf="item?.slug === 'admin'" svgIcon="mdi:account-star-outline" />
+                        <mat-icon *ngIf="item?.slug === 'super-user'" svgIcon="mdi:shield-crown-outline" />
                         <p class="truncate text-xl">{{item.name}}</p>
                     </div>
                     <div *ngIf="item?.is_default" class="w-72 flex justify-end px-4 py-3">

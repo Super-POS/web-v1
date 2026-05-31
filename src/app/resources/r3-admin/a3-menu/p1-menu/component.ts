@@ -33,6 +33,7 @@ import { Data, List } from './interface';
 import { FilterDialogComponent } from './filter-dialog/component';
 import { ViewDialogComponent } from './view-dialog/component';
 import { resolveFileUrl } from 'helper/utils/resolve-file-url';
+import { PosBreadcrumbComponent, PosListPageComponent } from 'app/shared/list-page';
 
 @Component({
     selector: 'app-menu-list',
@@ -40,6 +41,8 @@ import { resolveFileUrl } from 'helper/utils/resolve-file-url';
     templateUrl: './template.html',
     styleUrl: './style.scss',
     imports: [
+        PosListPageComponent,
+        PosBreadcrumbComponent,
         CommonModule,
         MatTableModule,
         NgClass,
@@ -95,8 +98,9 @@ export class MenuListComponent implements OnInit {
     }
 
     public total                   :   number         = 0;
-    public limit                   :   number         = 20;
+    public limit                   :   number         = 15;
     public page                    :   number         = 1;
+    readonly pageSizeOptions       :   number[]       = [15, 30, 50, 100];
     public isLoading               :   boolean        = false;
 
     // Search,sort and filter
@@ -161,6 +165,10 @@ export class MenuListComponent implements OnInit {
 
     totalSaleRevenueUsd(row: Data): number {
         return this._exchange.khrToUsd(Number(row.total_revenue) || 0);
+    }
+
+    rowNumber(index: number): number {
+        return (this.page - 1) * this.limit + index + 1;
     }
 
     saveExchangeRate(): void {

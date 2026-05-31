@@ -1,32 +1,54 @@
-.list-sale-section {
+:host {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+:host ::ng-deep .meeting-list-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
     width: 100%;
     height: calc(100dvh - 4.25rem) !important;
     overflow: hidden;
-    z-index: 1;
 
-    .list-sale-body,
-    .no-data {
+    .meeting-list-body {
+        flex: 1 1 auto;
+        min-height: 0;
         width: 100%;
-        height: calc(100dvh - 7.75rem);
-        overflow: hidden;
+        height: auto !important;
+        max-height: none;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
 
-        .list-sale-content {
-            width: 100%;
-            margin-bottom: 0.25rem;
-            height: calc(100dvh - 11rem);
-            overflow: hidden;
-        }
+    .meeting-list-table,
+    .meeting-list-table .meeting-list-table__scroll {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    .list-meeting-paginator {
+        flex-shrink: 0;
+        margin-top: 0.75rem;
+        padding-bottom: 0.25rem;
+        width: 100%;
     }
 }
 
-.list-sale-data {
-    width: 100%;
-    max-height: calc(100dvh - 12rem);
-    overflow: auto;
-}
-
 .meeting-rooms-table {
+    width: 100%;
+
     th.mat-mdc-header-cell {
         font-weight: 600;
+    }
+}
+
+::ng-deep .list-meeting-paginator .mat-mdc-paginator-container {
+    .mdc-icon-button {
+        @apply dark:bg-gray-700 #{'!important'};
     }
 }

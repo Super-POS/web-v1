@@ -18,12 +18,16 @@ import { take } from 'rxjs';
 import { ErpExpense } from '../interface';
 import { ErpPlService } from '../service';
 import { ErpCreateExpenseDialogComponent } from './create-dialog/component';
+import { PosBreadcrumbComponent, PosListPageComponent } from 'app/shared/list-page';
 
 @Component({
     selector: 'erp-expenses',
     standalone: true,
     templateUrl: './template.html',
+    styleUrl: '../../erp-page.scss',
     imports: [
+        PosListPageComponent,
+        PosBreadcrumbComponent,
         CommonModule,
         ReactiveFormsModule,
         MatButtonModule,

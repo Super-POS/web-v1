@@ -1,12 +1,13 @@
 import { DatePipe, NgClass, NgIf } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 
 import GlobalConstants from 'helper/shared/constants';
@@ -19,12 +20,16 @@ import { RestockDialogComponent } from './restock-dialog/component';
 import { UpdateDialogComponent } from './update-dialog/component';
 import { WastageDialogComponent } from './wastage-dialog/component';
 import { MenuIngredientService } from './service';
+import { PosBreadcrumbComponent, PosListPageComponent } from 'app/shared/list-page';
 
 @Component({
     selector: 'menu-ingredient',
     standalone: true,
     templateUrl: './template.html',
+    styleUrl: './style.scss',
     imports: [
+        PosListPageComponent,
+        PosBreadcrumbComponent,
         NgIf,
         NgClass,
         DatePipe,
@@ -34,9 +39,15 @@ import { MenuIngredientService } from './service';
         MatInputModule,
         MatMenuModule,
         MatTableModule,
+        MatPaginatorModule,
     ],
 })
 export class MenuIngredientComponent implements OnInit {
+    @ViewChild(MatPaginator) set matPaginator(paginator: MatPaginator | undefined) {
+        if (paginator) {
+            this.dataSource.paginator = paginator;
+        }
+    }
     private _service = inject(MenuIngredientService);
     private _matDialog = inject(MatDialog);
     private _snackBarService = inject(SnackbarService);
@@ -57,6 +68,8 @@ export class MenuIngredientComponent implements OnInit {
     isLoading = false;
     restockMode = false;
     searchText = '';
+    readonly pageSizeOptions = [15, 30, 50, 100];
+    readonly defaultPageSize = 15;
 
     ngOnInit(): void {
         this.dataSource.filterPredicate = (data: IngredientItem, filter: string) => {
@@ -74,6 +87,15 @@ export class MenuIngredientComponent implements OnInit {
         const value = (event.target as HTMLInputElement).value;
         this.searchText = value;
         this.dataSource.filter = value.trim().toLowerCase();
+        this.dataSource.paginator?.firstPage();
+    }
+
+    rowNumber(index: number): number {
+        const p = this.dataSource.paginator;
+        if (!p) {
+            return index + 1;
+        }
+        return p.pageIndex * p.pageSize + index + 1;
     }
 
     private _syncTableFilter(): void {

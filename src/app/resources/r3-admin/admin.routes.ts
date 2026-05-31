@@ -11,6 +11,7 @@ import { AdminModifierComponent } from "./a3-menu/p6-modifier/component";
 import { UserComponent }        from "./a4-user/u1-listing/component";
 import { AdminCashDrawerComponent } from "./a5-cash-drawer/component";
 import { AdminCouponComponent } from "./a10-coupon/component";
+import { AdminCouponFormPageComponent } from "./a10-coupon/form-page/component";
 import { AdminFinanceHubComponent } from "./a11-finance/component";
 import { MeetingRoomBookingsQueueComponent } from "app/shared/meeting-room-booking/meeting-room-bookings-queue.component";
 import { AdminMeetingRoomsComponent } from "./a14-meeting-rooms/component";
@@ -72,7 +73,16 @@ export default [
     },
     {
         path                    : 'coupons',
-        component               : AdminCouponComponent
+        children                : [
+            {
+                path            : '',
+                component       : AdminCouponComponent,
+            },
+            {
+                path            : 'create',
+                component       : AdminCouponFormPageComponent,
+            },
+        ],
     },
     {
         path                    : 'meeting-rooms',

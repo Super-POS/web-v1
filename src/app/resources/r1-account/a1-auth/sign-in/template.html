@@ -40,15 +40,13 @@
                                     #signInNgForm="ngForm">
                                     <!-- phone field -->
                                     <mat-form-field class="w-full thick-border">
-                                        <mat-label>Phone number</mat-label>
-                                        <input id="username" matInput [formControlName]="'username'" />
+                                        <mat-label>Phone or email</mat-label>
+                                        <input id="username" matInput [formControlName]="'username'" autocomplete="username" />
                                         @if (signInForm.get('username').hasError('required')) {
-                                        <mat-error> Please enter a phone number </mat-error>
+                                        <mat-error>Please enter your phone or email</mat-error>
                                         }
-                                        @if (signInForm.get('username').hasError('username')) {
-                                        <mat-error>
-                                            Please enter a valid username
-                                        </mat-error>
+                                        @if (signInForm.get('username').hasError('pattern')) {
+                                        <mat-error>Use a valid phone (0XXXXXXXX) or email</mat-error>
                                         }
                                         <button mat-icon-button type="button" matSuffix>
                                             <mat-icon class="icon-size-5 "
@@ -86,6 +84,16 @@
 
                                 </form>
 
+                                <helper-alert
+                                    *ngIf="showAlert"
+                                    class="mt-3"
+                                    [appearance]="'outline'"
+                                    [showIcon]="false"
+                                    [type]="alert.type"
+                                    [@shake]="alert.type === 'error'">
+                                    {{ alert.message }}
+                                </helper-alert>
+
                             </div>
 
 
@@ -111,13 +119,17 @@
                     <hr class="flex-grow">
                 </div>
                 <div class="flex gap-2">
-                    <button
-                        class="helper-mat-button-large h-[40px] w-full border-[1.5px] cursor-not-allowed  rounded-[10px] text-center items-center flex justify-center gap-2">
+                    <button type="button"
+                        (click)="quickLogin('admin')"
+                        [disabled]="signInForm.disabled"
+                        class="helper-mat-button-large h-[40px] w-full border-[1.5px] rounded-[10px] text-center items-center flex justify-center gap-2 hover:border-[#09235f] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                         <mat-icon svgIcon="mdi:account-star-outline" />
                         <span>Administrator</span>
                     </button>
-                    <button
-                        class="helper-mat-button-large h-[40px] w-full border-[1.5px]  cursor-not-allowed rounded-[10px] text-center items-center flex justify-center gap-2">
+                    <button type="button"
+                        (click)="quickLogin('cashier')"
+                        [disabled]="signInForm.disabled"
+                        class="helper-mat-button-large h-[40px] w-full border-[1.5px] rounded-[10px] text-center items-center flex justify-center gap-2 hover:border-[#09235f] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                         <mat-icon svgIcon="mdi:account-cash-outline" />
                         <span>Cashier</span>
                     </button>

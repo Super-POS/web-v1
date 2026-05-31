@@ -20,6 +20,7 @@ import { CreateDialogComponent }                                from '../create-
 import { UpdateDialogComponent }                                from '../update-dialog/component';
 import { MenuCategoryService }                                   from '../service';
 import { Data, Item }                                           from '../interface';
+import { PosBreadcrumbComponent, PosListPageComponent } from 'app/shared/list-page';
 
 @Component({
     selector                                                    : 'product-type',
@@ -27,6 +28,8 @@ import { Data, Item }                                           from '../interfa
     templateUrl                                                 : './template.html',
     styleUrl                                                    : './style.scss',
     imports: [
+        PosListPageComponent,
+        PosBreadcrumbComponent,
         MatTableModule,
         NgClass,
         NgIf,

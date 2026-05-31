@@ -3,6 +3,7 @@ import { HelperNavigationItem } from 'helper/components/navigation';
 import { Observable, ReplaySubject } from 'rxjs';
 import { Role } from '../user/interface';
 import { RoleEnum } from 'helper/enums/role.enum';
+import { isSuperUserRole } from 'helper/enums/role.util';
 import { navigationData } from './data';
 
 @Injectable({ providedIn: 'root' })
@@ -22,12 +23,6 @@ export class NavigationService {
             roleName === 'Cashier' ||
             roleSlug === 'cashier';
 
-        const isSuperUser =
-            roleName === RoleEnum.SUPER_USER ||
-            roleName === 'Super User' ||
-            roleSlug === 'super-user' ||
-            roleSlug === 'super_user';
-
         if (isAdmin) {
             this._navigation.next(navigationData.admin);
             return;
@@ -36,7 +31,7 @@ export class NavigationService {
             this._navigation.next(navigationData.user);
             return;
         }
-        if (isSuperUser) {
+        if (isSuperUserRole(role)) {
             this._navigation.next(navigationData.superuser);
             return;
         }

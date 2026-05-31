@@ -57,7 +57,6 @@ const CD_USD: { label: string; key: keyof Denominations; value: number }[] = [
 
 const CD_KHR: { label: string; key: keyof Denominations; value: number }[] = [
     { label: '100 R', key: 'khr_100', value: 100 },
-    { label: '200 R', key: 'khr_200', value: 200 },
     { label: '500 R', key: 'khr_500', value: 500 },
     { label: '1,000 R', key: 'khr_1000', value: 1000 },
     { label: '2,000 R', key: 'khr_2000', value: 2000 },
@@ -68,7 +67,6 @@ const CD_KHR: { label: string; key: keyof Denominations; value: number }[] = [
     { label: '30,000 R', key: 'khr_30000', value: 30000 },
     { label: '50,000 R', key: 'khr_50000', value: 50000 },
     { label: '100,000 R', key: 'khr_100000', value: 100000 },
-    { label: '200,000 R', key: 'khr_200000', value: 200000 },
 ];
 
 const CD_ALL_MAP: Record<string, { label: string; currency: 'USD' | 'KHR' }> = {};

@@ -1,0 +1,54 @@
+---
+description: UI/UX consistency standards for web-v1 (Angular + Material + Tailwind)
+globs:
+  - web-v1/src/**/*
+---
+
+# web-v1 UI consistency
+
+## Brand & colors
+- Primary brand: `var(--pos-brand)` / Tailwind `bg-pos-brand` / Material `color="primary"` (theme default is navy `#264497`).
+- Dark accent / borders: `var(--pos-brand-dark)` / `border-pos-brand-dark`.
+- Do **not** add new hardcoded hex brand colors (`#264497`, `#102D71`, `#0284c7`). Use tokens above.
+
+## Layout patterns
+
+### List pages — prefer `<pos-list-page>` (`app/shared/list-page`)
+```html
+<pos-list-page extraClass="flex-1 min-w-0">
+  <pos-breadcrumb posBreadcrumb [segments]="['ERP', 'Module', 'Page']" />
+  <ng-container posActions>
+    <!-- toolbar buttons, shared-input-filter, etc. -->
+  </ng-container>
+  <!-- page body (tables, tabs, filters) -->
+</pos-list-page>
+```
+
+### Global SCSS (`page-patterns.scss`, `shared.scss`)
+| Pattern | Class / component | Use for |
+|---------|-------------------|---------|
+| List/table page | `<pos-list-page>` or `list-sale-section` | Menu, sales, ERP listings |
+| Breadcrumb | `<pos-breadcrumb [segments]="[...]">` | Home › section › page |
+| Search/filter bar | `shared-input-filter` | Search + filter icon cluster |
+| Sort dropdown | `pos-sort-bar` | Sort field + order toggle |
+| Full-page form | `pos-form-shell` | Multi-step create/edit pages |
+| Form panel | `pos-panel`, `pos-form-section`, `pos-section-header` | Section cards inside forms |
+| Dialog form | `out-create-section` + `md-form-field-appearance-outline` | Create/update dialogs |
+| Primary CTA | `pos-btn-primary` on `mat-flat-button` | Submit / save actions |
+
+## Icons
+- Prefer **Heroicons outline** for actions; **MDI** only where already used in the same feature area.
+- Use `icon-size-5` / `icon-size-6` helpers; do not mix arbitrary icon sizes.
+
+## Forms
+- `mat-form-field appearance="outline"` everywhere.
+- Dialog titles: `min-h-14 max-h-14`, `text-3xl` title, close with `heroicons_outline:x-mark`.
+
+## Dark mode
+- Pair `bg-white` with `dark:bg-gray-800`; text `text-gray-600 dark:text-white`.
+- Rely on `--pos-*` CSS variables inside form shells (auto-switch in `.dark`).
+
+## Avoid
+- Duplicating `list-sale-section` or `out-create-section` in component SCSS.
+- One-off page palettes; extend `pos-form-shell` instead.
+- `mat-icon-buttonclass` typos (use `mat-icon-button`).

@@ -8,12 +8,15 @@ import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
 import { IngredientStock } from '../c1-order/interface';
 import { OrderService } from '../c1-order/service';
+import { PosBreadcrumbComponent, PosListPageComponent } from 'app/shared/list-page';
 
 @Component({
     selector: 'cashier-ingredient-stock',
     standalone: true,
     templateUrl: './template.html',
-    imports: [NgIf, DecimalPipe, MatIconModule, MatTableModule],
+    imports: [
+        PosListPageComponent,
+        PosBreadcrumbComponent,NgIf, DecimalPipe, MatIconModule, MatTableModule],
 })
 export class IngredientStockComponent implements OnInit {
     private _service = inject(OrderService);

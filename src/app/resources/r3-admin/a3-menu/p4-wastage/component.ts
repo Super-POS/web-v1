@@ -16,12 +16,16 @@ import { IngredientWastageRecord, RecipeWastageRecord } from './interface';
 import { RecordIngredientWastageDialogComponent } from './record-ingredient-dialog/component';
 import { RecordRecipeWastageDialogComponent } from './record-recipe-dialog/component';
 import { MenuWastageService } from './service';
+import { PosBreadcrumbComponent, PosListPageComponent } from 'app/shared/list-page';
 
 @Component({
     selector: 'menu-wastage',
     standalone: true,
     templateUrl: './template.html',
+    styleUrl: './style.scss',
     imports: [
+        PosListPageComponent,
+        PosBreadcrumbComponent,
         CommonModule,
         DatePipe,
         MatButtonModule,

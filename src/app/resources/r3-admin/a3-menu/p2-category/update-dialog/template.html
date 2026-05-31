@@ -39,7 +39,7 @@
 
     <mat-dialog-actions>
         <div class="w-full flex justify-end px-1">
-            <button class="helpers-mat-button-md​ text-white bg-[#102d71]" mat-flat-button (click)=" submit() " [disabled]=" isSaving || !form.valid ">
+            <button class="helpers-mat-button-md​ text-white pos-btn-primary" mat-flat-button (click)=" submit() " [disabled]=" isSaving || !form.valid ">
 
                 <span *ngIf = " !form.disabled ">Edit</span>
                 <mat-progress-spinner *ngIf="form.disabled" [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>

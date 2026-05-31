@@ -137,7 +137,7 @@
                         <div [formGroupName]="si" class="mb-6 border border-slate-200 rounded-lg p-4">
                             <!-- Size header -->
                             <div class="flex items-center gap-2 mb-3">
-                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#264497] text-white text-sm font-bold">
+                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full pos-btn-primary text-white text-sm font-bold">
                                     {{ SIZES[si] }}
                                 </span>
                                 <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">
@@ -195,7 +195,7 @@
     </div>
     <mat-dialog-actions>
         <div class="w-full flex justify-end px-1">
-            <button class="helpers-mat-button-md bg-[#264497] text-white" mat-flat-button (click)="submit()"
+            <button class="helpers-mat-button-md pos-btn-primary text-white" mat-flat-button (click)="submit()"
                 [disabled]="menuForm.invalid || saving">
                 <span *ngIf="!menuForm.disabled">Save</span>
                 <mat-progress-spinner *ngIf="menuForm.disabled" [diameter]="24"

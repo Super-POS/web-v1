@@ -12,7 +12,15 @@
 }
 
 .shared-input-filter {
-    @apply flex items-center h-10 border border-slate-300 hover:bg-zinc-50 rounded-[0.65rem] overflow-hidden #{'!important'};
+    @apply flex items-center h-10 min-w-[26ch] max-w-[26ch] border border-slate-300 dark:border-gray-600 dark:bg-gray-800 hover:bg-zinc-50 dark:hover:bg-gray-700/50 rounded-[0.65rem] overflow-hidden transition-colors #{'!important'};
+}
+
+.pos-sort-bar {
+    @apply flex items-center min-w-[26ch] max-w-[26ch] h-10 border border-slate-300 dark:border-gray-600 dark:bg-gray-800 rounded-[0.65rem] overflow-hidden #{'!important'};
+}
+
+.pos-toolbar-icon-btn {
+    @apply min-w-10 max-w-10 h-full flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer #{'!important'};
 }
 
 .side-bar-header {
@@ -24,7 +32,7 @@
 }
 
 .custom-border {
-    border: 1px solid #102D71 !important;
+    border: 1px solid var(--pos-brand-dark) !important;
 }
 
 .custom-mat-dialog-as-mat-drawer,

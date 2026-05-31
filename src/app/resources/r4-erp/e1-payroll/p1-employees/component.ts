@@ -16,12 +16,16 @@ import { ErpEmployee } from '../interface';
 import { ErpPayrollService } from '../service';
 import { ErpEmployeeCreateDialogComponent } from './create-dialog/component';
 import { ErpEmployeeUpdateDialogComponent } from './update-dialog/component';
+import { PosBreadcrumbComponent, PosListPageComponent } from 'app/shared/list-page';
 
 @Component({
     selector: 'erp-employees',
     standalone: true,
     templateUrl: './template.html',
+    styleUrl: '../../erp-page.scss',
     imports: [
+        PosListPageComponent,
+        PosBreadcrumbComponent,
         CommonModule,
         MatButtonModule,
         MatIconModule,

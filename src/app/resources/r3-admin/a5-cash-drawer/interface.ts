@@ -5,7 +5,6 @@ export interface Denominations {
     usd_50?: number;
     usd_100?: number;
     khr_100?: number;
-    khr_200?: number;
     khr_500?: number;
     khr_1000?: number;
     khr_2000?: number;
@@ -16,7 +15,6 @@ export interface Denominations {
     khr_30000?: number;
     khr_50000?: number;
     khr_100000?: number;
-    khr_200000?: number;
 }
 
 // GET /api/admin/cash-drawer → flat denomination counts on data

@@ -32,6 +32,7 @@ import { SaleService } from './service';
 import { Data, List } from './interface';
 import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
 import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
+import { PosBreadcrumbComponent, PosListPageComponent } from 'app/shared/list-page';
 
 // Component decorator specifying metadata for the component
 @Component({
@@ -40,6 +41,8 @@ import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
     templateUrl: './template.html',
     styleUrl: './style.scss',
     imports: [
+        PosListPageComponent,
+        PosBreadcrumbComponent,
         MatTableModule,
         NgIf,
         DatePipe,

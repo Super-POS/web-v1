@@ -1,6 +1,7 @@
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,10 +13,10 @@ import { HelperConfirmationService } from 'helper/services/confirmation/service'
 import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
 import { take } from 'rxjs';
-import { AdminCouponCreateDialogComponent } from './create-dialog/component';
 import { AdminCouponRow } from './interface';
 import { AdminCouponService } from './service';
 import { AdminCouponUpdateDialogComponent } from './update-dialog/component';
+import { PosBreadcrumbComponent, PosListPageComponent } from 'app/shared/list-page';
 
 @Component({
     selector: 'app-admin-coupon',
@@ -31,9 +32,13 @@ import { AdminCouponUpdateDialogComponent } from './update-dialog/component';
         MatMenuModule,
         MatProgressSpinnerModule,
         MatTableModule,
+        PosListPageComponent,
+        PosBreadcrumbComponent,
     ],
 })
 export class AdminCouponComponent implements OnInit {
+    private readonly _router = inject(Router);
+
     displayedColumns = ['code', 'discount_percent', 'usage', 'expires_at', 'restrictions', 'assigned_user', 'note', 'is_active', 'actions'] as const;
     rows: AdminCouponRow[] = [];
     isLoading = false;
@@ -64,11 +69,7 @@ export class AdminCouponComponent implements OnInit {
     }
 
     openCreateDialog(): void {
-        const dialogRef = this._matDialog.open(AdminCouponCreateDialogComponent, this._couponDrawerConfig());
-        dialogRef.componentInstance.resData.pipe(take(1)).subscribe((row: AdminCouponRow) => {
-            this.rows = [row, ...this.rows];
-            this.cdr.markForCheck();
-        });
+        this._router.navigate(['/admin/coupons/create']);
     }
 
     openUpdateDialog(row: AdminCouponRow): void {

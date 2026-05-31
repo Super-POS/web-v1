@@ -39,7 +39,7 @@
 
         <!-- Submit Button -->
         <div class="flex justify-end">
-            <button class="helpers-mat-button-md min-w-24 text-white bg-[#264497]"
+            <button class="helpers-mat-button-md min-w-24 text-white pos-btn-primary"
                 [disabled]="passwordForm.invalid || passwordForm.disabled" (click)="submit()" mat-flat-button>
                 <ng-container *ngIf="passwordForm.disabled">
                     <mat-progress-spinner [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>

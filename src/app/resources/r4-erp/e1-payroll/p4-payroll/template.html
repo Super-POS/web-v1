@@ -1,37 +1,17 @@
-<div class="list-sale-section flex-1 min-w-0 bg-white dark:bg-gray-800 mt-4 mx-4 rounded-tl-lg rounded-tr-lg">
-    <!-- Header -->
-    <div class="bg-white min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5 dark:bg-gray-800">
-        <div class="flex flex-1 items-center font-medium">
-            <div class="flex items-center">
-                <mat-icon class="text-gray-600 dark:text-white icon-size-5" [svgIcon]="'heroicons_outline:home'"></mat-icon>
-            </div>
-            <div class="flex items-center ml-1.5">
-                <span class="text-lg text-gray-600 dark:text-white -mb-0.5">ERP</span>
-            </div>
-            <div class="flex items-center">
-                <mat-icon class="-mb-0.5" [svgIcon]="'mat_solid:chevron_right'"></mat-icon>
-                <span class="text-lg text-gray-600 dark:text-white -mb-0.5">Payroll</span>
-            </div>
-            <div class="flex items-center">
-                <mat-icon class="-mb-0.5" [svgIcon]="'mat_solid:chevron_right'"></mat-icon>
-                <span class="text-lg text-gray-600 dark:text-white -mb-0.5">Payroll Periods</span>
-            </div>
-        </div>
-        <div class="flex items-center gap-2">
-            <button class="helpers-mat-button-sm" type="button" (click)="openGenerateDialog()" mat-stroked-button>
+<pos-list-page extraClass="erp-list-page min-h-0 flex-1" [toolbarBorder]="true" bodyClass="erp-list-body w-full flex-1 min-h-0 p-4 md:px-6" [inset]="false">
+    <pos-breadcrumb posBreadcrumb [segments]="['ERP', 'Payroll', 'Payroll Periods']" />
+    <ng-container posActions>
+        <button class="helpers-mat-button-sm" type="button" (click)="openGenerateDialog()" mat-stroked-button>
                 <mat-icon class="icon-size-5 text-slate-500" svgIcon="heroicons_outline:plus"></mat-icon>
                 <span class="ml-1 text-sm text-slate-600">Generate Payroll</span>
             </button>
-        </div>
-    </div>
+    </ng-container>
 
-    <!-- Body -->
-    <div class="list-sale-body">
-        <ng-container *ngIf="isLoading">
+<ng-container *ngIf="isLoading">
             <div class="px-4 py-6 text-slate-500">Getting data from API...</div>
         </ng-container>
 
-        <div *ngIf="rows.length === 0 && !isLoading" class="no-data bg-white border-t dark:bg-gray-800">
+        <div *ngIf="rows.length === 0 && !isLoading" class="no-data w-full bg-white border border-slate-100 dark:border-gray-700 rounded-lg dark:bg-gray-800">
             <div class="flex flex-col justify-center items-center mb-4 py-12">
                 <mat-icon class="icon-size-24" svgIcon="toc"></mat-icon>
                 <span class="text-2xl -mt-3">No data</span>
@@ -39,9 +19,9 @@
             </div>
         </div>
 
-        <div *ngIf="rows.length > 0 && !isLoading" class="list-sale-content px-4 pb-4 bg-white rounded-bl-xl rounded-br-xl dark:bg-gray-800">
-            <div class="list-sale-data overflow-x-auto">
-                <table mat-table [dataSource]="rows" class="w-full min-w-[600px]">
+        <div *ngIf="rows.length > 0 && !isLoading" class="list-sale-content erp-list-table w-full min-w-0 rounded-lg border border-slate-100 dark:border-gray-700 flex flex-col bg-white dark:bg-gray-800">
+            <div class="list-sale-data erp-list-table__scroll min-w-0 w-full overflow-x-auto">
+                <table mat-table [dataSource]="rows" class="w-full min-w-0 erp-table">
 
                     <!-- Period -->
                     <ng-container matColumnDef="period">
@@ -107,5 +87,4 @@
                 </table>
             </div>
         </div>
-    </div>
-</div>
+</pos-list-page>

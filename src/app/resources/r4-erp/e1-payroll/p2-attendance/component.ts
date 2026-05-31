@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, UntypedFormGroup } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
@@ -8,19 +8,24 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTableModule } from '@angular/material/table';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
 import { take } from 'rxjs';
 import { ErpAttendance } from '../interface';
 import { ErpPayrollService } from '../service';
 import { ErpMarkAttendanceDialogComponent } from './mark-dialog/component';
+import { PosBreadcrumbComponent, PosListPageComponent } from 'app/shared/list-page';
 
 @Component({
     selector: 'erp-attendance',
     standalone: true,
     templateUrl: './template.html',
+    styleUrl: '../../erp-page.scss',
     imports: [
+        PosListPageComponent,
+        PosBreadcrumbComponent,
         CommonModule,
         ReactiveFormsModule,
         MatButtonModule,
@@ -29,13 +34,22 @@ import { ErpMarkAttendanceDialogComponent } from './mark-dialog/component';
         MatInputModule,
         MatProgressSpinnerModule,
         MatTableModule,
+        MatPaginatorModule,
     ],
 })
 export class ErpAttendanceComponent implements OnInit {
+    @ViewChild(MatPaginator) set matPaginator(paginator: MatPaginator | undefined) {
+        if (paginator) {
+            this.dataSource.paginator = paginator;
+        }
+    }
+
     displayedColumns = ['employee', 'date', 'clock_in', 'clock_out', 'hours_worked', 'overtime_hours', 'status', 'actions'] as const;
-    rows: ErpAttendance[] = [];
+    dataSource = new MatTableDataSource<ErpAttendance>([]);
     isLoading = false;
     filterForm: UntypedFormGroup;
+    readonly pageSizeOptions = [15, 30, 50, 100];
+    readonly defaultPageSize = 15;
 
     constructor(
         private service: ErpPayrollService,
@@ -73,7 +87,8 @@ export class ErpAttendanceComponent implements OnInit {
         const { start_date, end_date } = this.filterForm.getRawValue();
         this.service.getAttendance({ start_date, end_date }).subscribe({
             next: (res) => {
-                this.rows = res.data || [];
+                this.dataSource.data = res.data || [];
+                this.dataSource.paginator?.firstPage();
                 this.isLoading = false;
                 this.cdr.markForCheck();
             },
@@ -92,7 +107,8 @@ export class ErpAttendanceComponent implements OnInit {
     openMarkDialog(): void {
         const dialogRef = this._matDialog.open(ErpMarkAttendanceDialogComponent, this._drawerConfig());
         dialogRef.componentInstance.resData.pipe(take(1)).subscribe((row: ErpAttendance) => {
-            this.rows = [row, ...this.rows];
+            this.dataSource.data = [row, ...this.dataSource.data];
+            this.dataSource.paginator?.firstPage();
             this.cdr.markForCheck();
         });
     }

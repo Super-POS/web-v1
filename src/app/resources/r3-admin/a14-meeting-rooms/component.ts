@@ -1,13 +1,14 @@
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTableModule } from '@angular/material/table';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { HelperConfirmationConfig, HelperConfirmationService } from 'helper/services/confirmation';
 import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
 import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
@@ -15,6 +16,7 @@ import GlobalConstants from 'helper/shared/constants';
 import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
 import { AdminMeetingRoomRow } from './interface';
 import { AdminMeetingRoomService } from './service';
+import { PosBreadcrumbComponent, PosListPageComponent } from 'app/shared/list-page';
 
 @Component({
     selector: 'app-admin-meeting-rooms',
@@ -22,6 +24,8 @@ import { AdminMeetingRoomService } from './service';
     templateUrl: './template.html',
     styleUrl: './style.scss',
     imports: [
+        PosListPageComponent,
+        PosBreadcrumbComponent,
         CommonModule,
         DecimalPipe,
         MatButtonModule,
@@ -29,14 +33,23 @@ import { AdminMeetingRoomService } from './service';
         MatMenuModule,
         MatProgressSpinnerModule,
         MatTableModule,
+        MatPaginatorModule,
         UsdFromKhrPipe,
     ],
 })
 export class AdminMeetingRoomsComponent implements OnInit {
+    @ViewChild(MatPaginator) set matPaginator(paginator: MatPaginator | undefined) {
+        if (paginator) {
+            this.dataSource.paginator = paginator;
+        }
+    }
+
     displayedColumns = ['name', 'type', 'capacity', 'price', 'status', 'description', 'actions'] as const;
-    rows: AdminMeetingRoomRow[] = [];
+    dataSource = new MatTableDataSource<AdminMeetingRoomRow>([]);
     isLoading = false;
     usdRate = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
+    readonly pageSizeOptions = [15, 30, 50, 100];
+    readonly defaultPageSize = 15;
 
     constructor(
         private service: AdminMeetingRoomService,
@@ -99,7 +112,7 @@ export class AdminMeetingRoomsComponent implements OnInit {
         this.isLoading = true;
         this.service.list().subscribe({
             next: (res) => {
-                this.rows = res.data ?? [];
+                this.dataSource.data = res.data ?? [];
                 this.isLoading = false;
                 this.cdr.markForCheck();
             },

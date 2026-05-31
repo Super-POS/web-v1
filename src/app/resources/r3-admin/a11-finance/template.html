@@ -1,40 +1,289 @@
-<div class="list-sale-section w-full bg-white dark:bg-gray-800 mt-4 mx-4 rounded-tl-lg rounded-tr-lg">
-    <div class="bg-white min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5 dark:bg-gray-800 border-b border-slate-200 dark:border-gray-700">
-        <div class="flex flex-1 items-center font-medium">
-            <mat-icon class="text-gray-600 dark:text-white icon-size-5" [svgIcon]="'heroicons_outline:home'"></mat-icon>
-            <span class="text-lg text-gray-600 dark:text-white ml-1.5">Admin</span>
-            <mat-icon class="-mb-0.5" [svgIcon]="'mat_solid:chevron_right'"></mat-icon>
-            <span class="text-lg text-gray-600 dark:text-white -mb-0.5">Finance</span>
-        </div>
-    </div>
+<pos-list-page
+    extraClass="finance-page min-h-0 flex-1"
+    [toolbarBorder]="true"
+    bodyClass="finance-body w-full flex-1 min-h-0 p-4 md:px-6 pb-8"
+    [inset]="false">
+    <pos-breadcrumb posBreadcrumb [segments]="['Admin', 'Finance']" />
 
-    <div class="list-sale-body p-5 pb-8">
-        <p class="text-slate-600 dark:text-slate-400 text-sm max-w-3xl mb-6">
-            Open any area below for numbers, history, and controls related to money, discounts, cash handling, and pricing.
-        </p>
+    <div class="flex flex-col gap-5 max-w-[1400px] mx-auto w-full">
 
-        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            <a
-                *ngFor="let area of areas"
-                [routerLink]="area.link"
-                class="group flex flex-col rounded-lg border border-slate-200 dark:border-gray-600 bg-white dark:bg-gray-800/80 p-4 shadow-sm hover:border-[#102d71] hover:shadow-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#102d71] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900"
-            >
-                <div class="flex items-start gap-3">
-                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-slate-200 group-hover:bg-[#102d71]/10 group-hover:text-[#102d71]">
-                        <mat-icon class="icon-size-6" [svgIcon]="area.icon"></mat-icon>
+        <!-- Period filters -->
+        <section class="rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm">
+            <div class="flex flex-wrap items-center gap-2 mb-3">
+                <span class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 mr-1">View by</span>
+                <button type="button" class="finance-period-btn text-sm px-3 py-1.5 rounded-full border border-slate-200 dark:border-gray-600"
+                    [class.is-active]="activeGroup === 'day'" (click)="setGroup('day')">Day</button>
+                <button type="button" class="finance-period-btn text-sm px-3 py-1.5 rounded-full border border-slate-200 dark:border-gray-600"
+                    [class.is-active]="activeGroup === 'month'" (click)="setGroup('month')">Month</button>
+                <button type="button" class="finance-period-btn text-sm px-3 py-1.5 rounded-full border border-slate-200 dark:border-gray-600"
+                    [class.is-active]="activeGroup === 'year'" (click)="setGroup('year')">Year</button>
+                <button type="button" class="finance-period-btn text-sm px-3 py-1.5 rounded-full border border-slate-200 dark:border-gray-600"
+                    [class.is-active]="activeGroup === 'custom'" (click)="setGroup('custom')">Custom</button>
+            </div>
+
+            <div class="flex flex-wrap items-end gap-2">
+                <ng-container *ngIf="activeGroup !== 'custom'">
+                    <button
+                        *ngFor="let opt of periodOptions"
+                        type="button"
+                        [hidden]="opt.group !== activeGroup"
+                        class="finance-period-btn text-sm px-3 py-1.5 rounded-lg border border-slate-200 dark:border-gray-600 text-slate-700 dark:text-slate-200"
+                        [class.is-active]="activePreset === opt.id"
+                        (click)="selectPreset(opt.id)">
+                        {{ opt.label }}
+                    </button>
+                </ng-container>
+
+                <ng-container *ngIf="activeGroup === 'custom'">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs text-slate-500 dark:text-slate-400">From</label>
+                        <input type="date" [(ngModel)]="customFrom"
+                            class="border border-slate-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white" />
                     </div>
-                    <div class="min-w-0 flex-1">
-                        <div class="flex items-center justify-between gap-2">
-                            <span class="text-base font-semibold text-slate-800 dark:text-white">{{ area.title }}</span>
-                            <mat-icon
-                                class="icon-size-5 text-slate-400 group-hover:text-[#102d71] shrink-0"
-                                [svgIcon]="'mat_solid:chevron_right'"
-                            ></mat-icon>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs text-slate-500 dark:text-slate-400">To</label>
+                        <input type="date" [(ngModel)]="customTo"
+                            class="border border-slate-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm bg-white dark:bg-gray-700 text-slate-900 dark:text-white" />
+                    </div>
+                    <button mat-flat-button type="button" (click)="applyCustomRange()" class="helpers-mat-button-md text-white pos-btn-primary">
+                        Apply
+                    </button>
+                </ng-container>
+
+                <div class="flex flex-wrap items-center gap-1 ml-auto">
+                    <span class="text-xs text-slate-500 dark:text-slate-400 mr-1">Chart</span>
+                    <button
+                        *ngFor="let g of granularityOptions"
+                        type="button"
+                        class="finance-period-btn text-xs px-2.5 py-1 rounded-md border border-slate-200 dark:border-gray-600"
+                        [class.is-active]="granularity === g.id"
+                        (click)="setGranularity(g.id)">
+                        {{ g.label }}
+                    </button>
+                </div>
+            </div>
+
+            <p *ngIf="report && !isLoading" class="text-xs text-slate-500 dark:text-slate-400 mt-3">
+                Showing {{ periodLabel() }}
+            </p>
+        </section>
+
+        <!-- Loading -->
+        <div *ngIf="isLoading" class="flex items-center justify-center py-16">
+            <div class="flex flex-col items-center gap-3">
+                <mat-progress-spinner [diameter]="48" mode="indeterminate"></mat-progress-spinner>
+                <span class="text-sm text-slate-500">Loading financial data…</span>
+            </div>
+        </div>
+
+        <!-- Empty -->
+        <div *ngIf="hasLoaded && !isLoading && !report" class="rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-16 text-center">
+            <mat-icon class="icon-size-16 text-slate-300" svgIcon="heroicons_outline:chart-bar"></mat-icon>
+            <p class="text-lg text-slate-600 dark:text-slate-300 mt-3">No financial data for this period</p>
+            <p class="text-sm text-slate-500 mt-1">Try a different date range.</p>
+        </div>
+
+        <ng-container *ngIf="report && !isLoading">
+
+            <!-- KPI cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+                <div class="rounded-xl border border-blue-100 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30 p-4">
+                    <div class="flex items-center gap-2">
+                        <mat-icon class="icon-size-5 text-blue-500" svgIcon="heroicons_outline:currency-dollar"></mat-icon>
+                        <span class="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">Revenue</span>
+                    </div>
+                    <p class="text-2xl font-bold text-blue-900 dark:text-blue-100 mt-2 tabular-nums">
+                        ${{ report.summary.revenue | usdFromKhr:usdRate | number:'1.2-2' }}
+                    </p>
+                    <p class="text-sm text-blue-700 dark:text-blue-300 mt-1">{{ report.summary.total_orders | number }} orders</p>
+                </div>
+
+                <div class="rounded-xl border border-emerald-100 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/30 p-4">
+                    <div class="flex items-center gap-2">
+                        <mat-icon class="icon-size-5 text-emerald-500" svgIcon="heroicons_outline:arrow-trending-up"></mat-icon>
+                        <span class="text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">Gross profit</span>
+                    </div>
+                    <p class="text-2xl font-bold text-emerald-900 dark:text-emerald-100 mt-2 tabular-nums">
+                        ${{ report.summary.gross_profit | usdFromKhr:usdRate | number:'1.2-2' }}
+                    </p>
+                    <p class="text-sm text-emerald-700 dark:text-emerald-300 mt-1">
+                        Margin {{ report.summary.gross_margin_pct | number:'1.1-1' }}%
+                    </p>
+                </div>
+
+                <div class="rounded-xl border border-violet-100 dark:border-violet-800 bg-violet-50 dark:bg-violet-900/30 p-4">
+                    <div class="flex items-center gap-2">
+                        <mat-icon class="icon-size-5 text-violet-500" svgIcon="heroicons_outline:scale"></mat-icon>
+                        <span class="text-xs font-semibold uppercase tracking-wide text-violet-600 dark:text-violet-400">Net profit</span>
+                    </div>
+                    <p class="text-2xl font-bold text-violet-900 dark:text-violet-100 mt-2 tabular-nums">
+                        ${{ report.summary.net_profit | usdFromKhr:usdRate | number:'1.2-2' }}
+                    </p>
+                    <p class="text-sm text-violet-700 dark:text-violet-300 mt-1">
+                        Margin {{ report.summary.net_margin_pct | number:'1.1-1' }}%
+                    </p>
+                </div>
+
+                <div class="rounded-xl border border-orange-100 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/30 p-4">
+                    <div class="flex items-center gap-2">
+                        <mat-icon class="icon-size-5 text-orange-500" svgIcon="heroicons_outline:shopping-bag"></mat-icon>
+                        <span class="text-xs font-semibold uppercase tracking-wide text-orange-600 dark:text-orange-400">COGS</span>
+                    </div>
+                    <p class="text-2xl font-bold text-orange-900 dark:text-orange-100 mt-2 tabular-nums">
+                        ${{ report.summary.cogs | usdFromKhr:usdRate | number:'1.2-2' }}
+                    </p>
+                    <p class="text-sm text-orange-700 dark:text-orange-300 mt-1">Cost of goods sold</p>
+                </div>
+            </div>
+
+            <!-- Wallet summary -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+                    <p class="text-xs font-medium text-slate-500 uppercase">Wallet deposits</p>
+                    <p class="text-xl font-bold tabular-nums mt-1">
+                        ${{ report.wallet_summary.total_deposits_approved | usdFromKhr:usdRate | number:'1.2-2' }}
+                    </p>
+                </div>
+                <div class="rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+                    <p class="text-xs font-medium text-slate-500 uppercase">Wallet payments</p>
+                    <p class="text-xl font-bold tabular-nums mt-1">
+                        ${{ report.wallet_summary.total_payments | usdFromKhr:usdRate | number:'1.2-2' }}
+                    </p>
+                </div>
+                <div class="rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+                    <p class="text-xs font-medium text-slate-500 uppercase">Wallet refunds</p>
+                    <p class="text-xl font-bold tabular-nums mt-1">
+                        ${{ report.wallet_summary.total_refunds | usdFromKhr:usdRate | number:'1.2-2' }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+
+                <!-- Revenue trend -->
+                <div class="xl:col-span-2 rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+                    <h3 class="text-sm font-semibold text-slate-800 dark:text-white flex items-center gap-2 mb-4">
+                        <mat-icon class="icon-size-5 text-teal-600" svgIcon="heroicons_outline:chart-bar"></mat-icon>
+                        Revenue trend
+                        <span class="text-xs font-normal text-slate-500">({{ report.revenue_series.granularity }})</span>
+                    </h3>
+
+                    <div *ngIf="!report.revenue_series.rows?.length" class="py-10 text-center text-sm text-slate-500">
+                        No revenue data in this period.
+                    </div>
+
+                    <div *ngIf="report.revenue_series.rows?.length" class="space-y-3">
+                        <div *ngFor="let row of report.revenue_series.rows" class="grid grid-cols-[5.5rem_1fr_5rem] sm:grid-cols-[6.5rem_1fr_6rem] items-center gap-3">
+                            <span class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ formatPeriod(row.period) }}</span>
+                            <div class="finance-bar-track">
+                                <div class="finance-bar-fill"
+                                    [style.width]="barWidth(+row.revenue, maxRevenue(report.revenue_series.rows))"></div>
+                            </div>
+                            <span class="text-sm font-semibold text-right tabular-nums">
+                                ${{ row.revenue | usdFromKhr:usdRate | number:'1.0-0' }}
+                            </span>
                         </div>
-                        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400 leading-snug">{{ area.description }}</p>
                     </div>
                 </div>
-            </a>
-        </div>
+
+                <!-- Payment methods -->
+                <div class="rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+                    <h3 class="text-sm font-semibold text-slate-800 dark:text-white flex items-center gap-2 mb-4">
+                        <mat-icon class="icon-size-5 text-indigo-500" svgIcon="heroicons_outline:credit-card"></mat-icon>
+                        Payment methods
+                    </h3>
+                    <div *ngIf="!report.payment_breakdown?.length" class="py-8 text-center text-sm text-slate-500">No payments recorded.</div>
+                    <div *ngIf="report.payment_breakdown?.length" class="space-y-4">
+                        <div *ngFor="let p of report.payment_breakdown">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="font-medium">{{ formatMethod(p.method) }}</span>
+                                <span class="tabular-nums">${{ p.total_amount | usdFromKhr:usdRate | number:'1.2-2' }}</span>
+                            </div>
+                            <div class="finance-bar-track">
+                                <div class="finance-bar-fill bg-indigo-500"
+                                    [style.width]="barWidth(+p.total_amount, maxPaymentAmount(report.payment_breakdown))"
+                                    style="background: linear-gradient(90deg, #4f46e5, #818cf8);"></div>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">{{ p.transaction_count | number }} transactions</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+                <!-- Sales channels -->
+                <div class="rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+                    <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">Sales by channel</h3>
+                    <div *ngIf="!report.channel_breakdown?.length" class="py-6 text-sm text-slate-500 text-center">No channel data.</div>
+                    <div *ngIf="report.channel_breakdown?.length" class="overflow-x-auto rounded-lg border border-slate-100 dark:border-gray-700">
+                        <table mat-table [dataSource]="report.channel_breakdown" class="w-full finance-table">
+                            <ng-container matColumnDef="channel">
+                                <th mat-header-cell *matHeaderCellDef>Channel</th>
+                                <td mat-cell *matCellDef="let r">{{ formatChannel(r.channel) }}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="orders">
+                                <th mat-header-cell *matHeaderCellDef class="text-right">Orders</th>
+                                <td mat-cell *matCellDef="let r" class="text-right tabular-nums">{{ r.order_count | number }}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="revenue">
+                                <th mat-header-cell *matHeaderCellDef class="text-right">Revenue</th>
+                                <td mat-cell *matCellDef="let r" class="text-right tabular-nums font-medium">
+                                    ${{ r.revenue | usdFromKhr:usdRate | number:'1.2-2' }}
+                                </td>
+                            </ng-container>
+                            <tr mat-header-row *matHeaderRowDef="channelColumnsArr"></tr>
+                            <tr mat-row *matRowDef="let row; columns: channelColumnsArr"></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Top menus -->
+                <div class="rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+                    <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">Top selling items</h3>
+                    <div *ngIf="!report.top_menus?.length" class="py-6 text-sm text-slate-500 text-center">No menu sales in this period.</div>
+                    <div *ngIf="report.top_menus?.length" class="overflow-x-auto rounded-lg border border-slate-100 dark:border-gray-700">
+                        <table mat-table [dataSource]="report.top_menus" class="w-full finance-table">
+                            <ng-container matColumnDef="rank">
+                                <th mat-header-cell *matHeaderCellDef class="w-10">#</th>
+                                <td mat-cell *matCellDef="let r; let i = index">{{ i + 1 }}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="item">
+                                <th mat-header-cell *matHeaderCellDef>Item</th>
+                                <td mat-cell *matCellDef="let r" class="font-medium">{{ menuName(r) }}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="qty">
+                                <th mat-header-cell *matHeaderCellDef class="text-right">Qty</th>
+                                <td mat-cell *matCellDef="let r" class="text-right tabular-nums">{{ r.total_qty | number }}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="revenue">
+                                <th mat-header-cell *matHeaderCellDef class="text-right">Revenue</th>
+                                <td mat-cell *matCellDef="let r" class="text-right tabular-nums font-medium">
+                                    ${{ r.revenue | usdFromKhr:usdRate | number:'1.2-2' }}
+                                </td>
+                            </ng-container>
+                            <tr mat-header-row *matHeaderRowDef="topMenuColumnsArr"></tr>
+                            <tr mat-row *matRowDef="let row; columns: topMenuColumnsArr"></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick links -->
+            <div class="rounded-xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-800/60 p-4">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-3">Related</p>
+                <div class="flex flex-wrap gap-2">
+                    <a routerLink="/admin/pos" class="inline-flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-600 hover:border-pos-brand-dark">
+                        <mat-icon class="icon-size-4" svgIcon="mdi:cart-outline"></mat-icon> Sales history
+                    </a>
+                    <a routerLink="/admin/cash-drawer" class="inline-flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-600 hover:border-pos-brand-dark">
+                        <mat-icon class="icon-size-4" svgIcon="mdi:cash-register"></mat-icon> Cash drawer
+                    </a>
+                    <a routerLink="/admin/coupons" class="inline-flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-600 hover:border-pos-brand-dark">
+                        <mat-icon class="icon-size-4" svgIcon="mdi:ticket-percent-outline"></mat-icon> Coupons
+                    </a>
+                </div>
+            </div>
+        </ng-container>
     </div>
-</div>
+</pos-list-page>

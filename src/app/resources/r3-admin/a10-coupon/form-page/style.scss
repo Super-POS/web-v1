@@ -1,0 +1,126 @@
+:host {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.coupon-form-page {
+    --ink: var(--pos-ink);
+    --muted: var(--pos-muted);
+    --panel: var(--pos-panel);
+    --border: var(--pos-border);
+    --shadow: var(--pos-shadow);
+    width: 100%;
+    min-width: 0;
+    padding: 16px 24px 32px;
+    box-sizing: border-box;
+}
+
+.coupon-form-page__header {
+    margin-bottom: 20px;
+}
+
+.coupon-form-page__title {
+    margin: 12px 0 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.coupon-form-page__panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 20px 24px 24px;
+}
+
+.coupon-form-section {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+
+    &:last-of-type {
+        border-bottom: none;
+    }
+}
+
+.coupon-form-section__title {
+    margin: 0 0 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.coupon-form-section__hint {
+    margin: 0 0 12px;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.coupon-form-section__body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.fields-grid {
+    display: grid;
+    gap: 12px;
+
+    &--triple {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.category-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.category-chip {
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    background: var(--pos-panel-muted, #f8fafc);
+    color: var(--ink);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+    &--selected {
+        background: #9333ea;
+        border-color: #9333ea;
+        color: #fff;
+    }
+}
+
+.chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.coupon-form-page__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+@media (max-width: 900px) {
+    .fields-grid--triple {
+        grid-template-columns: 1fr;
+    }
+
+    .coupon-form-page {
+        padding: 16px;
+    }
+}

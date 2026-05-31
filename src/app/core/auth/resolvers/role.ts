@@ -1,17 +1,18 @@
-import { inject } from "@angular/core";
-import { Router } from "@angular/router";
-import { RoleEnum } from "helper/enums/role.enum";
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { RoleEnum } from 'helper/enums/role.enum';
+import { isSuperUserRole } from 'helper/enums/role.util';
 import { UserPayload } from 'helper/interfaces/payload.interface';
 import jwt_decode from 'jwt-decode';
-import { of } from "rxjs";
-import { AuthService } from "../service";
+import { of } from 'rxjs';
+import { AuthService } from '../service';
 
 export const roleResolver = (allowedRoles: string[]) => {
     return () => {
         const router = inject(Router);
         const token = inject(AuthService).accessToken;
         const tokenPayload: UserPayload = jwt_decode(token);
-        const role = tokenPayload.user.roles.find(role => role.is_default);
+        const role = tokenPayload.user.roles.find((r) => r.is_default);
         if (!role) {
             router.navigateByUrl('');
             return of(false);
@@ -20,18 +21,17 @@ export const roleResolver = (allowedRoles: string[]) => {
         const wantsAdmin = allowedRoles.includes(RoleEnum.ADMIN);
         const wantsCashier = allowedRoles.includes(RoleEnum.CASHIER);
         const wantsSuperUser = allowedRoles.includes(RoleEnum.SUPER_USER);
-        const isSuperUserSlug = slug === 'super-user' || slug === 'super_user';
         const isValidRole =
             allowedRoles.includes(role.name) ||
             (wantsAdmin && slug === 'admin') ||
             (wantsCashier && slug === 'cashier') ||
-            (wantsSuperUser && isSuperUserSlug);
+            (wantsSuperUser && isSuperUserRole(role));
         if (!isValidRole) {
             if (slug === 'admin') {
                 router.navigateByUrl('/admin/dashboard');
             } else if (slug === 'cashier') {
                 router.navigateByUrl('/cashier/order');
-            } else if (isSuperUserSlug) {
+            } else if (isSuperUserRole(role)) {
                 router.navigateByUrl('/erp/analytics');
             } else {
                 router.navigateByUrl('');

@@ -77,7 +77,7 @@
             </button>
 
             
-            <button class="helpers-mat-button-md bg-[#264497] text-white" mat-flat-button (click)="submit()"
+            <button class="helpers-mat-button-md pos-btn-primary text-white" mat-flat-button (click)="submit()"
                 [disabled]="filterForm.invalid || saving">
                 <span *ngIf="!saving">Search</span>
                 <mat-progress-spinner *ngIf="saving" [diameter]="24" [mode]="'indeterminate'">

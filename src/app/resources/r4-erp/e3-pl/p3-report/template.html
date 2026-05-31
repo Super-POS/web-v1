@@ -1,24 +1,7 @@
-<div class="list-sale-section flex-1 min-w-0 bg-white dark:bg-gray-800 mt-4 mx-4 rounded-tl-lg rounded-tr-lg">
-    <div class="bg-white min-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5 dark:bg-gray-800 flex-wrap">
-        <div class="flex flex-1 items-center font-medium">
-            <div class="flex items-center">
-                <mat-icon class="text-gray-600 dark:text-white icon-size-5" [svgIcon]="'heroicons_outline:home'"></mat-icon>
-            </div>
-            <div class="flex items-center ml-1.5">
-                <span class="text-lg text-gray-600 dark:text-white -mb-0.5">ERP</span>
-            </div>
-            <div class="flex items-center">
-                <mat-icon class="-mb-0.5" [svgIcon]="'mat_solid:chevron_right'"></mat-icon>
-                <span class="text-lg text-gray-600 dark:text-white -mb-0.5">P&amp;L</span>
-            </div>
-            <div class="flex items-center">
-                <mat-icon class="-mb-0.5" [svgIcon]="'mat_solid:chevron_right'"></mat-icon>
-                <span class="text-lg text-gray-600 dark:text-white -mb-0.5">Report</span>
-            </div>
-        </div>
-
-        <div class="flex items-center gap-2">
-            <form [formGroup]="filterForm" class="flex items-center gap-2">
+<pos-list-page extraClass="erp-list-page min-h-0 flex-1" [toolbarBorder]="true" bodyClass="erp-list-body w-full flex-1 min-h-0 p-4 md:px-6" [inset]="false">
+    <pos-breadcrumb posBreadcrumb [segments]="['ERP', 'P&L', 'Report']" />
+    <ng-container posActions>
+        <form [formGroup]="filterForm" class="flex items-center gap-2">
                 <mat-form-field appearance="outline" class="helpers-mat-form-field-sm w-36">
                     <mat-label>From</mat-label>
                     <input matInput type="date" formControlName="start_date" />
@@ -32,12 +15,9 @@
                     <span class="ml-1 text-sm">Search</span>
                 </button>
             </form>
-        </div>
-    </div>
+    </ng-container>
 
-    <div class="list-sale-body px-4 pb-6">
-
-        <!-- Loading -->
+<!-- Loading -->
         <ng-container *ngIf="isLoading">
             <div class="py-10 text-slate-500">Getting data from API...</div>
         </ng-container>
@@ -52,7 +32,7 @@
         </ng-container>
 
         <!-- Report Cards -->
-        <div *ngIf="!isLoading && report" class="mt-4 space-y-4 max-w-2xl">
+        <div *ngIf="!isLoading && report" class="w-full grid grid-cols-1 lg:grid-cols-3 gap-4">
 
             <!-- ── Revenue & Gross Profit ── -->
             <div class="bg-slate-50 dark:bg-gray-700 rounded-xl p-4 space-y-3">
@@ -135,5 +115,4 @@
             </div>
 
         </div>
-    </div>
-</div>
+</pos-list-page>

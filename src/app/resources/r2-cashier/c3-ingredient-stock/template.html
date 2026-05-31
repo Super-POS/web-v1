@@ -1,13 +1,7 @@
-<div class="list-sale-section w-full bg-white dark:bg-gray-800 mt-4 mx-4 rounded-tl-lg rounded-tr-lg">
-    <div class="bg-white min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5 dark:bg-gray-800">
-        <div class="flex flex-1 items-center font-medium">
-            <mat-icon class="text-gray-600 dark:text-white icon-size-5" [svgIcon]="'heroicons_outline:home'"></mat-icon>
-            <span class="text-lg text-gray-600 dark:text-white ml-1.5">Ingredients</span>
-        </div>
-    </div>
-
-    <div class="list-sale-body w-full p-4">
-        <div *ngIf="isLoading">Getting data from API...</div>
+<pos-list-page extraClass="w-full">
+    <pos-breadcrumb posBreadcrumb [segments]="['Cashier', 'Ingredient stock']" />
+    
+<div *ngIf="isLoading">Getting data from API...</div>
 
         <div *ngIf="!isLoading && dataSource.data.length === 0" class="text-center py-8 text-gray-500">
             No data
@@ -52,5 +46,4 @@
                 <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
             </table>
         </div>
-    </div>
-</div>
+</pos-list-page>

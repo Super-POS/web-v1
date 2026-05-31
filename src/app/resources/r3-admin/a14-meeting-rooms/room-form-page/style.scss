@@ -2,20 +2,33 @@
     display: block;
     width: 100%;
     min-width: 0;
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 .room-form-page {
-    --ink: #0f172a;
-    --muted: #64748b;
-    --panel: #ffffff;
-    --border: #e2e8f0;
-    --shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+    --ink: var(--pos-ink);
+    --muted: var(--pos-muted);
+    --panel: var(--pos-panel);
+    --border: var(--pos-border);
+    --shadow: var(--pos-shadow);
     width: 100%;
     min-width: 0;
     min-height: 0;
     flex: 1;
-    padding: 16px 0 24px;
+    padding: 16px 24px 32px;
     box-sizing: border-box;
+}
+
+.room-form-page__header {
+    margin-bottom: 20px;
+}
+
+.room-form-page__title {
+    margin: 12px 0 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--ink);
 }
 
 .room-form-page__loading {
@@ -30,12 +43,6 @@
 .room-form-page__content {
     width: 100%;
     min-width: 0;
-    padding: 0 16px;
-    box-sizing: border-box;
-
-    @media (min-width: 768px) {
-        padding: 0 24px;
-    }
 }
 
 .room-form-page__panel {
@@ -52,42 +59,19 @@
 .room-form-page__sections {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 0;
+    gap: 24px;
 
     @media (min-width: 1024px) {
         grid-template-columns: 1fr 1fr;
-        gap: 24px;
         align-items: start;
     }
 }
 
-.room-form-page__sections .section + .section {
-    margin-top: 0;
-    padding-top: 0;
-    border-top: none;
-
-    @media (max-width: 1023px) {
-        margin-top: 24px;
-        padding-top: 24px;
-        border-top: 1px solid var(--border);
-    }
-}
-
-.section__header {
-    margin-bottom: 16px;
-
-    h2 {
-        margin: 0 0 4px;
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--ink);
-    }
-
-    p {
-        margin: 0;
-        font-size: 13px;
-        color: var(--muted);
-    }
+.section__title {
+    margin: 0 0 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ink);
 }
 
 .fields-grid {
@@ -96,16 +80,6 @@
     gap: 0 16px;
 
     @media (min-width: 640px) {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    @media (min-width: 1280px) {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-
-.fields-grid--pair {
-    @media (min-width: 1280px) {
         grid-template-columns: 1fr 1fr;
     }
 }
@@ -117,6 +91,12 @@
     margin-top: 28px;
     padding-top: 20px;
     border-top: 1px solid var(--border);
+}
+
+@media (max-width: 768px) {
+    .room-form-page {
+        padding: 16px;
+    }
 }
 
 :host-context(.dark) {

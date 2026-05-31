@@ -16,6 +16,7 @@ import { UserService } from 'app/core/user/service';
 import { Role } from 'app/core/user/interface';
 import { env } from 'envs/env';
 import { RoleEnum } from 'helper/enums/role.enum';
+import { isSuperUserRole } from 'helper/enums/role.util';
 import { UserPayload } from 'helper/interfaces/payload.interface';
 import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
@@ -86,11 +87,12 @@ export class SwitchRoleComponent implements OnChanges, OnDestroy {
                 // this.notificationsService.getAll();
                 const slug = role.slug?.toLowerCase();
                 if (slug === 'admin' || role.name === RoleEnum.ADMIN) {
-                    this._router.navigateByUrl('/admin/dashboard')
+                    this._router.navigateByUrl('/admin/dashboard');
                 } else if (slug === 'cashier' || role.name === RoleEnum.CASHIER) {
-                    this._router.navigateByUrl('/cashier/order')
-                }
-                else {
+                    this._router.navigateByUrl('/cashier/order');
+                } else if (isSuperUserRole(role)) {
+                    this._router.navigateByUrl('/erp/analytics');
+                } else {
                     this._router.navigateByUrl('');
                 }
                 this.close();

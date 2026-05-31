@@ -16,12 +16,16 @@ import { ErpExpenseCategory } from '../interface';
 import { ErpPlService } from '../service';
 import { ErpCreateCategoryDialogComponent } from './create-dialog/component';
 import { ErpUpdateCategoryDialogComponent } from './update-dialog/component';
+import { PosBreadcrumbComponent, PosListPageComponent } from 'app/shared/list-page';
 
 @Component({
     selector: 'erp-expense-categories',
     standalone: true,
     templateUrl: './template.html',
+    styleUrl: '../../erp-page.scss',
     imports: [
+        PosListPageComponent,
+        PosBreadcrumbComponent,
         CommonModule,
         MatButtonModule,
         MatIconModule,

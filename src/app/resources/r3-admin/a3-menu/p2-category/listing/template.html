@@ -1,122 +1,82 @@
-<div class="list-sale-section bg-white dark:bg-gray-800 mt-4 mx-4 rounded-tl-lg rounded-tr-lg">
+<pos-list-page extraClass="min-h-0 flex-1" [toolbarBorder]="true" bodyClass="w-full flex-1 min-h-0 p-4 md:px-6" [inset]="false">
+    <pos-breadcrumb posBreadcrumb [segments]="['Menu', 'Category']" />
+    <ng-container posActions>
+        <button class="helpers-mat-button-sm w-6" type="button" (click)="openCreateDialog()" mat-stroked-button>
+            <mat-icon class="icon-size-6 text-slate-500" svgIcon="heroicons_outline:plus"></mat-icon>
+        </button>
+    </ng-container>
 
-    <div class="bg-white min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5 dark:bg-gray-800">
-        <div class="flex flex-1 items-center font-medium">
-            <div class="flex items-center">
-                <mat-icon class="text-gray-600 dark:text-white icon-size-5" matPrefix
-                    [svgIcon]="'heroicons_outline:home'"></mat-icon>
-            </div>
-            <div class="flex items-center ml-1.5">
-                <span class="text-lg text-gray-600 dark:text-white -mb-0.5">Menu</span>
-            </div>
-            <div class="flex items-center">
-                <mat-icon class="-mb-0.5" [svgIcon]="'mat_solid:chevron_right'">
-                </mat-icon>
-                <span class="text-lg text-gray-600 dark:text-white -mb-0.5">Category</span>
-            </div>
+    <ng-container *ngIf="isLoading">
+        <div class="py-6 text-slate-500">Loading categories…</div>
+    </ng-container>
+
+    <div *ngIf="dataSource.data.length === 0 && !isLoading"
+        class="no-data w-full bg-white border-t dark:bg-gray-800">
+        <div class="flex flex-col justify-center items-center py-12">
+            <mat-icon class="icon-size-24" svgIcon="toc"></mat-icon>
+            <span class="text-2xl -mt-3">No data</span>
         </div>
-
-        <div class="flex items-center gap-2">
-            <button class="helpers-mat-button-sm w-6 " (click)=" openCreateDialog() " mat-stroked-button>
-                <mat-icon class="icon-size-6 text-slate-500" svgIcon="heroicons_outline:plus"></mat-icon>
-            </button>
-        </div>
-
     </div>
 
-    <div class="list-sale-body">
-
-         <!-- Display Loading -->
-        <ng-container *ngIf=" isLoading ">
-            Getting Data from API...
-        </ng-container>
-
-        <!-- Show 'No Data' message if the data source is empty -->
-        <div *ngIf="dataSource.data.length === 0 && !isLoading"
-            class="no-data bg-white border-t dark:hover:bg-gray-800">
-            <div class="flex flex-col justify-center items-center mb-4">
-                <mat-icon class="icon-size-24" svgIcon="toc"></mat-icon>
-                <span class="text-2xl -mt-3">No data</span>
-            </div>
-        </div>
-
-        <!-- Show data table if there is data -->
-        <div *ngIf = " dataSource.data.length > 0 "  class="list-sale-content px-4 pb-4 bg-white rounded-bl-xl rounded-br-xl dark:bg-gray-800">
-
-
-            <table mat-table [dataSource]=" dataSource ">
+    <div *ngIf="dataSource.data.length > 0 && !isLoading"
+        class="list-sale-content w-full min-w-0 rounded-lg border border-slate-100 dark:border-gray-700 overflow-hidden flex flex-col bg-white dark:bg-gray-800">
+        <div class="list-sale-data overflow-x-auto min-w-0 w-full">
+            <table mat-table [dataSource]="dataSource" class="w-full min-w-0 category-table">
 
                 <ng-container matColumnDef="no">
                     <th mat-header-cell *matHeaderCellDef class="w-10">No.</th>
-                    <td mat-cell *matCellDef="let i = index ">
-                        <span>{{ i+1 }}.</span>
+                    <td mat-cell *matCellDef="let i = index">
+                        <span>{{ i + 1 }}.</span>
                     </td>
                 </ng-container>
 
                 <ng-container matColumnDef="name">
-                    <th mat-header-cell *matHeaderCellDef class="w-[80%]">Name</th>
+                    <th mat-header-cell *matHeaderCellDef>Name</th>
                     <td mat-cell *matCellDef="let item">
-                        <div class="flex gap-1 items-center">
-                            <img class="w-6 h-6 scale-90 object-cover dark:bg-white dark:bg-opacity-5  transition-all rounded-lg hover:border-green-300"
-                                [src]=" fileUrl+item.image " alt="invalid img">
-
-                            <span> {{ item?.name }} </span>
+                        <div class="flex gap-2 items-center">
+                            <img class="w-6 h-6 object-cover rounded-lg dark:bg-white/5"
+                                [src]="fileUrl + item.image" alt="">
+                            <span>{{ item?.name }}</span>
                         </div>
                     </td>
                 </ng-container>
 
                 <ng-container matColumnDef="n_of_products">
                     <th mat-header-cell *matHeaderCellDef class="text-right">Menu</th>
-                    <td mat-cell *matCellDef="let item">
-                        <span class="min-w-[95px] max-w-[95px] flex justify-end text-gray-500">
-                            {{item?.n_of_products | number}}
-                        </span>
+                    <td mat-cell *matCellDef="let item" class="text-right text-gray-500">
+                        {{ item?.n_of_products | number }}
                     </td>
                 </ng-container>
 
-                <!-- Ordered At Column -->
                 <ng-container matColumnDef="created_at">
                     <th mat-header-cell *matHeaderCellDef class="min-w-36">Date</th>
                     <td mat-cell *matCellDef="let item">
-                        <span class="text-gray-500">{{ item?.created_at | date: 'dd-MMM-YYY' }}</span>
+                        <span class="text-gray-500">{{ item?.created_at | date: 'dd-MMM-yyyy' }}</span>
                     </td>
                 </ng-container>
 
                 <ng-container matColumnDef="action" stickyEnd>
                     <th mat-header-cell *matHeaderCellDef>Action</th>
                     <td mat-cell *matCellDef="let item; let i = index">
-
                         <button mat-icon-button [matMenuTriggerFor]="menu">
                             <mat-icon class="icon-size-6" svgIcon="mat_outline:more_vert"></mat-icon>
                         </button>
-
                         <mat-menu #menu="matMenu">
-
-                            <button mat-menu-item (click)=" openUpdateDialog(item, i) ">
-                                <mat-icon class="icon-size-6 " svgIcon="mdi:square-edit-outline"></mat-icon>
-                                <span class="text-lg ">Edit</span>
+                            <button mat-menu-item (click)="openUpdateDialog(item, i)">
+                                <mat-icon class="icon-size-6" svgIcon="mdi:square-edit-outline"></mat-icon>
+                                <span class="text-lg">Edit</span>
                             </button>
-
-                            <button mat-menu-item [disabled]="item.n_of_products != 0"
-                                (click)="onDelete(item)">
-                                <mat-icon class="icon-size-6 text-red-400"
-                                    svgIcon="mdi:trash-can-outline"></mat-icon>
+                            <button mat-menu-item [disabled]="item.n_of_products != 0" (click)="onDelete(item)">
+                                <mat-icon class="icon-size-6 text-red-400" svgIcon="mdi:trash-can-outline"></mat-icon>
                                 <span class="text-red-400">Delete data</span>
                             </button>
-
                         </mat-menu>
                     </td>
                 </ng-container>
 
                 <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
                 <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-
             </table>
-
-
         </div>
-
-
     </div>
-
-</div>
+</pos-list-page>

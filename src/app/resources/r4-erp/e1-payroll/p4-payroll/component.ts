@@ -15,12 +15,16 @@ import { take } from 'rxjs';
 import { ErpPayrollPeriod } from '../interface';
 import { ErpPayrollService } from '../service';
 import { ErpGeneratePayrollDialogComponent } from './generate-dialog/component';
+import { PosBreadcrumbComponent, PosListPageComponent } from 'app/shared/list-page';
 
 @Component({
     selector: 'erp-payroll-periods',
     standalone: true,
     templateUrl: './template.html',
+    styleUrl: '../../erp-page.scss',
     imports: [
+        PosListPageComponent,
+        PosBreadcrumbComponent,
         CommonModule,
         MatButtonModule,
         MatIconModule,

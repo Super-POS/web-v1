@@ -1,5 +1,5 @@
 # Stage 1
-FROM node:18-alpine AS node
+FROM node:20-alpine AS builder
 
 # Build-time URLs (browser must reach host-mapped ports; see docker-compose build args)
 ARG API_BASE_URL
@@ -11,16 +11,14 @@ ENV FILE_BASE_URL=${FILE_BASE_URL}
 ENV SOCKET_URL=${SOCKET_URL}
 ENV RecaptchaSiteKey=${RecaptchaSiteKey}
 
-# utf-8-validate / bufferutil (transitive of ws) need node-gyp → Python + build tools on Alpine
-RUN apk add --no-cache python3 make g++ \
-    && ln -sf python3 /usr/bin/python
-
 WORKDIR /usr/app
+ENV NODE_ENV=production
 
-RUN apk add --no-cache python3 make g++
+# utf-8-validate / bufferutil (transitive of ws) need node-gyp -> Python + build tools on Alpine
+RUN apk add --no-cache python3 make g++ && ln -sf python3 /usr/bin/python
 
-COPY ./package.json /usr/app/package.json
-COPY ./package-lock.json /usr/app/package-lock.json
+COPY ./package.json ./package.json
+COPY ./package-lock.json ./package-lock.json
 
 # Increase Node heap memory limit for install and build
 ENV NODE_OPTIONS=--max_old_space_size=1536
@@ -28,18 +26,19 @@ ENV NODE_OPTIONS=--max_old_space_size=1536
 # Install Dependencies
 RUN npm ci --legacy-peer-deps
 
-COPY ./ /usr/app
+COPY ./ .
 
 # Build
 RUN npm run build -- --configuration=production
 
 # Stage 2 — same image family as stage 1 (no nginx:* pull). Helpful when Docker Hub metadata for nginx fails on the host network.
-FROM node:18-alpine
+FROM node:20-alpine AS runtime
 
 RUN npm install -g serve@14.2.4
 
 WORKDIR /srv
-COPY --from=node /usr/app/dist ./dist
+ENV NODE_ENV=production
+COPY --from=builder /usr/app/dist ./dist
 
 EXPOSE 80
 # -s: SPA fallback to index.html (same intent as nginx try_files)

@@ -17,6 +17,7 @@ import {
     MEETING_ROOM_TYPES,
 } from '../interface';
 import { AdminMeetingRoomService } from '../service';
+import { PosBreadcrumbComponent } from 'app/shared/list-page';
 
 @Component({
     selector: 'app-admin-meeting-room-form-page',
@@ -32,6 +33,7 @@ import { AdminMeetingRoomService } from '../service';
         MatInputModule,
         MatProgressSpinnerModule,
         MatSelectModule,
+        PosBreadcrumbComponent,
     ],
 })
 export class AdminMeetingRoomFormPageComponent implements OnInit, OnDestroy {
@@ -53,6 +55,14 @@ export class AdminMeetingRoomFormPageComponent implements OnInit, OnDestroy {
 
     readonly roomTypes = MEETING_ROOM_TYPES;
     readonly roomStatuses = MEETING_ROOM_STATUSES;
+
+    get pageTitle(): string {
+        return this.isEditMode ? 'Edit meeting room' : 'Create meeting room';
+    }
+
+    get breadcrumbSegments(): string[] {
+        return ['Admin', 'Meeting rooms', this.isEditMode ? 'Edit' : 'Create'];
+    }
 
     ngOnInit(): void {
         this._route.paramMap.pipe(takeUntil(this._unsub)).subscribe(() => {

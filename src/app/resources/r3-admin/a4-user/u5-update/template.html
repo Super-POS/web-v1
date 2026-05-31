@@ -61,7 +61,7 @@
     </div>
     <mat-dialog-actions>
         <div class="w-full flex justify-end px-1">
-            <button class="helpers-mat-button-md text-white bg-[#264497]" mat-flat-button (click)="submit()"
+            <button class="helpers-mat-button-md text-white pos-btn-primary" mat-flat-button (click)="submit()"
                 [disabled]="createUser.invalid || isLoading">
                 <span *ngIf="!createUser.disabled">Done</span>
                 <mat-progress-spinner *ngIf="createUser.disabled" [diameter]="24"

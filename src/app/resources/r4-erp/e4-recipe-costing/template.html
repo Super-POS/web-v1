@@ -1,25 +1,10 @@
-<div class="list-sale-section flex-1 min-w-0 bg-white dark:bg-gray-800 mt-4 mx-4 rounded-tl-lg rounded-tr-lg">
-
-    <!-- Breadcrumb / Header -->
-    <div class="bg-white min-h-14 max-h-14 flex gap-2 justify-between items-center py-2 pl-5 pr-2.5 dark:bg-gray-800 rounded-tl-lg rounded-tr-lg">
-        <div class="flex flex-1 items-center font-medium">
-            <div class="flex items-center">
-                <mat-icon class="text-gray-600 dark:text-white icon-size-5" [svgIcon]="'heroicons_outline:home'"></mat-icon>
-            </div>
-            <div class="flex items-center ml-1.5">
-                <span class="text-lg text-gray-600 dark:text-white -mb-0.5">ERP</span>
-            </div>
-            <div class="flex items-center">
-                <mat-icon class="-mb-0.5" [svgIcon]="'mat_solid:chevron_right'"></mat-icon>
-                <span class="text-lg text-gray-600 dark:text-white -mb-0.5">Recipe Costing</span>
-            </div>
-        </div>
-        <div class="flex items-center gap-2">
-            <button mat-icon-button type="button" (click)="load()" [disabled]="isLoading" class="text-slate-500">
-                <mat-icon class="icon-size-5" svgIcon="heroicons_outline:arrow-path"></mat-icon>
-            </button>
-        </div>
-    </div>
+<pos-list-page extraClass="erp-list-page min-h-0 flex-1" [toolbarBorder]="true" bodyClass="erp-list-body w-full flex-1 min-h-0 p-4 md:px-6" [inset]="false">
+    <pos-breadcrumb posBreadcrumb [segments]="['ERP', 'Recipe Costing']" />
+    <ng-container posActions>
+        <button mat-icon-button type="button" (click)="load()" [disabled]="isLoading" class="text-slate-500" aria-label="Refresh">
+            <mat-icon class="icon-size-5" svgIcon="heroicons_outline:arrow-path"></mat-icon>
+        </button>
+    </ng-container>
 
     <!-- Loading overlay -->
     <ng-container *ngIf="isLoading">
@@ -29,7 +14,7 @@
     </ng-container>
 
     <!-- Content -->
-    <div *ngIf="!isLoading" class="px-4 pb-4">
+    <div *ngIf="!isLoading" class="w-full">
 
         <!-- Summary Cards -->
         <div *ngIf="summary" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
@@ -72,21 +57,40 @@
         <div class="flex flex-col lg:flex-row gap-4">
 
             <!-- LEFT: Menu table -->
-            <div class="flex-1 min-w-0">
+            <div class="flex-1 min-w-0 flex flex-col gap-3">
+                <!-- Search -->
+                <div *ngIf="!isLoading && dataSource.data.length > 0" class="max-w-md">
+                    <mat-form-field appearance="outline" class="w-full helpers-mat-form-field-sm" subscriptSizing="dynamic">
+                        <mat-label>Search menu items</mat-label>
+                        <mat-icon matPrefix class="text-slate-400 icon-size-5" svgIcon="heroicons_outline:magnifying-glass"></mat-icon>
+                        <input matInput type="text" [value]="searchText" (input)="onSearchInput($event)"
+                            placeholder="Filter by name or code" autocomplete="off" />
+                    </mat-form-field>
+                </div>
+
                 <!-- Empty state -->
-                <div *ngIf="rows.length === 0" class="flex flex-col justify-center items-center py-12 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div *ngIf="!isLoading && dataSource.data.length === 0"
+                    class="flex flex-col justify-center items-center py-12 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <mat-icon class="icon-size-16 text-gray-400" svgIcon="toc"></mat-icon>
                     <span class="text-xl text-gray-500 dark:text-gray-400 mt-2">No recipe data</span>
                     <span class="text-sm text-slate-400 mt-1">No costing records found.</span>
                 </div>
 
-                <div *ngIf="rows.length > 0" class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                    <table mat-table [dataSource]="rows" class="w-full">
+                <!-- No search matches -->
+                <div *ngIf="!isLoading && dataSource.data.length > 0 && dataSource.filteredData.length === 0"
+                    class="flex flex-col justify-center items-center py-12 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <mat-icon class="icon-size-12 text-gray-400" svgIcon="heroicons_outline:magnifying-glass"></mat-icon>
+                    <span class="text-sm text-gray-500 dark:text-gray-400 mt-2">No menu items match your search.</span>
+                </div>
+
+                <div *ngIf="!isLoading && dataSource.filteredData.length > 0"
+                    class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                    <table mat-table [dataSource]="dataSource" class="w-full erp-table">
 
                         <!-- Menu Name -->
                         <ng-container matColumnDef="menu_name">
                             <th mat-header-cell *matHeaderCellDef class="whitespace-nowrap">Menu Item</th>
-                            <td mat-cell *matCellDef="let r" class="cursor-pointer" (click)="selectRow(r)">
+                            <td mat-cell *matCellDef="let r" class="cursor-pointer">
                                 <div class="flex flex-col">
                                     <span class="font-medium" [class.text-blue-600]="selectedItem?.menu_id === r.menu_id">{{ r.menu_name }}</span>
                                     <span *ngIf="r.menu_code" class="text-xs text-slate-400">{{ r.menu_code }}</span>
@@ -97,7 +101,7 @@
                         <!-- Has Sizes -->
                         <ng-container matColumnDef="has_sizes">
                             <th mat-header-cell *matHeaderCellDef>Sizes</th>
-                            <td mat-cell *matCellDef="let r" (click)="selectRow(r)" class="cursor-pointer">
+                            <td mat-cell *matCellDef="let r" class="cursor-pointer">
                                 <span *ngIf="r.has_sizes"
                                     class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
                                     Yes
@@ -112,7 +116,7 @@
                         <!-- Product Cost -->
                         <ng-container matColumnDef="product_cost">
                             <th mat-header-cell *matHeaderCellDef>Cost</th>
-                            <td mat-cell *matCellDef="let r" (click)="selectRow(r)" class="cursor-pointer">
+                            <td mat-cell *matCellDef="let r" class="cursor-pointer">
                                 ${{ r.product_cost | number:'1.2-2' }}
                             </td>
                         </ng-container>
@@ -120,7 +124,7 @@
                         <!-- Price -->
                         <ng-container matColumnDef="price">
                             <th mat-header-cell *matHeaderCellDef>Price</th>
-                            <td mat-cell *matCellDef="let r" (click)="selectRow(r)" class="cursor-pointer">
+                            <td mat-cell *matCellDef="let r" class="cursor-pointer">
                                 <span *ngIf="r.price != null">${{ r.price | number:'1.2-2' }}</span>
                                 <span *ngIf="r.price == null" class="text-gray-400">—</span>
                             </td>
@@ -129,7 +133,7 @@
                         <!-- Margin % -->
                         <ng-container matColumnDef="margin_pct">
                             <th mat-header-cell *matHeaderCellDef>Margin %</th>
-                            <td mat-cell *matCellDef="let r" (click)="selectRow(r)" class="cursor-pointer">
+                            <td mat-cell *matCellDef="let r" class="cursor-pointer">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
                                     [ngClass]="marginBadgeClass(r.margin_pct)">
                                     {{ r.margin_pct | number:'1.1-1' }}%
@@ -139,20 +143,26 @@
 
                         <tr mat-header-row *matHeaderRowDef="displayedColumnsArr; sticky: true"></tr>
                         <tr mat-row *matRowDef="let row; columns: displayedColumnsArr"
-                            class="hover:bg-blue-50 transition-colors cursor-pointer"
+                            class="hover:bg-blue-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
                             [class.bg-blue-50]="selectedItem?.menu_id === row.menu_id"
+                            [class.dark:bg-gray-700]="selectedItem?.menu_id === row.menu_id"
                             (click)="selectRow(row)"></tr>
                     </table>
+                </div>
+
+                <div *ngIf="!isLoading && dataSource.filteredData.length > 0"
+                    class="erp-list-paginator rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                    <mat-paginator
+                        class="w-full bg-transparent"
+                        [pageSizeOptions]="pageSizeOptions"
+                        [pageSize]="defaultPageSize"
+                        [showFirstLastButtons]="true">
+                    </mat-paginator>
                 </div>
             </div>
 
             <!-- RIGHT: Detail panel -->
             <div class="lg:w-96 flex-shrink-0">
-
-                <!-- Loading detail -->
-                <div *ngIf="isLoadingDetail" class="flex items-center justify-center py-16 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <mat-progress-spinner [diameter]="32" [mode]="'indeterminate'"></mat-progress-spinner>
-                </div>
 
                 <!-- Empty state for detail panel -->
                 <div *ngIf="!isLoadingDetail && !selectedItem"
@@ -161,8 +171,8 @@
                     <span class="text-sm text-gray-400 mt-2 text-center px-4">Click a row to view ingredient or size details</span>
                 </div>
 
-                <!-- Detail panel content -->
-                <div *ngIf="!isLoadingDetail && selectedItem"
+                <!-- Detail panel (loading or loaded) -->
+                <div *ngIf="selectedItem"
                     class="bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
 
                     <!-- Panel header -->
@@ -171,13 +181,18 @@
                             <span class="font-semibold text-gray-900 dark:text-white">{{ selectedItem.menu_name }}</span>
                             <span *ngIf="selectedItem.menu_code" class="text-xs text-gray-400">{{ selectedItem.menu_code }}</span>
                         </div>
-                        <button mat-icon-button type="button" (click)="selectedItem = null" class="text-gray-400">
+                        <button mat-icon-button type="button" (click)="selectedItem = null; isLoadingDetail = false" class="text-gray-400">
                             <mat-icon class="icon-size-4" svgIcon="heroicons_outline:x-mark"></mat-icon>
                         </button>
                     </div>
 
+                    <!-- Loading detail -->
+                    <div *ngIf="isLoadingDetail" class="flex items-center justify-center py-12">
+                        <mat-progress-spinner [diameter]="32" [mode]="'indeterminate'"></mat-progress-spinner>
+                    </div>
+
                     <!-- Sizes table -->
-                    <div *ngIf="selectedItem.has_sizes" class="overflow-x-auto">
+                    <div *ngIf="!isLoadingDetail && selectedItem.has_sizes" class="overflow-x-auto">
                         <div *ngIf="!selectedItem.sizes?.length" class="px-4 py-6 text-sm text-gray-400 text-center">No size data available.</div>
                         <table *ngIf="selectedItem.sizes?.length" mat-table [dataSource]="selectedItem.sizes" class="w-full">
 
@@ -212,7 +227,7 @@
                     </div>
 
                     <!-- Ingredients table -->
-                    <div *ngIf="!selectedItem.has_sizes" class="overflow-x-auto">
+                    <div *ngIf="!isLoadingDetail && !selectedItem.has_sizes" class="overflow-x-auto">
                         <div *ngIf="!selectedItem.ingredients?.length" class="px-4 py-6 text-sm text-gray-400 text-center">No ingredient data available.</div>
                         <table *ngIf="selectedItem.ingredients?.length" mat-table [dataSource]="selectedItem.ingredients" class="w-full">
 
@@ -255,4 +270,4 @@
             </div>
         </div>
     </div>
-</div>
+</pos-list-page>

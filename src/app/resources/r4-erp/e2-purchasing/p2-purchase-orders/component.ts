@@ -17,12 +17,16 @@ import { ErpPurchaseOrder } from '../interface';
 import { ErpPurchasingService } from '../service';
 import { ErpCreatePODialogComponent } from './create-dialog/component';
 import { ErpReceiveGoodsDialogComponent } from './receive-dialog/component';
+import { PosBreadcrumbComponent, PosListPageComponent } from 'app/shared/list-page';
 
 @Component({
     selector: 'erp-purchase-orders',
     standalone: true,
     templateUrl: './template.html',
+    styleUrl: '../../erp-page.scss',
     imports: [
+        PosListPageComponent,
+        PosBreadcrumbComponent,
         CommonModule,
         FormsModule,
         MatButtonModule,

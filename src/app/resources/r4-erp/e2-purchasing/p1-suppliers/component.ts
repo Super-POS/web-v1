@@ -14,12 +14,16 @@ import { ErpSupplier } from '../interface';
 import { ErpPurchasingService } from '../service';
 import { ErpSupplierCreateDialogComponent } from './create-dialog/component';
 import { ErpSupplierUpdateDialogComponent } from './update-dialog/component';
+import { PosBreadcrumbComponent, PosListPageComponent } from 'app/shared/list-page';
 
 @Component({
     selector: 'erp-suppliers',
     standalone: true,
     templateUrl: './template.html',
+    styleUrl: '../../erp-page.scss',
     imports: [
+        PosListPageComponent,
+        PosBreadcrumbComponent,
         CommonModule,
         MatButtonModule,
         MatIconModule,

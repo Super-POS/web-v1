@@ -14,12 +14,16 @@ import { take } from 'rxjs';
 import { ErpLeave } from '../interface';
 import { ErpPayrollService } from '../service';
 import { ErpRequestLeaveDialogComponent } from './request-dialog/component';
+import { PosBreadcrumbComponent, PosListPageComponent } from 'app/shared/list-page';
 
 @Component({
     selector: 'erp-leaves',
     standalone: true,
     templateUrl: './template.html',
+    styleUrl: '../../erp-page.scss',
     imports: [
+        PosListPageComponent,
+        PosBreadcrumbComponent,
         CommonModule,
         MatButtonModule,
         MatIconModule,

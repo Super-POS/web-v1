@@ -274,4 +274,4 @@ export const navigationData = {
     admin: adminNavigation,
     user: userNavigation,
     superuser: superUserNavigation,
-}
+};

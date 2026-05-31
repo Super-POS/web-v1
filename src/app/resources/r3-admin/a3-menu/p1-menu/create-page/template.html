@@ -1,129 +1,287 @@
-<div class="menu-create">
-    <header class="menu-create__hero">
-        <div class="hero__left">
-            <div class="breadcrumb">
-                <mat-icon class="breadcrumb__icon" [svgIcon]="'heroicons_outline:home'"></mat-icon>
-                <span>Menu</span>
-                <span class="breadcrumb__slash">/</span>
-                <span>{{ breadcrumbAction }}</span>
-            </div>
-            <h1>{{ pageTitle }}</h1>
-            <p>{{ pageSubtitle }}</p>
-        </div>
-        <button mat-icon-button class="hero__close" (click)="goBack()" aria-label="Close">
-            <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
-        </button>
+<div class="menu-create pos-form-shell">
+    <header class="menu-create__header">
+        <pos-breadcrumb [segments]="breadcrumbSegments" />
+        <h1 class="menu-create__title">{{ pageTitle }}</h1>
     </header>
 
-    <div class="menu-create__content" *ngIf="formReady">
+    <div class="menu-create__loading" *ngIf="isLoading" role="status" aria-live="polite">
+        <mat-progress-spinner [diameter]="32" [mode]="'indeterminate'"></mat-progress-spinner>
+        <span>Loading menu…</span>
+    </div>
+
+    <div class="menu-create__content" *ngIf="formReady && !isLoading">
+        <div class="progress-track" aria-hidden="true">
+            <div class="progress-track__fill" [style.width.%]="progressPercent"></div>
+        </div>
+
+        <nav class="stepper" aria-label="Menu creation steps">
+            <ol class="stepper__list">
+                <li *ngFor="let step of STEPS; let i = index"
+                    class="stepper__item"
+                    [class.stepper__item--active]="currentStep === i"
+                    [class.stepper__item--done]="currentStep > i">
+                    <button type="button"
+                        class="stepper__btn"
+                        [disabled]="i > currentStep"
+                        (click)="goToStep(i)"
+                        [attr.aria-current]="currentStep === i ? 'step' : null">
+                        <span class="stepper__index">
+                            <mat-icon *ngIf="currentStep > i" class="stepper__check" svgIcon="heroicons_outline:check"></mat-icon>
+                            <span *ngIf="currentStep <= i">{{ i + 1 }}</span>
+                        </span>
+                        <span class="stepper__label">{{ step.label }}</span>
+                    </button>
+                    <span class="stepper__connector" *ngIf="i < STEPS.length - 1" aria-hidden="true"></span>
+                </li>
+            </ol>
+        </nav>
+
         <form [formGroup]="menuForm" class="menu-create__grid">
+            <section class="panel panel--form menu-create__panel">
 
-            <section class="panel panel--form">
-
-                <!-- Basics -->
-                <div class="section">
-                    <div class="section__header">
-                        <div>
-                            <h2>Basics</h2>
-                            <p>Identify the menu item and choose a category.</p>
-                        </div>
-                    </div>
-
-                    <div class="image-inline">
-                        <div class="image-drop image-drop--inline" (click)="fileInput.click()">
-                            <img [src]="src" class="image-preview image-preview--inline" alt="Menu Picture" />
-                            <div class="image-overlay">
-                                <span>Upload image</span>
-                            </div>
-                        </div>
-                        <input type="file" #fileInput style="display: none;" (change)="onFileChange($event)" accept="image/*" />
-
-                        <div class="image-inline__meta">
-                            <div class="panel__title">Menu photo</div>
-                            <p class="panel__subtitle">Click to upload a square photo for best results.</p>
-                            <div class="media-help">
-                                <div class="media-help__chip">Tip</div>
-                                <p>Use bright backgrounds and centered drinks for a clean catalog look.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="fields-grid">
-                        <mat-form-field appearance="outline" class="field">
-                            <mat-label>Code</mat-label>
-                            <input matInput formControlName="code" placeholder="Enter code">
-                            <mat-error>Please enter menu code</mat-error>
-                        </mat-form-field>
-
-                        <mat-form-field appearance="outline" class="field">
-                            <mat-label>Name</mat-label>
-                            <input matInput formControlName="name" placeholder="Enter name">
-                            <mat-error>Please enter menu name</mat-error>
-                        </mat-form-field>
-                    </div>
-
-                    <mat-form-field appearance="outline" class="field">
-                        <mat-label>Menu type</mat-label>
-                        <mat-select formControlName="type_id">
-                            @for (item of setup; track item.id) {
-                            <mat-option [value]="item.id">{{ item.name }}</mat-option>
-                            }
-                        </mat-select>
-                        <mat-error>Please select menu type</mat-error>
-                    </mat-form-field>
+                <div class="step-alert" *ngIf="stepError" role="alert">
+                    <mat-icon svgIcon="heroicons_outline:exclamation-circle"></mat-icon>
+                    <span>{{ stepError }}</span>
                 </div>
 
-                <!-- Pricing and sizes -->
-                <div class="section">
+                <!-- Step: Basics -->
+                <div class="section basics-step" *ngIf="currentStepKey === 'basics'">
                     <div class="section__header">
-                        <div>
-                            <h2>Pricing and sizes</h2>
-                            <p>Enable sizes to set unique prices per size.</p>
-                        </div>
+                        <h2>Basics</h2>
+                        <span class="step-badge">Step {{ currentStep + 1 }} of {{ STEPS.length }}</span>
                     </div>
 
-                    <div class="size-toggle" formArrayName="sizes">
-                        <div class="size-toggle__item" *ngFor="let sc of sizeRows.controls; let si = index" [formGroupName]="si">
-                            <mat-checkbox color="primary"
-                                [checked]="isSizeEnabled(si)"
-                                (change)="onSizeToggle(si, $event.checked)">
-                                <span class="size-label">{{ SIZE_LABELS[SIZES[si]] }}</span>
-                                <span class="size-code">{{ SIZES[si] }}</span>
-                            </mat-checkbox>
-                        </div>
-                    </div>
+                    <div class="basics-layout">
+                        <div class="basics-layout__main">
+                            <!-- Identity -->
+                            <div class="basics-block">
+                                <h3 class="basics-block__title">Name &amp; code</h3>
+                                <div class="fields-grid">
+                                    <mat-form-field appearance="outline" class="field">
+                                        <mat-label>Name</mat-label>
+                                        <input matInput formControlName="name" placeholder="e.g. Iced Latte" autocomplete="off">
+                                        <mat-error>Please enter a menu name</mat-error>
+                                    </mat-form-field>
+                                    <mat-form-field appearance="outline" class="field">
+                                        <mat-label>Item code</mat-label>
+                                        <input matInput formControlName="code" readonly
+                                            [placeholder]="isEditMode ? '' : 'Auto'">
+                                        <mat-error>Enter a name to generate a code</mat-error>
+                                    </mat-form-field>
+                                </div>
+                            </div>
 
-                    <mat-form-field appearance="outline" class="field" *ngIf="!hasSizes">
-                        <mat-label>Price (USD)</mat-label>
-                        <input matInput type="number" step="0.01" formControlName="unit_price_usd" placeholder="Enter price (USD)">
-                        <mat-error>Please enter a valid USD price</mat-error>
-                    </mat-form-field>
-
-                    <div class="size-price-grid" *ngIf="hasSizes" formArrayName="sizes">
-                        <ng-container *ngFor="let sc of sizeRows.controls; let si = index">
-                            <div [formGroupName]="si" *ngIf="isSizeEnabled(si)" class="field">
-                                <mat-form-field appearance="outline" class="w-full">
-                                    <mat-label>{{ SIZE_LABELS[SIZES[si]] }} price (USD)</mat-label>
-                                    <input matInput type="number" step="0.01" formControlName="price_usd" placeholder="0.00">
-                                    <mat-error>Required</mat-error>
+                            <!-- Category -->
+                            <div class="basics-block">
+                                <h3 class="basics-block__title">Category</h3>
+                                <mat-form-field appearance="outline" class="field w-full">
+                                    <mat-label>Menu type</mat-label>
+                                    <mat-icon matPrefix class="icon-size-5 text-slate-400 mr-1" svgIcon="heroicons_outline:magnifying-glass"></mat-icon>
+                                    <input
+                                        matInput
+                                        type="text"
+                                        placeholder="Search…"
+                                        [formControl]="menuTypeSearch"
+                                        [matAutocomplete]="menuTypeAuto"
+                                        (blur)="onMenuTypeBlur()"
+                                        autocomplete="off"
+                                        [disabled]="isLoadingSetup" />
+                                    <mat-spinner *ngIf="isLoadingSetup" matSuffix [diameter]="18" class="mr-2"></mat-spinner>
+                                    <button *ngIf="selectedMenuType && !isLoadingSetup" matSuffix mat-icon-button type="button"
+                                        class="!w-8 !h-8"
+                                        aria-label="Clear category"
+                                        (click)="clearMenuTypeSearch()">
+                                        <mat-icon class="icon-size-4" svgIcon="heroicons_outline:x-mark"></mat-icon>
+                                    </button>
+                                    <mat-error *ngIf="menuTypeInvalid">Select a category</mat-error>
+                                    <mat-autocomplete
+                                        #menuTypeAuto="matAutocomplete"
+                                        position="below"
+                                        class="pos-autocomplete-panel"
+                                        [displayWith]="displayMenuTypeName"
+                                        (optionSelected)="onMenuTypeSelected($event)">
+                                        <mat-option *ngFor="let item of filteredSetup" [value]="item">
+                                            <div class="flex flex-col leading-tight py-0.5">
+                                                <span class="font-medium">{{ item.name }}</span>
+                                            </div>
+                                        </mat-option>
+                                        <mat-option *ngIf="filteredSetup.length === 0 && menuTypeQuery && !isLoadingSetup" disabled>
+                                            <span class="text-slate-400 text-sm">No matches</span>
+                                        </mat-option>
+                                        <mat-option *ngIf="setup.length === 0 && !isLoadingSetup" disabled>
+                                            <span class="text-slate-400 text-sm">No categories</span>
+                                        </mat-option>
+                                    </mat-autocomplete>
                                 </mat-form-field>
+                                <p *ngIf="!isLoadingSetup && setup.length === 0" class="basics-block__footer">
+                                    <a routerLink="/admin/menu/category" class="basics-block__link">Add category</a>
+                                </p>
                             </div>
-                        </ng-container>
+                        </div>
+
+                        <!-- Photo -->
+                        <aside class="basics-block basics-block--photo">
+                            <h3 class="basics-block__title">Photo <span class="required-mark" *ngIf="!isEditMode">Required</span></h3>
+
+                            <div class="basics-photo">
+                                <div class="basics-photo__preview image-drop"
+                                    [class.image-drop--filled]="hasCustomImage"
+                                    role="button"
+                                    tabindex="0"
+                                    aria-label="Upload menu photo"
+                                    (click)="fileInput.click()"
+                                    (keydown.enter)="fileInput.click()"
+                                    (keydown.space)="$event.preventDefault(); fileInput.click()">
+                                    <img [src]="src" class="image-preview basics-photo__img" [alt]="menuPhotoAlt" />
+                                    <div class="image-overlay">
+                                        <mat-icon svgIcon="heroicons_outline:arrow-up-tray"></mat-icon>
+                                        <span>{{ hasCustomImage ? 'Change' : 'Upload' }}</span>
+                                    </div>
+                                </div>
+                                <input type="file" #fileInput class="sr-only" (change)="onFileChange($event)" accept="image/*" />
+
+                                <div class="basics-photo__actions">
+                                    <button type="button" mat-stroked-button class="w-full" (click)="fileInput.click()">
+                                        <mat-icon class="icon-size-5" svgIcon="heroicons_outline:arrow-up-tray"></mat-icon>
+                                        <span class="ml-1">Choose image</span>
+                                    </button>
+                                    <button type="button" mat-button class="w-full"
+                                        *ngIf="hasCustomImage && !isEditMode"
+                                        (click)="removeImage()">
+                                        Remove photo
+                                    </button>
+                                </div>
+
+                                <p class="helper helper--warn"
+                                    *ngIf="!isEditMode && menuForm.get('image')?.invalid && menuForm.get('image')?.touched">
+                                    Photo required
+                                </p>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+
+                <!-- Step: Pricing -->
+                <div class="section" *ngIf="currentStepKey === 'pricing'">
+                    <div class="section__header">
+                        <h2>Pricing</h2>
+                        <span class="step-badge">Step {{ currentStep + 1 }} of {{ STEPS.length }}</span>
                     </div>
 
-                    <!-- Recipe rows -->
-                    <div *ngIf="hasSizes" class="recipe-builder">
-                        <div class="recipe-header">
-                            <div>
-                                <h3>Size recipes</h3>
-                                <p>Set ingredient amounts for each enabled size.</p>
+                    <div class="pricing-mode" role="group" aria-label="Pricing type">
+                        <button type="button"
+                            class="pricing-mode__card"
+                            [class.pricing-mode__card--active]="!hasSizes"
+                            (click)="setPricingMode('single')">
+                            <mat-icon svgIcon="heroicons_outline:tag"></mat-icon>
+                            <span class="pricing-mode__title">Single price</span>
+                        </button>
+                        <button type="button"
+                            class="pricing-mode__card"
+                            [class.pricing-mode__card--active]="hasSizes"
+                            (click)="setPricingMode('sizes')">
+                            <mat-icon svgIcon="heroicons_outline:squares-2x2"></mat-icon>
+                            <span class="pricing-mode__title">Multiple sizes</span>
+                        </button>
+                    </div>
+
+                    <ng-container *ngIf="!hasSizes">
+                        <mat-form-field appearance="outline" class="field">
+                            <mat-label>Price (USD)</mat-label>
+                            <input matInput type="number" step="0.01" min="0.01" formControlName="unit_price_usd" placeholder="0.00">
+                            <mat-error>Please enter a valid USD price</mat-error>
+                        </mat-form-field>
+                    </ng-container>
+
+                    <ng-container *ngIf="hasSizes">
+                        <div class="size-toggle" formArrayName="sizes">
+                            <div class="size-toggle__item"
+                                *ngFor="let sc of sizeRows.controls; let si = index"
+                                [formGroupName]="si"
+                                [class.size-toggle__item--on]="isSizeEnabled(si)">
+                                <mat-checkbox color="primary"
+                                    [checked]="isSizeEnabled(si)"
+                                    (change)="onSizeToggle(si, $event.checked)">
+                                    <span class="size-label">{{ SIZE_LABELS[SIZES[si]] }}</span>
+                                    <span class="size-code">{{ SIZES[si] }}</span>
+                                </mat-checkbox>
                             </div>
+                        </div>
+
+                        <div class="size-price-grid" formArrayName="sizes">
+                            <ng-container *ngFor="let sc of sizeRows.controls; let si = index">
+                                <div [formGroupName]="si" *ngIf="isSizeEnabled(si)" class="field">
+                                    <mat-form-field appearance="outline" class="w-full">
+                                        <mat-label>{{ SIZE_LABELS[SIZES[si]] }} price (USD)</mat-label>
+                                        <input matInput type="number" step="0.01" min="0.01" formControlName="price_usd" placeholder="0.00">
+                                        <mat-error>Required</mat-error>
+                                    </mat-form-field>
+                                </div>
+                            </ng-container>
+                        </div>
+
+                    </ng-container>
+                </div>
+
+                <!-- Step: Recipe -->
+                <div class="section" *ngIf="currentStepKey === 'recipes'">
+                    <div class="section__header">
+                        <h2>Recipe</h2>
+                        <span class="step-badge">Step {{ currentStep + 1 }} of {{ STEPS.length }}</span>
+                    </div>
+
+                    <!-- Single-price recipe -->
+                    <ng-container *ngIf="!hasSizes">
+                        <div class="recipe-builder recipe-builder--required">
+                            <div class="recipe-header">
+                                <h3 class="recipe-header__title">Ingredients</h3>
+                                <button type="button" mat-stroked-button (click)="addRecipeRow()">
+                                    <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                                    <span class="ml-1">Add ingredient</span>
+                                </button>
+                            </div>
+
+                            <p class="helper" *ngIf="!ingredients.length">Loading ingredients…</p>
+
+                            <div formArrayName="recipes" class="recipe-rows">
+                                <div *ngFor="let row of recipeRows.controls; let ri = index"
+                                     [formGroupName]="ri"
+                                     class="recipe-rows__item">
+                                    <mat-form-field appearance="outline" class="recipe-field recipe-field--grow">
+                                        <mat-label>Ingredient</mat-label>
+                                        <mat-select formControlName="ingredient_id">
+                                            <mat-option *ngFor="let ing of ingredients" [value]="ing.id">
+                                                {{ ing.name }}<ng-container *ngIf="ing.unit"> ({{ ing.unit }})</ng-container>
+                                            </mat-option>
+                                        </mat-select>
+                                        <mat-error>Required</mat-error>
+                                    </mat-form-field>
+                                    <mat-form-field appearance="outline" class="recipe-field recipe-field--qty">
+                                        <mat-label>Amount</mat-label>
+                                        <input matInput type="number" step="any" min="0" formControlName="quantity" placeholder="0" />
+                                        <mat-error>Required</mat-error>
+                                    </mat-form-field>
+                                    <button type="button" mat-icon-button class="recipe-delete" (click)="removeRecipeRow(ri)" aria-label="Remove ingredient">
+                                        <mat-icon [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <p class="helper helper--warn" *ngIf="recipeRows.length === 0">Add at least one ingredient</p>
+                        </div>
+                    </ng-container>
+
+                    <!-- Multi-size recipes -->
+                    <div class="recipe-builder recipe-builder--required" *ngIf="hasSizes">
+                        <div class="recipe-header">
+                            <h3 class="recipe-header__title">Ingredients by size</h3>
                             <button type="button" mat-stroked-button (click)="addSizeRecipeRow()">
                                 <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
                                 <span class="ml-1">Add ingredient</span>
                             </button>
                         </div>
 
-                        <p class="helper" *ngIf="!ingredients.length">Loading ingredients...</p>
+                        <p class="helper" *ngIf="!ingredients.length">Loading ingredients…</p>
 
                         <div class="recipe-table">
                             <div class="recipe-table__head">
@@ -146,50 +304,63 @@
                                                 {{ ing.name }}<ng-container *ngIf="ing.unit"> ({{ ing.unit }})</ng-container>
                                             </mat-option>
                                         </mat-select>
+                                        <mat-error>Required</mat-error>
                                     </mat-form-field>
 
                                     <mat-form-field appearance="outline" class="recipe-field"
                                         *ngFor="let si of enabledSizeIndices">
-                                        <mat-label>{{ SIZES[si] }}</mat-label>
-                                        <input matInput type="number" step="any" min="0"
+                                        <mat-label>{{ SIZES[si] }} amount</mat-label>
+                                        <input matInput type="number" step="any" min="0.0001"
                                             [formControlName]="'amount_' + SIZES[si]"
                                             placeholder="0" />
+                                        <mat-error>Required</mat-error>
                                     </mat-form-field>
 
-                                    <button type="button" mat-icon-button class="recipe-delete" (click)="removeSizeRecipeRow(ri)">
+                                    <button type="button" mat-icon-button class="recipe-delete" (click)="removeSizeRecipeRow(ri)" aria-label="Remove row">
                                         <mat-icon [svgIcon]="'heroicons_outline:trash'"></mat-icon>
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        <p class="helper" *ngIf="sizeRecipeRows.length === 0">
-                            No ingredients added. Stock will not be deducted.
-                        </p>
+                        <p class="helper helper--warn" *ngIf="sizeRecipeRows.length === 0">Add at least one ingredient</p>
                     </div>
                 </div>
 
-                <!-- Modifiers -->
-                <div class="section">
+                <!-- Step: Modifiers -->
+                <div class="section" *ngIf="currentStepKey === 'modifiers'">
                     <div class="section__header">
-                        <div>
-                            <h2>Modifiers</h2>
-                            <p>Pick optional groups like sugar, milk, or ice.</p>
-                        </div>
+                        <h2>Modifiers</h2>
+                        <span class="step-badge">Step {{ currentStep + 1 }} of {{ STEPS.length }}</span>
                     </div>
 
-                    <p class="helper" *ngIf="isLoadingModifiers">Loading modifiers...</p>
+                    <div class="modifier-summary" *ngIf="selectedModifierCount > 0">
+                        <mat-icon svgIcon="heroicons_outline:check-circle"></mat-icon>
+                        <span>{{ selectedModifierCount }} group{{ selectedModifierCount === 1 ? '' : 's' }} selected</span>
+                    </div>
+
+                    <p class="helper" *ngIf="isLoadingModifiers">Loading modifiers…</p>
 
                     <div class="modifier-box" *ngIf="!isLoadingModifiers">
-                        <div *ngIf="modifierGroups.length === 0" class="helper">
-                            No modifier groups found. Create groups in Modifier page first.
+                        <div *ngIf="modifierGroups.length === 0" class="modifier-empty">
+                            <mat-icon svgIcon="heroicons_outline:adjustments-horizontal"></mat-icon>
+                            <p>No modifier groups</p>
+                            <a routerLink="/admin/menu/modifier" class="modifier-empty__link">Create modifier groups</a>
                         </div>
-                        <div *ngFor="let group of modifierGroups" class="modifier-row">
-                            <mat-checkbox [checked]="isModifierSelected(group.id)"
-                                (change)="toggleModifierGroup(group.id, $event.checked)">
-                                {{ group.name }}
-                            </mat-checkbox>
+
+                        <div *ngFor="let group of modifierGroups"
+                             class="modifier-card"
+                             [class.modifier-card--selected]="isModifierSelected(group.id)">
+                            <div class="modifier-card__main">
+                                <mat-checkbox
+                                    [checked]="isModifierSelected(group.id)"
+                                    (change)="toggleModifierGroup(group.id, $event.checked)">
+                                    <span class="modifier-card__name">{{ group.name }}</span>
+                                    <span class="modifier-card__code" *ngIf="group.code">{{ group.code }}</span>
+                                </mat-checkbox>
+                            </div>
                             <mat-checkbox *ngIf="isModifierSelected(group.id)"
+                                class="modifier-card__required"
                                 [checked]="modifierRequired(group.id)"
                                 (change)="onModifierRequiredChange(group.id, $event.checked)">
                                 Required
@@ -198,14 +369,26 @@
                     </div>
                 </div>
 
-                <!-- Actions -->
-                <div class="actions">
+                <div class="actions actions--sticky">
                     <button class="helpers-mat-button-md" mat-stroked-button type="button" (click)="goBack()">Cancel</button>
-                    <button class="helpers-mat-button-md action-primary" mat-flat-button type="button"
-                        (click)="submit()" [disabled]="menuForm.invalid || saving">
-                        <span *ngIf="!saving">{{ actionLabel }}</span>
-                        <mat-progress-spinner *ngIf="saving" [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>
-                    </button>
+                    <div class="actions__nav">
+                        <button class="helpers-mat-button-md" mat-stroked-button type="button"
+                            *ngIf="currentStep > 0"
+                            (click)="previousStep()">
+                            Back
+                        </button>
+                        <button class="helpers-mat-button-md action-primary pos-btn-primary" mat-flat-button type="button"
+                            *ngIf="!isLastStep"
+                            (click)="nextStep()">
+                            Continue
+                        </button>
+                        <button class="helpers-mat-button-md action-primary pos-btn-primary" mat-flat-button type="button"
+                            *ngIf="isLastStep"
+                            (click)="submit()" [disabled]="!canSaveMenu">
+                            <span *ngIf="!saving">{{ actionLabel }}</span>
+                            <mat-progress-spinner *ngIf="saving" [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>
+                        </button>
+                    </div>
                 </div>
 
             </section>

@@ -1,0 +1,135 @@
+<div class="coupon-form-page pos-form-shell">
+    <header class="coupon-form-page__header">
+        <pos-breadcrumb [segments]="breadcrumbSegments" />
+        <h1 class="coupon-form-page__title">{{ pageTitle }}</h1>
+    </header>
+
+    <div class="coupon-form-page__content" *ngIf="formReady">
+        <form [formGroup]="form" class="coupon-form-page__panel">
+            <section class="coupon-form-section">
+                <h2 class="coupon-form-section__title">Code &amp; discount</h2>
+                <div class="coupon-form-section__body">
+                    <mat-checkbox formControlName="generate_code" color="primary" class="mb-2 block">
+                        Generate random code
+                    </mat-checkbox>
+                    <mat-form-field appearance="outline" class="field w-full">
+                        <mat-label>Coupon code</mat-label>
+                        <input matInput formControlName="code"
+                            [placeholder]="form.get('generate_code')?.value ? 'Assigned when you create' : 'e.g. SUMMER10'"
+                            maxlength="64" class="uppercase" />
+                        <mat-hint *ngIf="form.get('generate_code')?.value">A unique code is created on the server when you save.</mat-hint>
+                        <mat-error>Code must be at least 2 characters</mat-error>
+                    </mat-form-field>
+
+                    <div class="fields-grid fields-grid--triple">
+                        <mat-form-field appearance="outline" class="field w-full">
+                            <mat-label>Discount (%)</mat-label>
+                            <input matInput type="number" formControlName="discount_percent" min="0.01" max="100" step="0.01" placeholder="10" />
+                            <mat-error>Required</mat-error>
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" class="field w-full">
+                            <mat-label>Usage limit</mat-label>
+                            <input matInput type="number" formControlName="usage_limit" min="1" step="1" placeholder="Unlimited" />
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" class="field w-full">
+                            <mat-label>Expires at</mat-label>
+                            <input matInput type="datetime-local" formControlName="expires_at" />
+                        </mat-form-field>
+                    </div>
+
+                    <mat-form-field appearance="outline" class="field w-full">
+                        <mat-label>Note</mat-label>
+                        <input matInput formControlName="note" maxlength="500" placeholder="Internal note (optional)" />
+                    </mat-form-field>
+                </div>
+            </section>
+
+            <section class="coupon-form-section">
+                <h2 class="coupon-form-section__title">Applies to</h2>
+                <div class="coupon-form-section__body">
+                    <p class="coupon-form-section__hint">Leave categories and menus empty to apply to all items.</p>
+
+                    <div *ngIf="isLoadingCategories" class="text-sm text-slate-500">Loading categories…</div>
+                    <div *ngIf="!isLoadingCategories" class="category-chips">
+                        <button *ngFor="let cat of allCategories" type="button"
+                            (click)="toggleCategory(cat)"
+                            class="category-chip"
+                            [class.category-chip--selected]="isCategorySelected(cat)">
+                            {{ cat.name }}
+                        </button>
+                        <span *ngIf="allCategories.length === 0" class="text-sm text-slate-400">No categories found.</span>
+                    </div>
+
+                    <mat-form-field appearance="outline" class="field w-full">
+                        <mat-label>Specific menus</mat-label>
+                        <mat-icon matPrefix class="icon-size-5 text-slate-400 mr-1" svgIcon="heroicons_outline:magnifying-glass"></mat-icon>
+                        <input matInput type="text" placeholder="Search by menu name…"
+                            [formControl]="menuSearch" [matAutocomplete]="menuAuto" autocomplete="off" />
+                        <mat-spinner *ngIf="isSearchingMenus" matSuffix [diameter]="18" class="mr-2"></mat-spinner>
+                        <mat-autocomplete #menuAuto="matAutocomplete" position="below" class="pos-autocomplete-panel"
+                            [displayWith]="displayEmpty" (optionSelected)="onMenuSelected($event)">
+                            <mat-option *ngFor="let m of menuSuggestions" [value]="m">
+                                <div class="flex flex-col leading-tight py-0.5">
+                                    <span class="font-medium">{{ m.name }}</span>
+                                    <span class="text-xs text-slate-400">{{ m.type?.name ?? '' }} · {{ m.code }}</span>
+                                </div>
+                            </mat-option>
+                            <mat-option *ngIf="menuSuggestions.length === 0 && menuSearch.value && !isSearchingMenus" disabled>
+                                <span class="text-slate-400 text-sm">No matches</span>
+                            </mat-option>
+                        </mat-autocomplete>
+                    </mat-form-field>
+                    <div *ngIf="selectedMenus.length > 0" class="chip-row">
+                        <mat-chip *ngFor="let m of selectedMenus" [removable]="true" (removed)="removeMenu(m.id)"
+                            class="!bg-orange-100 !text-orange-800 dark:!bg-orange-900 dark:!text-orange-200">
+                            {{ m.name }}
+                            <mat-icon matChipRemove svgIcon="heroicons_outline:x-mark" class="icon-size-4"></mat-icon>
+                        </mat-chip>
+                    </div>
+                </div>
+            </section>
+
+            <section class="coupon-form-section">
+                <h2 class="coupon-form-section__title">Assignment</h2>
+                <div class="coupon-form-section__body">
+                    <mat-form-field appearance="outline" class="field w-full">
+                        <mat-label>Assign to users</mat-label>
+                        <mat-icon matPrefix class="icon-size-5 text-slate-400 mr-1" svgIcon="heroicons_outline:magnifying-glass"></mat-icon>
+                        <input matInput type="text" placeholder="Search by name or phone…"
+                            [formControl]="userSearch" [matAutocomplete]="userAuto" autocomplete="off" />
+                        <mat-spinner *ngIf="isSearchingUsers" matSuffix [diameter]="18" class="mr-2"></mat-spinner>
+                        <mat-hint>Leave empty for a public coupon</mat-hint>
+                        <mat-autocomplete #userAuto="matAutocomplete" position="below" class="pos-autocomplete-panel"
+                            [displayWith]="displayEmpty" (optionSelected)="onUserSelected($event)">
+                            <mat-option *ngFor="let u of userSuggestions" [value]="u">
+                                <div class="flex flex-col leading-tight py-0.5">
+                                    <span class="font-medium">{{ u.name }}</span>
+                                    <span class="text-xs text-slate-400">{{ u.phone }}</span>
+                                </div>
+                            </mat-option>
+                            <mat-option *ngIf="userSuggestions.length === 0 && userSearch.value && !isSearchingUsers" disabled>
+                                <span class="text-slate-400 text-sm">No matches</span>
+                            </mat-option>
+                        </mat-autocomplete>
+                    </mat-form-field>
+                    <div *ngIf="selectedUsers.length > 0" class="chip-row">
+                        <mat-chip *ngFor="let u of selectedUsers" [removable]="true" (removed)="removeUser(u.id)"
+                            class="!bg-blue-100 !text-blue-800 dark:!bg-blue-900 dark:!text-blue-200">
+                            {{ u.name }}
+                            <mat-icon matChipRemove svgIcon="heroicons_outline:x-mark" class="icon-size-4"></mat-icon>
+                        </mat-chip>
+                    </div>
+                </div>
+            </section>
+
+            <div class="coupon-form-page__actions">
+                <button type="button" mat-stroked-button class="helpers-mat-button-md" (click)="goBack()">Cancel</button>
+                <button type="button" mat-flat-button class="helpers-mat-button-md pos-btn-primary"
+                    (click)="submit()" [disabled]="isSaving || !form.valid">
+                    <span *ngIf="!isSaving">Create coupon</span>
+                    <mat-progress-spinner *ngIf="isSaving" [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
