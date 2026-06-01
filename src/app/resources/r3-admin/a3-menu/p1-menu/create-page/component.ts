@@ -261,7 +261,6 @@ export class MenuCreatePageComponent implements OnInit, OnDestroy {
             unit_price_usd: [unitPriceUsd, hasSizes ? [] : [Validators.required, Validators.min(0.01)]],
             recipes:        this.formBuilder.array(existingRecipes.map((r) => this._recipeGroup(r))),
             sizes:          this.formBuilder.array(this.SIZES.map((s) => this._sizeGroup(s, menu))),
-            sizeRecipes:    this.formBuilder.array(this._buildSizeRecipeRows(menu)),
             modifier_items: [[]],
         });
 
@@ -392,7 +391,11 @@ export class MenuCreatePageComponent implements OnInit, OnDestroy {
 
     private _ensureMinRecipeRows(): void {
         if (this.hasSizes) {
-            if (this.sizeRecipeRows.length === 0) this.addSizeRecipeRow();
+            for (const si of this.enabledSizeIndices) {
+                if (this.sizeRecipeRows(si).length === 0) {
+                    this.addSizeRecipeRow(si);
+                }
+            }
             return;
         }
         if (this.recipeRows.length === 0) this.addRecipeRow();
@@ -421,34 +424,20 @@ export class MenuCreatePageComponent implements OnInit, OnDestroy {
     private _syncSizeRecipeValidators(): void {
         if (!this.menuForm) return;
 
-        if (!this.hasSizes) {
-            for (const row of this.sizeRecipeRows.controls) {
+        for (let si = 0; si < this.SIZES.length; si++) {
+            const enabled = this.hasSizes && this.isSizeEnabled(si);
+            for (const row of this.sizeRecipeRows(si).controls) {
                 const ingCtrl = row.get('ingredient_id')!;
-                ingCtrl.clearValidators();
-                ingCtrl.updateValueAndValidity({ emitEvent: false });
-                for (const sizeKey of this.SIZES) {
-                    const amountCtrl = row.get(`amount_${sizeKey}`)!;
-                    amountCtrl.clearValidators();
-                    amountCtrl.updateValueAndValidity({ emitEvent: false });
-                }
-            }
-            return;
-        }
-
-        const enabledKeys = this.enabledSizeIndices.map((si) => this.SIZES[si]);
-
-        for (const row of this.sizeRecipeRows.controls) {
-            for (const sizeKey of this.SIZES) {
-                const amountCtrl = row.get(`amount_${sizeKey}`)!;
-                if (this.hasSizes && enabledKeys.includes(sizeKey)) {
-                    amountCtrl.setValidators([Validators.required, Validators.min(0.0001)]);
+                const qtyCtrl = row.get('quantity')!;
+                if (enabled) {
+                    ingCtrl.setValidators([Validators.required]);
+                    qtyCtrl.setValidators([Validators.required, Validators.min(0.0001)]);
                 } else {
-                    amountCtrl.clearValidators();
-                    if (!enabledKeys.includes(sizeKey)) {
-                        amountCtrl.setValue(null, { emitEvent: false });
-                    }
+                    ingCtrl.clearValidators();
+                    qtyCtrl.clearValidators();
                 }
-                amountCtrl.updateValueAndValidity({ emitEvent: false });
+                ingCtrl.updateValueAndValidity({ emitEvent: false });
+                qtyCtrl.updateValueAndValidity({ emitEvent: false });
             }
         }
     }
@@ -480,26 +469,27 @@ export class MenuCreatePageComponent implements OnInit, OnDestroy {
         return this.menuForm.get('sizes') as FormArray;
     }
 
-    get sizeRecipeRows(): FormArray {
-        return this.menuForm.get('sizeRecipes') as FormArray;
+    sizeRecipeRows(sizeIndex: number): FormArray {
+        return (this.sizeRows.at(sizeIndex) as UntypedFormGroup).get('recipes') as FormArray;
     }
 
     // ── Row add/remove ────────────────────────────────────────────────────────
 
-    addSizeRecipeRow(): void {
-        this.sizeRecipeRows.push(this._sizeRecipeRow());
+    addSizeRecipeRow(sizeIndex: number): void {
+        this.sizeRecipeRows(sizeIndex).push(this._recipeGroup());
         this._syncSizeRecipeValidators();
     }
 
-    removeSizeRecipeRow(i: number): void {
-        if (this.hasSizes && this.sizeRecipeRows.length <= 1) {
+    removeSizeRecipeRow(sizeIndex: number, rowIndex: number): void {
+        const rows = this.sizeRecipeRows(sizeIndex);
+        if (this.hasSizes && rows.length <= 1) {
             this.snackBarService.openSnackBar(
-                'At least one recipe row is required for sized menus.',
+                `At least one ingredient is required for ${this.SIZE_LABELS[this.SIZES[sizeIndex]]}.`,
                 GlobalConstants.error,
             );
             return;
         }
-        this.sizeRecipeRows.removeAt(i);
+        rows.removeAt(rowIndex);
         this._syncSizeRecipeValidators();
     }
 
@@ -519,51 +509,15 @@ export class MenuCreatePageComponent implements OnInit, OnDestroy {
             ? this._exchange.khrToUsd(existing.price)
             : null;
         const validators = enabled ? [Validators.required, Validators.min(0.01)] : [];
+        const recipes = this.formBuilder.array(
+            (existing?.recipes ?? []).map((r) => this._recipeGroup(r)),
+        );
         return this.formBuilder.group({
             size:      [sizeKey],
             enabled:   [enabled],
             price_usd: [priceUsd, validators],
+            recipes,
         });
-    }
-
-    /** One flat row: ingredient selector + one amount column per size. */
-    private _sizeRecipeRow(): UntypedFormGroup {
-        return this.formBuilder.group({
-            ingredient_id: [null, Validators.required],
-            amount_S:      [null],
-            amount_M:      [null],
-            amount_L:      [null],
-        });
-    }
-
-    private _buildSizeRecipeRows(menu?: Data): UntypedFormGroup[] {
-        if (!menu?.sizes?.length) return [];
-
-        const rows = new Map<number, { ingredient_id: number; amount_S?: number; amount_M?: number; amount_L?: number }>();
-
-        for (const size of menu.sizes) {
-            for (const recipe of size.recipes ?? []) {
-                const existing = rows.get(recipe.ingredient_id) ?? {
-                    ingredient_id: recipe.ingredient_id,
-                    amount_S: null,
-                    amount_M: null,
-                    amount_L: null,
-                };
-                if (size.size === 'S') existing.amount_S = recipe.quantity;
-                if (size.size === 'M') existing.amount_M = recipe.quantity;
-                if (size.size === 'L') existing.amount_L = recipe.quantity;
-                rows.set(recipe.ingredient_id, existing);
-            }
-        }
-
-        return Array.from(rows.values()).map((row) =>
-            this.formBuilder.group({
-                ingredient_id: [row.ingredient_id, Validators.required],
-                amount_S:      [row.amount_S ?? null],
-                amount_M:      [row.amount_M ?? null],
-                amount_L:      [row.amount_L ?? null],
-            })
-        );
     }
 
     // ── Payload builder ───────────────────────────────────────────────────────
@@ -584,23 +538,22 @@ export class MenuCreatePageComponent implements OnInit, OnDestroy {
                 const sizeKey = sg.size as 'S' | 'M' | 'L';
                 const seen = new Set<number>();
                 const recipes: { ingredient_id: number; quantity: number }[] = [];
-                for (const row of (raw.sizeRecipes ?? [])) {
-                    const id  = Number(row.ingredient_id);
-                    const qty = Number(row[`amount_${sizeKey}`]);
-                    if (!id || qty <= 0) continue;
+                for (const row of (sg.recipes ?? [])) {
+                    if (row?.ingredient_id == null || Number(row.quantity) <= 0) continue;
+                    const id = Number(row.ingredient_id);
                     if (seen.has(id)) {
                         this.snackBarService.openSnackBar(
-                            `Duplicate ingredient in ${this.SIZE_LABELS[sizeKey]} recipe.`,
+                            `Duplicate ingredient in ${this.SIZE_LABELS[sizeKey]} recipe; keep one row per ingredient.`,
                             GlobalConstants.error,
                         );
                         return null;
                     }
                     seen.add(id);
-                    recipes.push({ ingredient_id: id, quantity: qty });
+                    recipes.push({ ingredient_id: id, quantity: Number(row.quantity) });
                 }
                 if (recipes.length === 0) {
                     this.snackBarService.openSnackBar(
-                        `${this.SIZE_LABELS[sizeKey]} recipe is required. Add ingredient amounts for this size.`,
+                        `${this.SIZE_LABELS[sizeKey]} recipe is required. Add at least one ingredient for this size.`,
                         GlobalConstants.error,
                     );
                     return null;
@@ -993,7 +946,7 @@ export class MenuCreatePageComponent implements OnInit, OnDestroy {
             } else {
                 this._validateSizeRecipeRows(true);
                 this.stepError =
-                    'Add at least one recipe row with an ingredient and amounts for every enabled size (S/M/L).';
+                    'Add at least one ingredient with an amount for each enabled size (S, M, or L).';
             }
             return false;
         }
@@ -1038,40 +991,42 @@ export class MenuCreatePageComponent implements OnInit, OnDestroy {
     }
 
     private _validateSizeRecipeRows(markTouched: boolean): boolean {
-        if (this.sizeRecipeRows.length === 0) {
+        if (this.enabledSizeIndices.length === 0) {
             return false;
         }
 
         this._syncSizeRecipeValidators();
 
         let valid = true;
-        const enabledKeys = this.enabledSizeIndices.map((si) => this.SIZES[si]);
 
-        for (const row of this.sizeRecipeRows.controls) {
-            const ingCtrl = row.get('ingredient_id')!;
-            if (markTouched) {
-                ingCtrl.markAsTouched();
-                ingCtrl.updateValueAndValidity();
+        for (const si of this.enabledSizeIndices) {
+            const recipes = this.sizeRecipeRows(si);
+            if (recipes.length === 0) {
+                valid = false;
+                continue;
             }
-            if (ingCtrl.invalid) valid = false;
 
-            for (const sizeKey of enabledKeys) {
-                const amountCtrl = row.get(`amount_${sizeKey}`)!;
+            let sizeHasValidLine = false;
+            for (const row of recipes.controls) {
+                const ingCtrl = row.get('ingredient_id')!;
+                const qtyCtrl = row.get('quantity')!;
                 if (markTouched) {
-                    amountCtrl.markAsTouched();
-                    amountCtrl.updateValueAndValidity();
+                    ingCtrl.markAsTouched();
+                    qtyCtrl.markAsTouched();
+                    ingCtrl.updateValueAndValidity();
+                    qtyCtrl.updateValueAndValidity();
                 }
-                if (amountCtrl.invalid) valid = false;
+                const id = Number(ingCtrl.value);
+                const qty = Number(qtyCtrl.value);
+                if (id > 0 && Number.isFinite(qty) && qty >= 0.0001) {
+                    sizeHasValidLine = true;
+                } else if (ingCtrl.invalid || qtyCtrl.invalid) {
+                    valid = false;
+                }
             }
-        }
-
-        for (const sizeKey of enabledKeys) {
-            const hasLine = this.sizeRecipeRows.controls.some((row) => {
-                const id = Number(row.get('ingredient_id')?.value);
-                const qty = Number(row.get(`amount_${sizeKey}`)?.value);
-                return id > 0 && qty > 0;
-            });
-            if (!hasLine) valid = false;
+            if (!sizeHasValidLine) {
+                valid = false;
+            }
         }
 
         return valid;

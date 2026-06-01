@@ -271,59 +271,66 @@
                         </div>
                     </ng-container>
 
-                    <!-- Multi-size recipes -->
+                    <!-- Multi-size recipes: one ingredient list per enabled size -->
                     <div class="recipe-builder recipe-builder--required" *ngIf="hasSizes">
-                        <div class="recipe-header">
-                            <h3 class="recipe-header__title">Ingredients by size</h3>
-                            <button type="button" mat-stroked-button (click)="addSizeRecipeRow()">
-                                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
-                                <span class="ml-1">Add ingredient</span>
-                            </button>
-                        </div>
-
+                        <p class="helper recipe-intro">
+                            Each size can use different ingredients (e.g. small cup + small lid vs large cup + large lid).
+                        </p>
                         <p class="helper" *ngIf="!ingredients.length">Loading ingredients…</p>
 
-                        <div class="recipe-table">
-                            <div class="recipe-table__head">
-                                <div class="recipe-col recipe-col--ingredient">Ingredient</div>
-                                <div *ngFor="let si of enabledSizeIndices" class="recipe-col">
-                                    {{ SIZE_LABELS[SIZES[si]] }} ({{ SIZES[si] }})
-                                </div>
-                                <div class="recipe-col recipe-col--action"></div>
-                            </div>
+                        <div formArrayName="sizes" class="size-recipe-list">
+                            <ng-container *ngFor="let sc of sizeRows.controls; let si = index">
+                                <section *ngIf="isSizeEnabled(si)"
+                                    [formGroupName]="si"
+                                    class="size-recipe-block"
+                                    [attr.aria-label]="SIZE_LABELS[SIZES[si]] + ' recipe'">
+                                    <div class="size-recipe-block__header">
+                                        <span class="size-recipe-block__badge">{{ SIZES[si] }}</span>
+                                        <h3 class="size-recipe-block__title">{{ SIZE_LABELS[SIZES[si]] }}</h3>
+                                        <button type="button" mat-stroked-button class="size-recipe-block__add"
+                                            (click)="addSizeRecipeRow(si)">
+                                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                                            <span class="ml-1">Add ingredient</span>
+                                        </button>
+                                    </div>
 
-                            <div formArrayName="sizeRecipes">
-                                <div *ngFor="let row of sizeRecipeRows.controls; let ri = index"
-                                     [formGroupName]="ri"
-                                     class="recipe-table__row">
+                                    <div formArrayName="recipes" class="recipe-rows">
+                                        <div *ngFor="let row of sizeRecipeRows(si).controls; let ri = index"
+                                             [formGroupName]="ri"
+                                             class="recipe-rows__item">
+                                            <mat-form-field appearance="outline" class="recipe-field recipe-field--grow">
+                                                <mat-label>Ingredient</mat-label>
+                                                <mat-select formControlName="ingredient_id">
+                                                    <mat-option *ngFor="let ing of ingredients" [value]="ing.id">
+                                                        {{ ing.name }}<ng-container *ngIf="ing.unit"> ({{ ing.unit }})</ng-container>
+                                                    </mat-option>
+                                                </mat-select>
+                                                <mat-error>Required</mat-error>
+                                            </mat-form-field>
+                                            <mat-form-field appearance="outline" class="recipe-field recipe-field--qty">
+                                                <mat-label>Amount</mat-label>
+                                                <input matInput type="number" step="any" min="0.0001"
+                                                    formControlName="quantity" placeholder="0" />
+                                                <mat-error>Required</mat-error>
+                                            </mat-form-field>
+                                            <button type="button" mat-icon-button class="recipe-delete"
+                                                (click)="removeSizeRecipeRow(si, ri)"
+                                                [attr.aria-label]="'Remove ingredient from ' + SIZE_LABELS[SIZES[si]]">
+                                                <mat-icon [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                                            </button>
+                                        </div>
+                                    </div>
 
-                                    <mat-form-field appearance="outline" class="recipe-field recipe-col--ingredient">
-                                        <mat-label>Ingredient</mat-label>
-                                        <mat-select formControlName="ingredient_id">
-                                            <mat-option *ngFor="let ing of ingredients" [value]="ing.id">
-                                                {{ ing.name }}<ng-container *ngIf="ing.unit"> ({{ ing.unit }})</ng-container>
-                                            </mat-option>
-                                        </mat-select>
-                                        <mat-error>Required</mat-error>
-                                    </mat-form-field>
-
-                                    <mat-form-field appearance="outline" class="recipe-field"
-                                        *ngFor="let si of enabledSizeIndices">
-                                        <mat-label>{{ SIZES[si] }} amount</mat-label>
-                                        <input matInput type="number" step="any" min="0.0001"
-                                            [formControlName]="'amount_' + SIZES[si]"
-                                            placeholder="0" />
-                                        <mat-error>Required</mat-error>
-                                    </mat-form-field>
-
-                                    <button type="button" mat-icon-button class="recipe-delete" (click)="removeSizeRecipeRow(ri)" aria-label="Remove row">
-                                        <mat-icon [svgIcon]="'heroicons_outline:trash'"></mat-icon>
-                                    </button>
-                                </div>
-                            </div>
+                                    <p class="helper helper--warn" *ngIf="sizeRecipeRows(si).length === 0">
+                                        Add at least one ingredient for {{ SIZE_LABELS[SIZES[si]] }}
+                                    </p>
+                                </section>
+                            </ng-container>
                         </div>
 
-                        <p class="helper helper--warn" *ngIf="sizeRecipeRows.length === 0">Add at least one ingredient</p>
+                        <p class="helper helper--warn" *ngIf="enabledSizeIndices.length === 0">
+                            Enable at least one size on the Pricing step.
+                        </p>
                     </div>
                 </div>
 
