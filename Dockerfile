@@ -12,7 +12,6 @@ ENV SOCKET_URL=${SOCKET_URL}
 ENV RecaptchaSiteKey=${RecaptchaSiteKey}
 
 WORKDIR /usr/app
-ENV NODE_ENV=production
 
 # utf-8-validate / bufferutil (transitive of ws) need node-gyp -> Python + build tools on Alpine
 RUN apk add --no-cache python3 make g++ && ln -sf python3 /usr/bin/python
