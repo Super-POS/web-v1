@@ -40,8 +40,8 @@ export class ErpRecipeCostingComponent implements OnInit {
         }
     }
 
-    displayedColumns = ['menu_name', 'has_sizes', 'product_cost', 'price', 'margin_pct'] as const;
-    sizeColumns      = ['size', 'price', 'product_cost', 'margin_pct'] as const;
+    displayedColumns = ['menu_name', 'has_sizes', 'cost', 'price', 'margin_pct'] as const;
+    sizeColumns      = ['size', 'price', 'cost', 'margin_pct'] as const;
     ingredientColumns = ['name', 'unit', 'quantity_used', 'unit_cost', 'line_cost'] as const;
 
     dataSource = new MatTableDataSource<ErpRecipeCostItem>([]);
@@ -132,6 +132,15 @@ export class ErpRecipeCostingComponent implements OnInit {
                 this.cdr.markForCheck();
             },
         });
+    }
+
+    /** Returns a display price for the list table.
+     *  Non-sized → unit price. Sized → min of size prices. */
+    rowPrice(row: ErpRecipeCostItem): number | null {
+        if (row.has_sizes && row.sizes?.length) {
+            return Math.min(...row.sizes.map(s => s.price));
+        }
+        return row.price ?? null;
     }
 
     marginClass(pct: number): string {

@@ -18,20 +18,22 @@
 
         <!-- Summary Cards -->
         <div *ngIf="summary" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
-            <!-- Total Items -->
+            <!-- Total Products -->
             <div class="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3 flex flex-col gap-1">
                 <span class="text-xs text-blue-600 dark:text-blue-400 font-medium uppercase tracking-wide">Total Items</span>
-                <span class="text-2xl font-bold text-blue-800 dark:text-blue-200">{{ summary.total_items }}</span>
+                <span class="text-2xl font-bold text-blue-800 dark:text-blue-200">{{ summary.total_products }}</span>
+                <span class="text-xs text-blue-500">{{ summary.recipes_complete }} complete</span>
             </div>
-            <!-- Avg Cost -->
+            <!-- Missing / Inactive -->
+            <div class="bg-orange-50 dark:bg-orange-900/30 rounded-lg p-3 flex flex-col gap-1">
+                <span class="text-xs text-orange-600 dark:text-orange-400 font-medium uppercase tracking-wide">Incomplete</span>
+                <span class="text-2xl font-bold text-orange-800 dark:text-orange-200">{{ summary.missing_recipes + summary.missing_ingredient_costs }}</span>
+                <span class="text-xs text-orange-500">{{ summary.inactive }} inactive</span>
+            </div>
+            <!-- Avg Food Cost % -->
             <div class="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-3 flex flex-col gap-1">
-                <span class="text-xs text-purple-600 dark:text-purple-400 font-medium uppercase tracking-wide">Avg Cost</span>
-                <span class="text-2xl font-bold text-purple-800 dark:text-purple-200">${{ summary.avg_cost | number:'1.2-2' }}</span>
-            </div>
-            <!-- Avg Margin -->
-            <div class="bg-green-50 dark:bg-green-900/30 rounded-lg p-3 flex flex-col gap-1">
-                <span class="text-xs text-green-600 dark:text-green-400 font-medium uppercase tracking-wide">Avg Margin</span>
-                <span class="text-2xl font-bold text-green-800 dark:text-green-200">{{ summary.avg_margin_pct | number:'1.1-1' }}%</span>
+                <span class="text-xs text-purple-600 dark:text-purple-400 font-medium uppercase tracking-wide">Avg Food Cost</span>
+                <span class="text-2xl font-bold text-purple-800 dark:text-purple-200">{{ summary.avg_food_cost_pct | number:'1.1-1' }}%</span>
             </div>
             <!-- Highest Margin -->
             <div class="bg-emerald-50 dark:bg-emerald-900/30 rounded-lg p-3 flex flex-col gap-1">
@@ -113,11 +115,14 @@
                             </td>
                         </ng-container>
 
-                        <!-- Product Cost -->
-                        <ng-container matColumnDef="product_cost">
+                        <!-- Cost -->
+                        <ng-container matColumnDef="cost">
                             <th mat-header-cell *matHeaderCellDef>Cost</th>
                             <td mat-cell *matCellDef="let r" class="cursor-pointer">
-                                ${{ r.product_cost | number:'1.2-2' }}
+                                <ng-container *ngIf="r.cost != null">
+                                    ${{ r.cost | number:'1.2-2' }}
+                                </ng-container>
+                                <span *ngIf="r.cost == null" class="text-gray-400">—</span>
                             </td>
                         </ng-container>
 
@@ -125,8 +130,11 @@
                         <ng-container matColumnDef="price">
                             <th mat-header-cell *matHeaderCellDef>Price</th>
                             <td mat-cell *matCellDef="let r" class="cursor-pointer">
-                                <span *ngIf="r.price != null">${{ r.price | number:'1.2-2' }}</span>
-                                <span *ngIf="r.price == null" class="text-gray-400">—</span>
+                                <ng-container *ngIf="rowPrice(r) != null">
+                                    ${{ rowPrice(r) | number:'1.2-2' }}
+                                    <span *ngIf="r.has_sizes" class="text-xs text-gray-400 ml-0.5">from</span>
+                                </ng-container>
+                                <span *ngIf="rowPrice(r) == null" class="text-gray-400">—</span>
                             </td>
                         </ng-container>
 
@@ -206,9 +214,9 @@
                                 <td mat-cell *matCellDef="let s">${{ s.price | number:'1.2-2' }}</td>
                             </ng-container>
 
-                            <ng-container matColumnDef="product_cost">
+                            <ng-container matColumnDef="cost">
                                 <th mat-header-cell *matHeaderCellDef>Cost</th>
-                                <td mat-cell *matCellDef="let s">${{ s.product_cost | number:'1.2-2' }}</td>
+                                <td mat-cell *matCellDef="let s">${{ s.cost | number:'1.2-2' }}</td>
                             </ng-container>
 
                             <ng-container matColumnDef="margin_pct">
@@ -263,7 +271,7 @@
                         <!-- Total cost footer -->
                         <div *ngIf="selectedItem.ingredients?.length" class="px-4 py-2 border-t border-gray-200 dark:border-gray-600 flex justify-between items-center">
                             <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Total Cost</span>
-                            <span class="font-bold text-gray-900 dark:text-white">${{ selectedItem.product_cost | number:'1.2-2' }}</span>
+                            <span class="font-bold text-gray-900 dark:text-white">${{ selectedItem.cost | number:'1.2-2' }}</span>
                         </div>
                     </div>
                 </div>
