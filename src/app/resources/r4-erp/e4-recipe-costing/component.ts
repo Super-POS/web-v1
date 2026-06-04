@@ -56,7 +56,7 @@ export class ErpRecipeCostingComponent implements OnInit {
     readonly defaultPageSize = 15;
 
     constructor(
-        private service: ErpRecipeCostingService,
+        public service: ErpRecipeCostingService,
         private snackBar: SnackbarService,
         private cdr: ChangeDetectorRef,
     ) {}
@@ -141,6 +141,10 @@ export class ErpRecipeCostingComponent implements OnInit {
             return Math.min(...row.sizes.map(s => s.price));
         }
         return row.price ?? null;
+    }
+
+    toUsd(khr: number | null | undefined): number {
+        return this.service.khrToUsd(khr);
     }
 
     marginClass(pct: number): string {
