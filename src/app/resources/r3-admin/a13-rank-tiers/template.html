@@ -1,0 +1,108 @@
+<pos-list-page [toolbarBorder]="true" bodyClass="p-4 md:px-6">
+    <pos-breadcrumb posBreadcrumb [segments]="['Admin', 'Rank Tiers']" />
+
+    <ng-container posActions>
+        <button mat-icon-button type="button" (click)="load()" [disabled]="isLoading"
+            class="text-slate-500" aria-label="Refresh" matTooltip="Refresh">
+            <mat-icon class="icon-size-5" svgIcon="heroicons_outline:arrow-path"></mat-icon>
+        </button>
+    </ng-container>
+
+    <!-- Loading -->
+    <ng-container *ngIf="isLoading">
+        <div class="flex items-center justify-center py-16">
+            <mat-progress-spinner [diameter]="40" mode="indeterminate"></mat-progress-spinner>
+        </div>
+    </ng-container>
+
+    <!-- Table -->
+    <div *ngIf="!isLoading" class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <table mat-table [dataSource]="tiers" class="w-full">
+
+            <!-- Tier # -->
+            <ng-container matColumnDef="tier">
+                <th mat-header-cell *matHeaderCellDef class="w-20">Tier</th>
+                <td mat-cell *matCellDef="let row">
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold"
+                        [ngClass]="tierBadgeClass(row.tier)">
+                        {{ row.tier }}
+                    </span>
+                </td>
+            </ng-container>
+
+            <!-- Label -->
+            <ng-container matColumnDef="label">
+                <th mat-header-cell *matHeaderCellDef>Label</th>
+                <td mat-cell *matCellDef="let row">
+                    <ng-container *ngIf="editingId !== row.id; else editLabel">
+                        <span class="font-medium text-gray-900 dark:text-white">{{ row.label }}</span>
+                    </ng-container>
+                    <ng-template #editLabel>
+                        <mat-form-field appearance="outline" class="w-52 helpers-mat-form-field-sm" subscriptSizing="dynamic">
+                            <input matInput [(ngModel)]="editLabel" placeholder="Label" maxlength="200" />
+                        </mat-form-field>
+                    </ng-template>
+                </td>
+            </ng-container>
+
+            <!-- Min Points -->
+            <ng-container matColumnDef="min_points">
+                <th mat-header-cell *matHeaderCellDef>Min Points</th>
+                <td mat-cell *matCellDef="let row">
+                    <ng-container *ngIf="editingId !== row.id; else editPoints">
+                        <span class="text-gray-700 dark:text-gray-300">{{ row.min_points | number }}</span>
+                    </ng-container>
+                    <ng-template #editPoints>
+                        <mat-form-field appearance="outline" class="w-32 helpers-mat-form-field-sm" subscriptSizing="dynamic">
+                            <input matInput type="number" [(ngModel)]="editPoints" placeholder="0" min="0" />
+                        </mat-form-field>
+                    </ng-template>
+                </td>
+            </ng-container>
+
+            <!-- Actions -->
+            <ng-container matColumnDef="action">
+                <th mat-header-cell *matHeaderCellDef class="w-36 text-right">Action</th>
+                <td mat-cell *matCellDef="let row" class="text-right">
+
+                    <!-- View mode -->
+                    <ng-container *ngIf="editingId !== row.id">
+                        <button mat-icon-button type="button" (click)="startEdit(row)"
+                            [disabled]="editingId !== null"
+                            matTooltip="Edit" class="text-blue-500">
+                            <mat-icon class="icon-size-4" svgIcon="heroicons_outline:pencil-square"></mat-icon>
+                        </button>
+                    </ng-container>
+
+                    <!-- Edit mode -->
+                    <ng-container *ngIf="editingId === row.id">
+                        <button mat-icon-button type="button" (click)="saveEdit(row)"
+                            [disabled]="isSaving"
+                            matTooltip="Save" class="text-green-600">
+                            <mat-icon class="icon-size-4" svgIcon="heroicons_outline:check"></mat-icon>
+                        </button>
+                        <button mat-icon-button type="button" (click)="cancelEdit()"
+                            [disabled]="isSaving"
+                            matTooltip="Cancel" class="text-red-500">
+                            <mat-icon class="icon-size-4" svgIcon="heroicons_outline:x-mark"></mat-icon>
+                        </button>
+                    </ng-container>
+
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"
+                class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                [class.bg-blue-50]="editingId === row.id"
+                [class.dark:bg-gray-700]="editingId === row.id"></tr>
+        </table>
+
+        <!-- Empty state -->
+        <div *ngIf="!tiers.length"
+            class="flex flex-col items-center justify-center py-12 text-gray-400">
+            <mat-icon class="icon-size-12" svgIcon="heroicons_outline:trophy"></mat-icon>
+            <span class="mt-2 text-sm">No rank tiers found.</span>
+        </div>
+    </div>
+</pos-list-page>

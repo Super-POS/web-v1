@@ -16,6 +16,7 @@ import { AdminFinanceHubComponent } from "./a11-finance/component";
 import { MeetingRoomBookingsQueueComponent } from "app/shared/meeting-room-booking/meeting-room-bookings-queue.component";
 import { AdminMeetingRoomsComponent } from "./a14-meeting-rooms/component";
 import { AdminMeetingRoomFormPageComponent } from "./a14-meeting-rooms/room-form-page/component";
+import { AdminRankTiersComponent } from "./a13-rank-tiers/component";
 
 export default [
     {
@@ -104,6 +105,10 @@ export default [
     {
         path                    : 'room-bookings',
         component               : MeetingRoomBookingsQueueComponent
+    },
+    {
+        path                    : 'rank-tiers',
+        component               : AdminRankTiersComponent,
     },
 
 ] as Routes;

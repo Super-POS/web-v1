@@ -81,6 +81,13 @@ const adminNavigation: HelperNavigationItem[] = [
         link: '/admin/coupons',
     },
     {
+        id   : 'rank-tiers',
+        title: 'Rank Tiers',
+        type : 'basic',
+        icon : 'mdi:trophy-outline',
+        link : '/admin/rank-tiers',
+    },
+    {
         id: 'meeting-rooms',
         title: 'Meeting rooms',
         type: 'collapsable',
