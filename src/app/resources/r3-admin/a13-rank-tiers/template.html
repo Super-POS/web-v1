@@ -34,10 +34,10 @@
             <ng-container matColumnDef="label">
                 <th mat-header-cell *matHeaderCellDef>Label</th>
                 <td mat-cell *matCellDef="let row">
-                    <ng-container *ngIf="editingId !== row.id; else editLabel">
+                    <ng-container *ngIf="editingId !== row.id; else tplLabel">
                         <span class="font-medium text-gray-900 dark:text-white">{{ row.label }}</span>
                     </ng-container>
-                    <ng-template #editLabel>
+                    <ng-template #tplLabel>
                         <mat-form-field appearance="outline" class="w-52 helpers-mat-form-field-sm" subscriptSizing="dynamic">
                             <input matInput [(ngModel)]="editLabel" placeholder="Label" maxlength="200" />
                         </mat-form-field>
@@ -49,10 +49,10 @@
             <ng-container matColumnDef="min_points">
                 <th mat-header-cell *matHeaderCellDef>Min Points</th>
                 <td mat-cell *matCellDef="let row">
-                    <ng-container *ngIf="editingId !== row.id; else editPoints">
+                    <ng-container *ngIf="editingId !== row.id; else tplPoints">
                         <span class="text-gray-700 dark:text-gray-300">{{ row.min_points | number }}</span>
                     </ng-container>
-                    <ng-template #editPoints>
+                    <ng-template #tplPoints>
                         <mat-form-field appearance="outline" class="w-32 helpers-mat-form-field-sm" subscriptSizing="dynamic">
                             <input matInput type="number" [(ngModel)]="editPoints" placeholder="0" min="0" />
                         </mat-form-field>

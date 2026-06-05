@@ -1,4 +1,4 @@
-import { NgClass, NgIf } from '@angular/common';
+import { DecimalPipe, NgClass, NgIf } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -18,12 +18,14 @@ import { AdminRankTierService } from './service';
     selector: 'admin-rank-tiers',
     standalone: true,
     templateUrl: './template.html',
+    styleUrl: './style.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         PosListPageComponent,
         PosBreadcrumbComponent,
         NgIf,
         NgClass,
+        DecimalPipe,
         FormsModule,
         MatButtonModule,
         MatIconModule,
@@ -43,10 +45,10 @@ export class AdminRankTiersComponent implements OnInit {
     tiers   : RankTier[] = [];
     isLoading            = false;
 
-    editingId : number | null = null;
-    editLabel : string        = '';
-    editPoints: number        = 0;
-    isSaving                  = false;
+    editingId  : number | null = null;
+    editLabel  : string        = '';
+    editPoints : number        = 0;
+    isSaving                   = false;
 
     ngOnInit(): void {
         this.load();
@@ -83,8 +85,8 @@ export class AdminRankTiersComponent implements OnInit {
 
     saveEdit(tier: RankTier): void {
         const payload: UpdateRankTierPayload = {};
-        if (this.editLabel.trim()   !== tier.label)       payload.label      = this.editLabel.trim();
-        if (this.editPoints         !== tier.min_points)  payload.min_points = this.editPoints;
+        if (this.editLabel.trim() !== tier.label)      payload.label      = this.editLabel.trim();
+        if (this.editPoints       !== tier.min_points) payload.min_points = this.editPoints;
 
         if (!Object.keys(payload).length) {
             this.cancelEdit();
@@ -96,7 +98,7 @@ export class AdminRankTiersComponent implements OnInit {
             next: (res) => {
                 const idx = this.tiers.findIndex(t => t.id === tier.id);
                 if (idx >= 0) this.tiers[idx] = res.data;
-                this.tiers    = [...this.tiers];
+                this.tiers     = [...this.tiers];
                 this.editingId = null;
                 this.isSaving  = false;
                 this._snackBar.openSnackBar(res.message ?? 'Rank tier updated.', GlobalConstants.success);

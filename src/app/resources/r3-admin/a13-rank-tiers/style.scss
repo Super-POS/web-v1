@@ -1,0 +1,24 @@
+:host {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+:host ::ng-deep .rank-tiers-list-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+    height: calc(100dvh - 4.25rem) !important;
+    overflow: hidden;
+
+    .rank-tiers-list-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        width: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+}
