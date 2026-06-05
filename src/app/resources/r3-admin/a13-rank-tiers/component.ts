@@ -54,6 +54,7 @@ export class AdminRankTiersComponent implements OnInit {
 
     load(): void {
         this.isLoading = true;
+        this._cdr.markForCheck();
         this._service.listAll().subscribe({
             next: (res) => {
                 this.tiers     = res.data ?? [];
