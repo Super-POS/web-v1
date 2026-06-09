@@ -44,7 +44,7 @@
                     <th mat-header-cell *matHeaderCellDef class="text-right">Price / hr</th>
                     <td mat-cell *matCellDef="let r" class="text-right tabular-nums">
                         <ng-container *ngIf="r.price_per_hour != null; else noPrice">
-                            ${{ r.price_per_hour | usdFromKhr:usdRate | number:'1.2-2' }}
+                            ${{ r.price_per_hour | number:'1.2-2' }}
                         </ng-container>
                         <ng-template #noPrice>—</ng-template>
                     </td>

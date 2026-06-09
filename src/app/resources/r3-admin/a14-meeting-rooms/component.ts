@@ -10,10 +10,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { HelperConfirmationConfig, HelperConfirmationService } from 'helper/services/confirmation';
-import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
 import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
-import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
 import { AdminMeetingRoomRow } from './interface';
 import { AdminMeetingRoomService } from './service';
 import { PosBreadcrumbComponent, PosListPageComponent } from 'app/shared/list-page';
@@ -34,7 +32,6 @@ import { PosBreadcrumbComponent, PosListPageComponent } from 'app/shared/list-pa
         MatProgressSpinnerModule,
         MatTableModule,
         MatPaginatorModule,
-        UsdFromKhrPipe,
     ],
 })
 export class AdminMeetingRoomsComponent implements OnInit {
@@ -47,7 +44,6 @@ export class AdminMeetingRoomsComponent implements OnInit {
     displayedColumns = ['name', 'type', 'capacity', 'price', 'status', 'description', 'actions'] as const;
     dataSource = new MatTableDataSource<AdminMeetingRoomRow>([]);
     isLoading = false;
-    usdRate = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
     readonly pageSizeOptions = [15, 30, 50, 100];
     readonly defaultPageSize = 15;
 
@@ -57,20 +53,9 @@ export class AdminMeetingRoomsComponent implements OnInit {
         private cdr: ChangeDetectorRef,
         private router: Router,
         private confirmation: HelperConfirmationService,
-        private exchangeRates: ExchangeRateSettingService,
     ) {}
 
     ngOnInit(): void {
-        this.exchangeRates.fetchCashier().subscribe({
-            next: () => {
-                this.usdRate = this.exchangeRates.khrPerUsd;
-                this.cdr.markForCheck();
-            },
-            error: () => {
-                this.usdRate = this.exchangeRates.khrPerUsd;
-                this.cdr.markForCheck();
-            },
-        });
         this.load();
 
         this.router.events
