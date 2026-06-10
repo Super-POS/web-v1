@@ -1,0 +1,258 @@
+<pos-list-page extraClass="rank-rewards-list-page min-h-0 flex-1" [toolbarBorder]="true" bodyClass="rank-rewards-list-body w-full flex-1 min-h-0 p-4 md:px-6" [inset]="false">
+    <pos-breadcrumb posBreadcrumb [segments]="['Admin', 'Rank Tiers', 'Rewards']" />
+
+    <ng-container posActions>
+        <button mat-icon-button type="button" (click)="loadRewards()" [disabled]="!selectedTierId || isLoadingRewards"
+            class="text-slate-500" aria-label="Refresh" matTooltip="Refresh">
+            <mat-icon class="icon-size-5" svgIcon="heroicons_outline:arrow-path"></mat-icon>
+        </button>
+    </ng-container>
+
+    <!-- Loading tiers -->
+    <ng-container *ngIf="isLoadingTiers">
+        <div class="flex items-center justify-center py-16">
+            <mat-progress-spinner [diameter]="40" mode="indeterminate"></mat-progress-spinner>
+        </div>
+    </ng-container>
+
+    <ng-container *ngIf="!isLoadingTiers">
+
+        <!-- Tier selector + Add button -->
+        <div class="flex flex-wrap items-center gap-3 mb-4">
+            <mat-form-field appearance="outline" class="w-64 helpers-mat-form-field-sm" subscriptSizing="dynamic">
+                <mat-label>Select Tier</mat-label>
+                <mat-select [(ngModel)]="selectedTierId" (ngModelChange)="onTierChange($event)">
+                    <mat-option *ngFor="let t of tiers" [value]="t.id">{{ t.tier }}. {{ t.label }}</mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <button *ngIf="selectedTierId && !showAddForm"
+                mat-flat-button color="primary" type="button"
+                (click)="openAddForm()">
+                <mat-icon class="icon-size-4 mr-1" svgIcon="heroicons_outline:plus"></mat-icon>
+                Add Reward
+            </button>
+        </div>
+
+        <!-- No tier selected -->
+        <div *ngIf="!selectedTierId"
+            class="flex flex-col items-center justify-center py-16 text-gray-400">
+            <mat-icon class="icon-size-12" svgIcon="heroicons_outline:gift"></mat-icon>
+            <span class="mt-2 text-sm">Select a tier to manage its rewards.</span>
+        </div>
+
+        <ng-container *ngIf="selectedTierId">
+
+            <!-- Add Form Card -->
+            <div *ngIf="showAddForm"
+                class="mb-4 rounded-lg border border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 p-4">
+                <h3 class="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-3">New Reward</h3>
+
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Type</span>
+                    <mat-button-toggle-group [(ngModel)]="addType" aria-label="Reward type">
+                        <mat-button-toggle value="coupon">Coupon</mat-button-toggle>
+                        <mat-button-toggle value="item">Item</mat-button-toggle>
+                    </mat-button-toggle-group>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="helpers-mat-form-field-sm">
+                        <mat-label>Label</mat-label>
+                        <input matInput [(ngModel)]="addLabel" maxlength="200" placeholder="Reward name" />
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="helpers-mat-form-field-sm">
+                        <mat-label>Description</mat-label>
+                        <input matInput [(ngModel)]="addDesc" maxlength="500" placeholder="Optional" />
+                    </mat-form-field>
+
+                    <ng-container *ngIf="addType === 'coupon'">
+                        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="helpers-mat-form-field-sm">
+                            <mat-label>Discount %</mat-label>
+                            <input matInput type="number" [(ngModel)]="addPercent" min="1" max="100" placeholder="10" />
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="helpers-mat-form-field-sm">
+                            <mat-label>Expires (days, optional)</mat-label>
+                            <input matInput type="number" [(ngModel)]="addExpires" min="1" placeholder="No expiry" />
+                        </mat-form-field>
+                    </ng-container>
+
+                    <ng-container *ngIf="addType === 'item'">
+                        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="helpers-mat-form-field-sm">
+                            <mat-label>Menu ID</mat-label>
+                            <input matInput type="number" [(ngModel)]="addMenuId" min="1" placeholder="Menu item ID" />
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="helpers-mat-form-field-sm">
+                            <mat-label>Quantity</mat-label>
+                            <input matInput type="number" [(ngModel)]="addQty" min="1" placeholder="1" />
+                        </mat-form-field>
+                    </ng-container>
+                </div>
+
+                <div class="flex items-center gap-3 mt-3">
+                    <mat-checkbox [(ngModel)]="addActive">Active</mat-checkbox>
+                    <span class="flex-1"></span>
+                    <button mat-stroked-button type="button" (click)="cancelAdd()" [disabled]="isAdding">Cancel</button>
+                    <button mat-flat-button color="primary" type="button" (click)="submitAdd()"
+                        [disabled]="isAdding || !addLabel.trim()">
+                        <mat-progress-spinner *ngIf="isAdding" [diameter]="16" mode="indeterminate" class="mr-1 inline-block align-middle"></mat-progress-spinner>
+                        Save
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading rewards -->
+            <ng-container *ngIf="isLoadingRewards">
+                <div class="flex items-center justify-center py-16">
+                    <mat-progress-spinner [diameter]="40" mode="indeterminate"></mat-progress-spinner>
+                </div>
+            </ng-container>
+
+            <!-- Rewards table -->
+            <div *ngIf="!isLoadingRewards"
+                class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                <table mat-table [dataSource]="rewards" class="w-full">
+
+                    <!-- Type -->
+                    <ng-container matColumnDef="type">
+                        <th mat-header-cell *matHeaderCellDef class="w-24">Type</th>
+                        <td mat-cell *matCellDef="let row">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                [ngClass]="typeBadgeClass(row.type)">
+                                {{ row.type }}
+                            </span>
+                        </td>
+                    </ng-container>
+
+                    <!-- Label -->
+                    <ng-container matColumnDef="label">
+                        <th mat-header-cell *matHeaderCellDef>Label</th>
+                        <td mat-cell *matCellDef="let row">
+                            <ng-container *ngIf="editingId !== row.id; else tplLabel">
+                                <div class="font-medium text-gray-900 dark:text-white">{{ row.label }}</div>
+                                <div *ngIf="row.description" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ row.description }}</div>
+                            </ng-container>
+                            <ng-template #tplLabel>
+                                <mat-form-field appearance="outline" class="w-48 helpers-mat-form-field-sm" subscriptSizing="dynamic">
+                                    <input matInput [(ngModel)]="editLabel" placeholder="Label" maxlength="200" />
+                                </mat-form-field>
+                                <mat-form-field appearance="outline" class="w-48 helpers-mat-form-field-sm mt-1" subscriptSizing="dynamic">
+                                    <input matInput [(ngModel)]="editDesc" placeholder="Description" maxlength="500" />
+                                </mat-form-field>
+                            </ng-template>
+                        </td>
+                    </ng-container>
+
+                    <!-- Detail -->
+                    <ng-container matColumnDef="detail">
+                        <th mat-header-cell *matHeaderCellDef>Detail</th>
+                        <td mat-cell *matCellDef="let row">
+                            <ng-container *ngIf="editingId !== row.id; else tplDetail">
+                                <ng-container *ngIf="row.type === 'coupon'">
+                                    <span class="text-gray-700 dark:text-gray-300">{{ row.coupon_discount_percent }}% off</span>
+                                    <span *ngIf="row.coupon_expires_days" class="ml-1 text-xs text-gray-400">({{ row.coupon_expires_days }}d)</span>
+                                </ng-container>
+                                <ng-container *ngIf="row.type === 'item'">
+                                    <span class="text-gray-700 dark:text-gray-300">Menu #{{ row.menu_id }}</span>
+                                    <span class="ml-1 text-xs text-gray-400">× {{ row.quantity ?? 1 }}</span>
+                                </ng-container>
+                            </ng-container>
+                            <ng-template #tplDetail>
+                                <ng-container *ngIf="row.type === 'coupon'">
+                                    <mat-form-field appearance="outline" class="w-24 helpers-mat-form-field-sm" subscriptSizing="dynamic">
+                                        <mat-label>%</mat-label>
+                                        <input matInput type="number" [(ngModel)]="editPercent" min="1" max="100" />
+                                    </mat-form-field>
+                                    <mat-form-field appearance="outline" class="w-24 helpers-mat-form-field-sm ml-1" subscriptSizing="dynamic">
+                                        <mat-label>Days</mat-label>
+                                        <input matInput type="number" [(ngModel)]="editExpires" min="1" placeholder="∞" />
+                                    </mat-form-field>
+                                </ng-container>
+                                <ng-container *ngIf="row.type === 'item'">
+                                    <mat-form-field appearance="outline" class="w-28 helpers-mat-form-field-sm" subscriptSizing="dynamic">
+                                        <mat-label>Menu ID</mat-label>
+                                        <input matInput type="number" [(ngModel)]="editMenuId" min="1" />
+                                    </mat-form-field>
+                                    <mat-form-field appearance="outline" class="w-20 helpers-mat-form-field-sm ml-1" subscriptSizing="dynamic">
+                                        <mat-label>Qty</mat-label>
+                                        <input matInput type="number" [(ngModel)]="editQty" min="1" />
+                                    </mat-form-field>
+                                </ng-container>
+                            </ng-template>
+                        </td>
+                    </ng-container>
+
+                    <!-- Status -->
+                    <ng-container matColumnDef="status">
+                        <th mat-header-cell *matHeaderCellDef class="w-24">Active</th>
+                        <td mat-cell *matCellDef="let row">
+                            <ng-container *ngIf="editingId !== row.id; else tplActive">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                    [ngClass]="row.is_active
+                                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                        : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'">
+                                    {{ row.is_active ? 'Active' : 'Inactive' }}
+                                </span>
+                            </ng-container>
+                            <ng-template #tplActive>
+                                <mat-checkbox [(ngModel)]="editActive"></mat-checkbox>
+                            </ng-template>
+                        </td>
+                    </ng-container>
+
+                    <!-- Actions -->
+                    <ng-container matColumnDef="action">
+                        <th mat-header-cell *matHeaderCellDef class="w-32 text-right">Action</th>
+                        <td mat-cell *matCellDef="let row" class="text-right">
+
+                            <!-- View mode -->
+                            <ng-container *ngIf="editingId !== row.id">
+                                <button mat-icon-button type="button" (click)="startEdit(row)"
+                                    [disabled]="editingId !== null || deletingId !== null"
+                                    matTooltip="Edit" class="text-blue-500">
+                                    <mat-icon class="icon-size-4" svgIcon="heroicons_outline:pencil-square"></mat-icon>
+                                </button>
+                                <button mat-icon-button type="button" (click)="deleteReward(row)"
+                                    [disabled]="editingId !== null || deletingId !== null"
+                                    matTooltip="Delete" class="text-red-500">
+                                    <mat-icon *ngIf="deletingId !== row.id" class="icon-size-4" svgIcon="heroicons_outline:trash"></mat-icon>
+                                    <mat-progress-spinner *ngIf="deletingId === row.id" [diameter]="16" mode="indeterminate"></mat-progress-spinner>
+                                </button>
+                            </ng-container>
+
+                            <!-- Edit mode -->
+                            <ng-container *ngIf="editingId === row.id">
+                                <button mat-icon-button type="button" (click)="saveEdit(row)"
+                                    [disabled]="isSaving"
+                                    matTooltip="Save" class="text-green-600">
+                                    <mat-icon class="icon-size-4" svgIcon="heroicons_outline:check"></mat-icon>
+                                </button>
+                                <button mat-icon-button type="button" (click)="cancelEdit()"
+                                    [disabled]="isSaving"
+                                    matTooltip="Cancel" class="text-red-500">
+                                    <mat-icon class="icon-size-4" svgIcon="heroicons_outline:x-mark"></mat-icon>
+                                </button>
+                            </ng-container>
+
+                        </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumns"
+                        class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                        [class.bg-blue-50]="editingId === row.id"
+                        [class.dark:bg-gray-700]="editingId === row.id"></tr>
+                </table>
+
+                <!-- Empty state -->
+                <div *ngIf="!rewards.length"
+                    class="flex flex-col items-center justify-center py-12 text-gray-400">
+                    <mat-icon class="icon-size-12" svgIcon="heroicons_outline:gift"></mat-icon>
+                    <span class="mt-2 text-sm">No rewards configured for this tier.</span>
+                </div>
+            </div>
+
+        </ng-container>
+    </ng-container>
+</pos-list-page>

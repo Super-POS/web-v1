@@ -17,6 +17,7 @@ import { MeetingRoomBookingsQueueComponent } from "app/shared/meeting-room-booki
 import { AdminMeetingRoomsComponent } from "./a14-meeting-rooms/component";
 import { AdminMeetingRoomFormPageComponent } from "./a14-meeting-rooms/room-form-page/component";
 import { AdminRankTiersComponent } from "./a13-rank-tiers/component";
+import { AdminRankTierRewardsComponent } from "./a13-rank-tiers/rewards/component";
 
 export default [
     {
@@ -109,6 +110,10 @@ export default [
     {
         path                    : 'rank-tiers',
         component               : AdminRankTiersComponent,
+    },
+    {
+        path                    : 'rank-tier-rewards',
+        component               : AdminRankTierRewardsComponent,
     },
 
 ] as Routes;

@@ -81,11 +81,24 @@ const adminNavigation: HelperNavigationItem[] = [
         link: '/admin/coupons',
     },
     {
-        id   : 'rank-tiers',
-        title: 'Rank Tiers',
-        type : 'basic',
-        icon : 'mdi:trophy-outline',
-        link : '/admin/rank-tiers',
+        id      : 'rank-tiers',
+        title   : 'Rank Tiers',
+        type    : 'collapsable',
+        icon    : 'mdi:trophy-outline',
+        children: [
+            {
+                id   : 'rank-tiers.tiers',
+                title: 'Tiers',
+                type : 'basic',
+                link : '/admin/rank-tiers',
+            },
+            {
+                id   : 'rank-tiers.rewards',
+                title: 'Rewards',
+                type : 'basic',
+                link : '/admin/rank-tier-rewards',
+            },
+        ],
     },
     {
         id: 'meeting-rooms',
