@@ -11,7 +11,7 @@ export class AdminRankTierRewardService {
     constructor(private http: HttpClient) {}
 
     private base(tierId: number): string {
-        return `${env.API_BASE_URL}/admin/coffee-rank/${tierId}/rewards`;
+        return `${env.API_BASE_URL}/admin/rank-tiers/${tierId}/rewards`;
     }
 
     list(tierId: number): Observable<{ data: RankTierReward[] }> {
