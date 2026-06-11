@@ -1,0 +1,202 @@
+<pos-list-page extraClass="stamps-list-page min-h-0 flex-1" [toolbarBorder]="true" bodyClass="stamps-list-body w-full flex-1 min-h-0 p-4 md:px-6" [inset]="false">
+    <pos-breadcrumb posBreadcrumb [segments]="['Admin', 'Missions', 'Stamps']" />
+
+    <ng-container posActions>
+        <button mat-icon-button type="button" (click)="load()" [disabled]="isLoading"
+            class="text-slate-500" aria-label="Refresh" matTooltip="Refresh">
+            <mat-icon class="icon-size-5" svgIcon="heroicons_outline:arrow-path"></mat-icon>
+        </button>
+    </ng-container>
+
+    <!-- Loading -->
+    <ng-container *ngIf="isLoading">
+        <div class="flex items-center justify-center py-16">
+            <mat-progress-spinner [diameter]="40" mode="indeterminate"></mat-progress-spinner>
+        </div>
+    </ng-container>
+
+    <ng-container *ngIf="!isLoading">
+
+        <!-- Toolbar -->
+        <div class="flex items-center gap-3 mb-4">
+            <button *ngIf="!showAddForm" mat-flat-button color="primary" type="button" (click)="openAddForm()">
+                <mat-icon class="icon-size-4 mr-1" svgIcon="heroicons_outline:plus"></mat-icon>
+                Add Stamp
+            </button>
+        </div>
+
+        <!-- Add Form Card -->
+        <div *ngIf="showAddForm"
+            class="mb-4 rounded-lg border border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 p-4">
+            <h3 class="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-3">New Stamp</h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <mat-form-field appearance="outline" subscriptSizing="dynamic" class="helpers-mat-form-field-sm">
+                    <mat-label>Name</mat-label>
+                    <input matInput [(ngModel)]="addName" maxlength="200" placeholder="e.g. Future Peach Spark Stamp" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" subscriptSizing="dynamic" class="helpers-mat-form-field-sm">
+                    <mat-label>Category</mat-label>
+                    <mat-select [(ngModel)]="addCategory">
+                        <mat-option *ngFor="let cat of categories" [value]="cat">{{ categoryLabel(cat) }}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" subscriptSizing="dynamic" class="helpers-mat-form-field-sm">
+                    <mat-label>Trigger Condition</mat-label>
+                    <input matInput [(ngModel)]="addTrigger" maxlength="500" placeholder="e.g. Buy Future Peach Spark" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" subscriptSizing="dynamic" class="helpers-mat-form-field-sm">
+                    <mat-label>Bonus Points</mat-label>
+                    <input matInput type="number" [(ngModel)]="addPoints" min="0" placeholder="0" />
+                </mat-form-field>
+            </div>
+
+            <div class="flex items-center gap-3 mt-3">
+                <mat-checkbox [(ngModel)]="addActive">Active</mat-checkbox>
+                <span class="flex-1"></span>
+                <button mat-stroked-button type="button" (click)="cancelAdd()" [disabled]="isAdding">Cancel</button>
+                <button mat-flat-button color="primary" type="button" (click)="submitAdd()"
+                    [disabled]="isAdding || !addName.trim() || !addTrigger.trim()">
+                    <mat-progress-spinner *ngIf="isAdding" [diameter]="16" mode="indeterminate" class="mr-1 inline-block align-middle"></mat-progress-spinner>
+                    Save
+                </button>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <table mat-table [dataSource]="stamps" class="w-full">
+
+                <!-- Name -->
+                <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef>Name</th>
+                    <td mat-cell *matCellDef="let row">
+                        <ng-container *ngIf="editingId !== row.id; else tplName">
+                            <span class="font-medium text-gray-900 dark:text-white">{{ row.name }}</span>
+                        </ng-container>
+                        <ng-template #tplName>
+                            <mat-form-field appearance="outline" class="w-48 helpers-mat-form-field-sm" subscriptSizing="dynamic">
+                                <input matInput [(ngModel)]="editName" maxlength="200" />
+                            </mat-form-field>
+                        </ng-template>
+                    </td>
+                </ng-container>
+
+                <!-- Category -->
+                <ng-container matColumnDef="category">
+                    <th mat-header-cell *matHeaderCellDef class="w-28">Category</th>
+                    <td mat-cell *matCellDef="let row">
+                        <ng-container *ngIf="editingId !== row.id; else tplCategory">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                [ngClass]="categoryBadgeClass(row.category)">
+                                {{ categoryLabel(row.category) }}
+                            </span>
+                        </ng-container>
+                        <ng-template #tplCategory>
+                            <mat-form-field appearance="outline" class="w-28 helpers-mat-form-field-sm" subscriptSizing="dynamic">
+                                <mat-select [(ngModel)]="editCategory">
+                                    <mat-option *ngFor="let cat of categories" [value]="cat">{{ categoryLabel(cat) }}</mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </ng-template>
+                    </td>
+                </ng-container>
+
+                <!-- Trigger -->
+                <ng-container matColumnDef="trigger">
+                    <th mat-header-cell *matHeaderCellDef>Trigger Condition</th>
+                    <td mat-cell *matCellDef="let row">
+                        <ng-container *ngIf="editingId !== row.id; else tplTrigger">
+                            <span class="text-sm text-gray-600 dark:text-gray-300">{{ row.trigger_condition }}</span>
+                        </ng-container>
+                        <ng-template #tplTrigger>
+                            <mat-form-field appearance="outline" class="w-56 helpers-mat-form-field-sm" subscriptSizing="dynamic">
+                                <input matInput [(ngModel)]="editTrigger" maxlength="500" />
+                            </mat-form-field>
+                        </ng-template>
+                    </td>
+                </ng-container>
+
+                <!-- Points -->
+                <ng-container matColumnDef="points">
+                    <th mat-header-cell *matHeaderCellDef class="w-28">Bonus Points</th>
+                    <td mat-cell *matCellDef="let row">
+                        <ng-container *ngIf="editingId !== row.id; else tplPoints">
+                            <span class="text-gray-700 dark:text-gray-300">{{ row.bonus_points }} pts</span>
+                        </ng-container>
+                        <ng-template #tplPoints>
+                            <mat-form-field appearance="outline" class="w-20 helpers-mat-form-field-sm" subscriptSizing="dynamic">
+                                <input matInput type="number" [(ngModel)]="editPoints" min="0" />
+                            </mat-form-field>
+                        </ng-template>
+                    </td>
+                </ng-container>
+
+                <!-- Status -->
+                <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef class="w-24">Active</th>
+                    <td mat-cell *matCellDef="let row">
+                        <ng-container *ngIf="editingId !== row.id; else tplActive">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                [ngClass]="row.is_active
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                    : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'">
+                                {{ row.is_active ? 'Active' : 'Inactive' }}
+                            </span>
+                        </ng-container>
+                        <ng-template #tplActive>
+                            <mat-checkbox [(ngModel)]="editActive"></mat-checkbox>
+                        </ng-template>
+                    </td>
+                </ng-container>
+
+                <!-- Action -->
+                <ng-container matColumnDef="action">
+                    <th mat-header-cell *matHeaderCellDef class="w-28 text-right">Action</th>
+                    <td mat-cell *matCellDef="let row" class="text-right">
+                        <ng-container *ngIf="editingId !== row.id">
+                            <button mat-icon-button type="button" (click)="startEdit(row)"
+                                [disabled]="editingId !== null || deletingId !== null"
+                                matTooltip="Edit" class="text-blue-500">
+                                <mat-icon class="icon-size-4" svgIcon="heroicons_outline:pencil-square"></mat-icon>
+                            </button>
+                            <button mat-icon-button type="button" (click)="deleteStamp(row)"
+                                [disabled]="editingId !== null || deletingId !== null"
+                                matTooltip="Delete" class="text-red-500">
+                                <mat-icon *ngIf="deletingId !== row.id" class="icon-size-4" svgIcon="heroicons_outline:trash"></mat-icon>
+                                <mat-progress-spinner *ngIf="deletingId === row.id" [diameter]="16" mode="indeterminate"></mat-progress-spinner>
+                            </button>
+                        </ng-container>
+                        <ng-container *ngIf="editingId === row.id">
+                            <button mat-icon-button type="button" (click)="saveEdit(row)"
+                                [disabled]="isSaving" matTooltip="Save" class="text-green-600">
+                                <mat-icon class="icon-size-4" svgIcon="heroicons_outline:check"></mat-icon>
+                            </button>
+                            <button mat-icon-button type="button" (click)="cancelEdit()"
+                                [disabled]="isSaving" matTooltip="Cancel" class="text-red-500">
+                                <mat-icon class="icon-size-4" svgIcon="heroicons_outline:x-mark"></mat-icon>
+                            </button>
+                        </ng-container>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns"
+                    class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                    [class.bg-blue-50]="editingId === row.id"
+                    [class.dark:bg-gray-700]="editingId === row.id"></tr>
+            </table>
+
+            <!-- Empty state -->
+            <div *ngIf="!stamps.length"
+                class="flex flex-col items-center justify-center py-12 text-gray-400">
+                <mat-icon class="icon-size-12" svgIcon="heroicons_outline:ticket"></mat-icon>
+                <span class="mt-2 text-sm">No stamps configured yet.</span>
+            </div>
+        </div>
+
+    </ng-container>
+</pos-list-page>

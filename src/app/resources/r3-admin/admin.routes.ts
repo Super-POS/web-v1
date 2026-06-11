@@ -18,6 +18,8 @@ import { AdminMeetingRoomsComponent } from "./a14-meeting-rooms/component";
 import { AdminMeetingRoomFormPageComponent } from "./a14-meeting-rooms/room-form-page/component";
 import { AdminRankTiersComponent } from "./a13-rank-tiers/component";
 import { AdminRankTierRewardsComponent } from "./a13-rank-tiers/rewards/component";
+import { AdminMissionsComponent } from "./a15-missions/component";
+import { AdminStampsComponent } from "./a15-missions/stamps/component";
 
 export default [
     {
@@ -114,6 +116,19 @@ export default [
     {
         path                    : 'rank-tier-rewards',
         component               : AdminRankTierRewardsComponent,
+    },
+    {
+        path                    : 'missions',
+        children                : [
+            {
+                path            : '',
+                component       : AdminMissionsComponent,
+            },
+            {
+                path            : 'stamps',
+                component       : AdminStampsComponent,
+            },
+        ],
     },
 
 ] as Routes;

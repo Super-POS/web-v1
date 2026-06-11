@@ -101,6 +101,26 @@ const adminNavigation: HelperNavigationItem[] = [
         ],
     },
     {
+        id      : 'missions',
+        title   : 'Missions',
+        type    : 'collapsable',
+        icon    : 'mdi:map-marker-path',
+        children: [
+            {
+                id   : 'missions.list',
+                title: 'Missions',
+                type : 'basic',
+                link : '/admin/missions',
+            },
+            {
+                id   : 'missions.stamps',
+                title: 'Stamps',
+                type : 'basic',
+                link : '/admin/missions/stamps',
+            },
+        ],
+    },
+    {
         id: 'meeting-rooms',
         title: 'Meeting rooms',
         type: 'collapsable',
