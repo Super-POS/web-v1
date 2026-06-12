@@ -1,3 +1,5 @@
+/** Baray payment disabled — entire service commented out below. Re-enable when Baray returns. */
+/*
 // ================================================================>> Core Library
 import { Injectable } from '@angular/core';
 
@@ -25,12 +27,6 @@ export class BarayPaidWatcherService {
 
   constructor(private readonly _orders: OrderService) {}
 
-  /**
-   * Resolves when Baray payment is recorded (webhook) or the order is no longer `awaiting_payment`
-   * (e.g. cancelled). Real-time from Socket.IO (matched by orderId only — cashierId can differ if UI user
-   * was not loaded yet). HTTP polling every 1.5s to `/baray/order/:id/payment-state` (order row + baray tx
-   * success — not the heavy sales view, avoids client cache / odd JSON). Max 5 minutes.
-   */
   waitUntilSettled(orderId: number, _cashierId?: number): Observable<BaraySettled> {
     this._ensureSocket();
 
@@ -40,7 +36,6 @@ export class BarayPaidWatcherService {
       take(1),
     );
 
-    // exhaustMap: do not start a new poll until the last GET finishes (switchMap can cancel slow responses).
     const fromPoll$ = interval(1_500).pipe(
       startWith(0),
       exhaustMap(() => this._orders.getBarayPaymentState(orderId).pipe(catchError(() => of(null)))),
@@ -58,10 +53,6 @@ export class BarayPaidWatcherService {
     return race(fromWs$, fromPoll$, timeout$);
   }
 
-  /**
-   * `baray_transaction_status === 'success'` means the webhook updated the row even if the order status
-   * is still out of date in edge cases.
-   */
   private _barayOutcomeFromState(res: unknown): 'wait' | 'paid' | 'cancelled' {
     if (res == null || typeof res !== 'object') {
       return 'wait';
@@ -106,7 +97,6 @@ export class BarayPaidWatcherService {
       if (p == null || typeof p !== 'object') {
         return;
       }
-      // Socket.io may deliver JSON numbers as strings — normalize before match / filters.
       const orderId = Number((p as { orderId?: unknown }).orderId);
       if (!Number.isFinite(orderId)) {
         return;
@@ -124,3 +114,4 @@ export class BarayPaidWatcherService {
     });
   }
 }
+*/

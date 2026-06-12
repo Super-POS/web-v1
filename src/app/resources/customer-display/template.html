@@ -65,49 +65,12 @@
             </div>
         </div>
 
-        <!-- Baray card -->
+        <!-- Baray disabled
         <div *ngIf="qs.type === 'baray'"
             class="w-full max-w-sm rounded-[22px] bg-white shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] overflow-hidden animate-fade-in">
-
-            <!-- Blue ribbon -->
-            <div class="bg-blue-600 flex items-center gap-3 px-6 py-5">
-                <div class="h-11 w-11 rounded-xl bg-white/15 border border-white/30 flex items-center justify-center shrink-0">
-                    <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" stroke-width="2"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M3 10h18M7 15h1m4 0h1M3 6h18a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 011-1z" />
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-white font-semibold text-sm uppercase tracking-wider">Baray Payment</p>
-                    <p class="text-blue-100 text-xs">Scan QR to pay</p>
-                </div>
-            </div>
-
-            <!-- Body -->
-            <div class="px-6 pt-5 pb-2">
-                <p class="text-center text-3xl font-extrabold text-slate-900 tabular-nums">
-                    ${{ qs.amount | number:'1.2-2' }}
-                </p>
-
-                <div class="my-4 border-t border-slate-100"></div>
-
-                <div class="flex items-center justify-center">
-                    <qrcode [qrdata]="qs.qrString" [width]="260" [margin]="1"
-                        [errorCorrectionLevel]="'H'" [elementType]="'svg'"
-                        cssClass="block">
-                    </qrcode>
-                </div>
-            </div>
-
-            <!-- Footer -->
-            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 text-center">
-                <p class="text-sm font-semibold text-slate-700">Scan to complete payment</p>
-                <p class="mt-1 text-xs text-slate-400 tabular-nums">
-                    Expires in <span class="font-bold text-slate-600">{{ formatCountdown(secondsLeft) }}</span>
-                </p>
-            </div>
+            ...
         </div>
+        -->
 
     </ng-container>
 

@@ -12,6 +12,96 @@
     -webkit-overflow-scrolling: touch;
 }
 
+.checkout-payment-panel {
+    min-height: 0;
+}
+
+.checkout-subsection {
+    display: flex;
+    flex-direction: column;
+}
+
+.checkout-payment-detail {
+    margin-top: 0.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+:host-context(.dark) .checkout-payment-detail {
+    border-top-color: #374151;
+}
+
+.checkout-divider {
+    border-top: 1px solid #e2e8f0;
+    margin: 0;
+}
+
+:host-context(.dark) .checkout-divider {
+    border-top-color: #374151;
+}
+
+.checkout-detail-panel {
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+    padding: 1.25rem;
+    background: #f8fafc;
+}
+
+.checkout-detail-panel--baray {
+    border-color: #c7d2fe;
+    background: #eef2ff;
+}
+
+.checkout-detail-panel--qr {
+    border-color: #fed7aa;
+    background: #fff7ed;
+}
+
+.checkout-detail-panel--cash {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+}
+
+.checkout-detail-panel--aba,
+.aba-sample {
+    border-color: #b8d4e8;
+    background: #f0f7fc;
+}
+
+.checkout-detail-panel--result {
+    border-color: #fcd34d;
+    background: #fffbeb;
+}
+
+:host-context(.dark) .checkout-detail-panel {
+    background: #111827;
+    border-color: #374151;
+}
+
+:host-context(.dark) .checkout-detail-panel--baray {
+    border-color: #4338ca;
+    background: rgb(49 46 129 / 0.25);
+}
+
+:host-context(.dark) .checkout-detail-panel--qr {
+    border-color: #c2410c;
+    background: rgb(124 45 18 / 0.25);
+}
+
+:host-context(.dark) .checkout-detail-panel--cash {
+    border-color: #15803d;
+    background: rgb(20 83 45 / 0.25);
+}
+
+:host-context(.dark) .checkout-detail-panel--result {
+    border-color: #b45309;
+    background: rgb(120 53 15 / 0.25);
+}
+
+.checkout-order-panel {
+    max-width: 100%;
+}
+
 .checkout-header {
     flex-shrink: 0;
     min-height: 5rem;
@@ -24,6 +114,11 @@
 
 .payment-method-card {
     background: #fff;
+    min-height: 7.5rem;
+}
+
+.payment-method-card > p.font-semibold {
+    margin-top: 0.875rem;
 }
 
 .payment-method-card:hover {
@@ -49,6 +144,11 @@
 .payment-method-card.selected-qr-table {
     border-color: #ea580c;
     background: #fff7ed;
+}
+
+.payment-method-card.selected-aba {
+    border-color: #006dba;
+    background: #e8f4fb;
 }
 
 .denom-button {

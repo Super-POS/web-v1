@@ -4,7 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+// Baray disabled: import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 // ================================================================>> Third party Library
 import { MatButtonModule } from '@angular/material/button';
@@ -24,19 +24,21 @@ import { PrintableOrder, PrintReceiptService } from 'helper/services/print-recei
 import { SnackbarService } from 'helper/services/snack-bar/snack-bar.service';
 import GlobalConstants from 'helper/shared/constants';
 import { env } from 'envs/env';
-import { BarayPaidWatcherService } from '../baray-paid-watcher.service';
+// Baray disabled: import { BarayPaidWatcherService } from '../baray-paid-watcher.service';
+import { AbaPaidWatcherService } from '../aba-paid-watcher.service';
 import { CashierCouponOption, OrderCartLine } from '../interface';
 import { OrderService } from '../service';
 import { ExchangeRateSettingService } from 'helper/services/exchange-rate-setting/exchange-rate-setting.service';
 import { UsdFromKhrPipe } from 'helper/pipes/usd-from-khr.pipe';
+import { AbaPaymentPanelComponent } from './aba-payment-sample.component';
 
 /**
  * Payment methods exposed by the cashier checkout.
- * `baray`     = Baray local-bank pay-link (URL polled via `/cashier/ordering/baray/order/:id/payment-state`).
+ * `aba`       = ABA PayWay KHQR (PayWay generate-qr API + polling).
  * `cash`      = manual cash drawer flow with change calculation.
  * `qr_table`  = cashier confirms customer scanned a bank QR on the table (ABA, ACLEDA, Wing, …).
  */
-type PaymentMethod = 'cash' | 'baray' | 'qr_table';
+type PaymentMethod = 'cash' | 'qr_table' | 'aba';
 
 interface DrawerDenomRow {
     label: string;
@@ -92,12 +94,14 @@ function flatCount(obj: CashDrawer | null, key: keyof Denominations): number {
         NgForOf,
         NgIf,
         UsdFromKhrPipe,
+        AbaPaymentPanelComponent,
     ],
 })
 export class OrderCheckoutComponent implements OnInit, OnDestroy {
     private _unsubscribeAll: Subject<User> = new Subject<User>();
     private _cashPreviewChanges: Subject<void> = new Subject<void>();
     private matDialog = inject(MatDialog);
+    private _abaPaid = inject(AbaPaidWatcherService);
 
     user: User;
     fileUrl = env.FILE_BASE_URL;
@@ -108,33 +112,39 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
     activeCoupons: CashierCouponOption[] = [];
     selectedCouponCode = '';
     customerId: number | null = null;
-    paymentMethod: PaymentMethod = 'baray';
+    paymentMethod: PaymentMethod = 'cash';
     qrTableBankName = 'ABA';
+    isAwaitingAbaPayment = false;
+    isGeneratingAbaQr = false;
+    abaQrData: string | null = null;
+    abaTranId: string | null = null;
+    abaExpiresAt: Date | null = null;
+    abaMerchantName = 'CLUB 54 POS';
+    abaMerchantCity = 'Phnom Penh';
+    abaResult: 'paid' | 'cancelled' | 'timeout' | null = null;
+    abaResultAmountKhr = 0;
+    abaResultReceiptNumber: string | number | null = null;
+    private _abaPendingOrderId: number | null = null;
+    private _abaWaitSub: Subscription | null = null;
+    private _abaResultPendingOrder: OrderReceiptData | null = null;
     isOrderBeingMade = false;
     isCalculatingChange = false;
     isPreviewingCashChange = false;
 
-    /** Baray waiting overlay: shown while polling for payment confirmation. */
+    /* Baray disabled
     isAwaitingBarayPayment = false;
     barayPayUrl: string | null = null;
     safeBarayPayUrl: SafeResourceUrl | null = null;
     barayExpiresAt: Date | null = null;
-    /** Order total in KHR for display. */
     barayAmountKhr = 0;
-    /** Receipt # shown in the overlay so the cashier can match order ↔ payment. */
     barayReceiptNumber: string | null = null;
     private _barayPendingOrderId: number | null = null;
     private _barayWaitSub: Subscription | null = null;
-
-    /**
-     * After the wait overlay closes, show a full-screen result card so the
-     * cashier can't miss whether the payment landed.
-     */
     barayResult: 'paid' | 'cancelled' | 'timeout' | null = null;
     barayResultAmountKhr = 0;
     barayResultReceiptNumber: string | number | null = null;
-    /** Held until the cashier dismisses the result card; then we open the receipt drawer. */
     private _barayResultPendingOrder: OrderReceiptData | null = null;
+    */
 
     cashExchangeRate = ExchangeRateSettingService.FALLBACK_KHR_PER_USD;
     cashReceivedKhrAmount: number | null = null;
@@ -160,10 +170,10 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
         private _userService: UserService,
         private _service: OrderService,
         private _snackBarService: SnackbarService,
-        private _barayPaid: BarayPaidWatcherService,
+        // Baray disabled: private _barayPaid: BarayPaidWatcherService,
         private _cashDrawer: CashierCashDrawerService,
         private _printReceipt: PrintReceiptService,
-        private _sanitizer: DomSanitizer,
+        // Baray disabled: private _sanitizer: DomSanitizer,
     ) {
         this._userService.user$.pipe(takeUntil(this._unsubscribeAll)).subscribe((user: User) => {
             this.user = user;
@@ -215,7 +225,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this._endBarayWaitUi();
+        this._clearAbaWaitSub();
         this._unsubscribeAll.next(null);
         this._unsubscribeAll.complete();
     }
@@ -260,10 +270,23 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
     }
 
     selectPaymentMethod(method: PaymentMethod): void {
+        if (this.isAwaitingAbaPayment) {
+            return;
+        }
         this.paymentMethod = method;
         if (method === 'cash' && !this.cashDrawer && !this.isLoadingCashDrawer) {
             this.loadCashDrawer();
         }
+        if (method !== 'aba') {
+            this._resetAbaUi();
+        }
+    }
+
+    get abaExpiresLabel(): string | null {
+        if (!this.abaExpiresAt) {
+            return null;
+        }
+        return `Expires ${this.abaExpiresAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     }
 
     loadCashDrawer(): void {
@@ -417,7 +440,43 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
             this._placeQrTableOrder();
             return;
         }
-        this._placeBarayOrder();
+        if (this.paymentMethod === 'aba') {
+            this._placeAbaOrder();
+            return;
+        }
+        // Baray disabled: this._placeBarayOrder();
+    }
+
+    cancelAbaWait(): void {
+        if (this._abaPendingOrderId == null) {
+            this._endAbaWaitUi();
+            return;
+        }
+        const id = this._abaPendingOrderId;
+        this._service.cancelOrder(id).subscribe({
+            next: () => {
+                this._snackBarService.openSnackBar('ABA payment cancelled.', GlobalConstants.error);
+                this._endAbaWaitUi();
+                this.abaResult = 'cancelled';
+                this._changeDetectorRef.detectChanges();
+            },
+            error: () => {
+                this._endAbaWaitUi();
+                this._snackBarService.openSnackBar('Could not cancel order — verify payment manually.', GlobalConstants.error);
+            },
+        });
+    }
+
+    dismissAbaResult(): void {
+        const wasPaid = this.abaResult === 'paid';
+        const order = this._abaResultPendingOrder;
+        this.abaResult = null;
+        this.abaResultAmountKhr = 0;
+        this.abaResultReceiptNumber = null;
+        this._abaResultPendingOrder = null;
+        if (wasPaid && order) {
+            this.openOrderDetailDrawer(order);
+        }
     }
 
     dismissChangeResult(): void {
@@ -432,6 +491,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
         }
     }
 
+    /* Baray disabled
     dismissBarayResult(): void {
         const wasPaid = this.barayResult === 'paid';
         const order = this._barayResultPendingOrder;
@@ -467,6 +527,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
             },
         });
     }
+    */
 
     trackByLineKey(_index: number, line: OrderCartLine): string {
         return line?.lineKey;
@@ -625,6 +686,133 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
         });
     }
 
+    private _clearAbaWaitSub(): void {
+        this._abaWaitSub?.unsubscribe();
+        this._abaWaitSub = null;
+    }
+
+    private _endAbaWaitUi(): void {
+        this.isAwaitingAbaPayment = false;
+        this.isGeneratingAbaQr = false;
+        this._abaPendingOrderId = null;
+        this._clearAbaWaitSub();
+    }
+
+    private _resetAbaUi(): void {
+        this.abaQrData = null;
+        this.abaTranId = null;
+        this.abaExpiresAt = null;
+        this.isGeneratingAbaQr = false;
+    }
+
+    private _placeAbaOrder(): void {
+        if (this.carts.length === 0 || this.isAwaitingAbaPayment) {
+            return;
+        }
+
+        const savedTotal = this.totalPrice;
+        this.isOrderBeingMade = true;
+        this.isGeneratingAbaQr = true;
+        this.abaQrData = null;
+
+        this._service
+            .create({
+                cart: JSON.stringify(this._buildCartPayload()),
+                deferred_telegram: true,
+                coupon_code: this.selectedCouponCode?.trim() || undefined,
+                customer_id: this.customerId,
+            })
+            .subscribe({
+                next: (response) => {
+                    this.isOrderBeingMade = false;
+                    const order = response.data;
+                    if (order?.id == null) {
+                        this.isGeneratingAbaQr = false;
+                        this._service.clearCheckoutDraft();
+                        this.carts = [];
+                        this.totalPrice = 0;
+                        this._snackBarService.openSnackBar(response.message, GlobalConstants.success);
+                        this.openOrderDetailDrawer(order);
+                        return;
+                    }
+
+                    this._service.createAbaPaymentIntent(order.id, 'abapay_khqr').subscribe({
+                        next: (aba) => {
+                            const qr = aba.data?.qr?.trim();
+                            if (!qr) {
+                                this.isGeneratingAbaQr = false;
+                                this._snackBarService.openSnackBar('ABA PayWay: QR data not available.', GlobalConstants.error);
+                                return;
+                            }
+
+                            this._clearAbaWaitSub();
+                            this._abaPendingOrderId = order.id;
+                            this.abaQrData = qr;
+                            this.abaTranId = aba.data?.tran_id ?? null;
+                            this.abaMerchantName = aba.data?.merchant_name?.trim() || this.abaMerchantName;
+                            this.abaMerchantCity = aba.data?.merchant_city?.trim() || this.abaMerchantCity;
+                            const expIso = aba.data?.expires_at;
+                            this.abaExpiresAt = expIso ? new Date(expIso) : null;
+                            this.isGeneratingAbaQr = false;
+                            this.isAwaitingAbaPayment = true;
+
+                            this._abaWaitSub = this._abaPaid
+                                .waitUntilSettled(order.id)
+                                .pipe(take(1), takeUntil(this._unsubscribeAll))
+                                .subscribe((outcome) => {
+                                    this.isAwaitingAbaPayment = false;
+                                    this._abaPendingOrderId = null;
+                                    this._abaWaitSub = null;
+                                    this.abaResultAmountKhr = savedTotal;
+                                    this.abaResultReceiptNumber = order.receipt_number ?? null;
+
+                                    if (outcome === 'paid') {
+                                        this._service.clearCheckoutDraft();
+                                        this.carts = [];
+                                        this.totalPrice = 0;
+                                        this._resetAbaUi();
+                                        this._snackBarService.openSnackBar(
+                                            'ABA: Payment completed — receipt ' + String(order.receipt_number ?? '') + '.',
+                                            GlobalConstants.success,
+                                        );
+                                        this._abaResultPendingOrder = {
+                                            ...order,
+                                            payment_status: 'paid',
+                                        } as OrderReceiptData;
+                                        this.abaResult = 'paid';
+                                    } else if (outcome === 'cancelled') {
+                                        this._snackBarService.openSnackBar(
+                                            'Receipt ' + String(order.receipt_number ?? '') + ' — payment cancelled.',
+                                            GlobalConstants.error,
+                                        );
+                                        this.abaResult = 'cancelled';
+                                    } else {
+                                        this._snackBarService.openSnackBar(
+                                            'ABA: Payment timed out — verify manually before re-issuing.',
+                                            GlobalConstants.error,
+                                        );
+                                        this.abaResult = 'timeout';
+                                    }
+                                    this._changeDetectorRef.detectChanges();
+                                });
+                        },
+                        error: (err: HttpErrorResponse) => {
+                            this.isGeneratingAbaQr = false;
+                            this._snackBarService.openSnackBar(
+                                err?.error?.message || 'Unable to start ABA PayWay payment.',
+                                GlobalConstants.error,
+                            );
+                        },
+                    });
+                },
+                error: (err: HttpErrorResponse) => {
+                    this.isOrderBeingMade = false;
+                    this.isGeneratingAbaQr = false;
+                    this._snackBarService.openSnackBar(err?.error?.message || GlobalConstants.genericError, GlobalConstants.error);
+                },
+            });
+    }
+
     private _placeQrTableOrder(): void {
         if (this.carts.length === 0) return;
 
@@ -671,6 +859,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
             });
     }
 
+    /* Baray disabled
     private _clearBarayWaitSub(): void {
         this._barayWaitSub?.unsubscribe();
         this._barayWaitSub = null;
@@ -822,6 +1011,7 @@ export class OrderCheckoutComponent implements OnInit, OnDestroy {
                 },
             });
     }
+    */
 
     private openOrderDetailDrawer(order: OrderReceiptData): void {
         const dialogConfig = new MatDialogConfig<OrderReceiptData>();

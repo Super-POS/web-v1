@@ -1,0 +1,145 @@
+/* PayWay Merchant Integration Guideline v2.11 — ABA QR display panel. */
+
+:host {
+    display: block;
+}
+
+.aba-sample {
+    border-color: #b8d4e8;
+    background: #f0f7fc;
+}
+
+.aba-sample__title-logo {
+    height: 2rem;
+    width: auto;
+}
+
+.aba-sample__intro {
+    padding-bottom: 0.125rem;
+}
+
+.aba-sample__option {
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.aba-sample__option:hover {
+    border-color: #66a3d2;
+}
+
+.aba-sample__option.is-active {
+    border-color: #006dba;
+    background: #e8f4fb;
+    box-shadow: 0 0 0 1px #006dba;
+}
+
+.aba-sample__option-logo {
+    height: 2rem;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.aba-qr-card {
+    background: #fff;
+    max-width: 380px;
+}
+
+.aba-qr-card__header {
+    background: linear-gradient(180deg, #006dba 0%, #004a80 100%);
+    min-height: 56px;
+}
+
+.aba-qr-card__header-logo {
+    height: 2rem;
+    width: auto;
+    max-width: 8rem;
+    object-fit: contain;
+}
+
+.aba-qr-card__payway {
+    letter-spacing: 0.18em;
+}
+
+.aba-qr-card__ribbon {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 14px), 0 100%);
+    min-height: 56px;
+    background: #e50039;
+}
+
+.aba-qr-card__wordmark {
+    width: auto;
+    max-width: 55%;
+    height: 28px;
+}
+
+.aba-qr-card__merchant-name {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.aba-qr-card__sep {
+    height: 1px;
+    background-image: linear-gradient(
+        to right,
+        rgba(15, 23, 42, 0.35) 0,
+        rgba(15, 23, 42, 0.35) 6px,
+        transparent 6px,
+        transparent 12px
+    );
+    background-size: 12px 1px;
+    background-repeat: repeat-x;
+}
+
+.aba-qr-card__qr {
+    width: 220px;
+    height: 220px;
+}
+
+.aba-qr-card__qr ::ng-deep qrcode {
+    display: block;
+    line-height: 0;
+}
+
+.aba-qr-card__qr ::ng-deep svg {
+    width: 220px;
+    height: 220px;
+    display: block;
+}
+
+.aba-qr-card__badge {
+    width: 52px;
+    height: 52px;
+    border-radius: 999px;
+    background: #e50039;
+    border: 3px solid #fff;
+    box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.35);
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.aba-qr-card__badge-logo {
+    width: 70%;
+    height: 70%;
+    object-fit: contain;
+}
+
+:host-context(.dark) .aba-sample {
+    border-color: #1e4a6e;
+    background: rgb(0 109 186 / 0.12);
+}
+
+:host-context(.dark) .aba-sample__option {
+    background: #111827;
+    border-color: #374151;
+}
+
+:host-context(.dark) .aba-sample__option.is-active {
+    background: rgb(0 109 186 / 0.25);
+    border-color: #3b9fd9;
+}

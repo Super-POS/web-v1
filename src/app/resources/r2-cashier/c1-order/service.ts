@@ -8,9 +8,11 @@ import { Observable, catchError, tap, throwError } from 'rxjs';
 // ================================================================>> Custom Library
 import { env } from 'envs/env';
 import {
+    AbaPaymentIntentResponse,
+    AbaPaymentStateResponse,
     BakongPaymentIntentResponse,
     BakongPaymentStateResponse,
-    BarayPaymentIntentResponse,
+    // Baray disabled: BarayPaymentIntentResponse,
     CashierCouponOption,
     CheckoutDraft,
     IngredientStock,
@@ -126,7 +128,7 @@ export class OrderService {
         );
     }
 
-    /** After an order is created: Baray local-bank pay link (QR in UI). */
+    /* Baray disabled
     createBarayPaymentIntent(orderId: number): Observable<BarayPaymentIntentResponse> {
         return this.httpClient.post<BarayPaymentIntentResponse>(
             `${env.API_BASE_URL}/cashier/ordering/baray/payment-intent`,
@@ -135,16 +137,12 @@ export class OrderService {
         );
     }
 
-    /** Poll / sync: same as cashier/sales view (id, status, receipt). */
     getOrderViewForBaray(id: number): Observable<{ data: { id: number; status: string; receipt_number: string } }> {
         return this.httpClient.get<{ data: { id: number; status: string; receipt_number: string } }>(
             `${env.API_BASE_URL}/cashier/sales/${id}/view`,
         );
     }
 
-    /**
-     * Baray wait overlay: `order.status` + latest `payment_transaction` (success hits even if /view is cached or shaped oddly).
-     */
     getBarayPaymentState(id: number): Observable<{
         data: { order_id: number; order_status: string; baray_transaction_status: string | null };
     }> {
@@ -159,6 +157,34 @@ export class OrderService {
                 Pragma: 'no-cache',
             }),
         });
+    }
+    */
+
+    /** After an order is created: ABA PayWay QR string + tran_id to poll. */
+    createAbaPaymentIntent(
+        orderId: number,
+        paymentOption: 'abapay_khqr' | 'wechat' | 'alipay',
+    ): Observable<AbaPaymentIntentResponse> {
+        return this.httpClient.post<AbaPaymentIntentResponse>(
+            `${env.API_BASE_URL}/cashier/ordering/aba/payment-intent`,
+            { order_id: orderId, payment_option: paymentOption },
+            { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) },
+        );
+    }
+
+    getAbaPaymentState(id: number): Observable<AbaPaymentStateResponse> {
+        const params = new HttpParams().set('t', String(Date.now()));
+        return this.httpClient.get<AbaPaymentStateResponse>(
+            `${env.API_BASE_URL}/cashier/ordering/aba/order/${id}/payment-state`,
+            {
+                params,
+                headers: new HttpHeaders({
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache',
+                    Pragma: 'no-cache',
+                }),
+            },
+        );
     }
 
     /** After an order is created: Bakong KHQR string + md5 to poll (rendered as QR in the UI). */

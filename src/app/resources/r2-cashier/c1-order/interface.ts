@@ -116,7 +116,7 @@ export interface ResponseOrder {
     message : string
 }
 
-/** api-v1 POST /cashier/ordering/baray/payment-intent */
+/** Baray disabled — api-v1 POST /cashier/ordering/baray/payment-intent
 export interface BarayPaymentIntentResponse {
     data: {
         _id: string;
@@ -127,6 +127,7 @@ export interface BarayPaymentIntentResponse {
     };
     message: string;
 }
+*/
 
 /** api-v1 POST /cashier/ordering/bakong/payment-intent — KHQR string + md5 to poll. */
 export interface BakongPaymentIntentResponse {
@@ -167,5 +168,32 @@ export interface BakongPaymentStateResponse {
         bakong_transaction_status: string | null;
         /** Latest `responseMessage` echoed from Bakong's `/v1/check_transaction_by_md5` poll. */
         bakong_response_message: string | null;
+    };
+}
+
+/** api-v1 POST /cashier/ordering/aba/payment-intent — PayWay QR string + tran_id to poll. */
+export interface AbaPaymentIntentResponse {
+    data: {
+        qr: string;
+        tran_id: string;
+        payment_transaction_id: number;
+        expires_at: string;
+        qr_amount: number;
+        qr_currency: 'USD' | 'KHR';
+        payment_option: 'abapay_khqr' | 'wechat' | 'alipay';
+        merchant_name?: string;
+        merchant_city?: string;
+        abapay_deeplink?: string | null;
+    };
+    message: string;
+}
+
+/** api-v1 GET /cashier/ordering/aba/order/:id/payment-state */
+export interface AbaPaymentStateResponse {
+    data: {
+        order_id: number;
+        order_status: string;
+        aba_transaction_status: string | null;
+        aba_response_message: string | null;
     };
 }

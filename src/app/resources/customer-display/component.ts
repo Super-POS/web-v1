@@ -11,7 +11,7 @@ import { env } from 'envs/env';
 
 interface QrState {
     screen: 'qr';
-    type: 'khqr' | 'baray';
+    type: 'khqr'; // | 'baray'
     qrString: string;
     amount: number;
     currency: string;
@@ -73,6 +73,7 @@ export class CustomerDisplayComponent implements OnInit, OnDestroy {
             });
         });
 
+        /* Baray disabled
         this.socket.on('customer-display:show-baray', (data: {
             orderId: number;
             url: string;
@@ -90,6 +91,7 @@ export class CustomerDisplayComponent implements OnInit, OnDestroy {
                 });
             });
         });
+        */
 
         this.socket.on('customer-display:clear', () => {
             this._zone.run(() => this._goIdle());
